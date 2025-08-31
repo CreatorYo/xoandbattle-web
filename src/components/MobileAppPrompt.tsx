@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { SimpleBottomSheet } from '@/components/ui/bottom-sheet';
 import { Smartphone, Sparkles, GamepadIcon } from 'lucide-react';
@@ -8,10 +8,18 @@ interface MobileAppPromptProps {
 }
 
 export function MobileAppPrompt({ onContinue }: MobileAppPromptProps) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const hasDismissed = localStorage.getItem('mobile-app-prompt-dismissed');
+    if (!hasDismissed) {
+      setIsOpen(true);
+    }
+  }, []);
 
   const handleContinue = () => {
     setIsOpen(false);
+    localStorage.setItem('mobile-app-prompt-dismissed', 'true');
     onContinue();
   };
 
@@ -19,19 +27,22 @@ export function MobileAppPrompt({ onContinue }: MobileAppPromptProps) {
     window.open('https://apps.apple.com/us/app/x-o-battle/id6745736399', '_blank');
   };
 
+  const handleClose = () => {
+    setIsOpen(false);
+    localStorage.setItem('mobile-app-prompt-dismissed', 'true');
+  };
+
   return (
     <SimpleBottomSheet 
       open={isOpen} 
-      onOpenChange={setIsOpen}
+      onOpenChange={handleClose}
       contentClassName="bg-gradient-to-br from-background via-background to-primary/5"
     >
       <div className="text-center space-y-6">
-        {/* App Icon */}
         <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg">
           <GamepadIcon className="w-10 h-10 text-primary-foreground" />
         </div>
 
-        {/* Header */}
         <div className="space-y-2">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
             Better on the app
@@ -41,23 +52,21 @@ export function MobileAppPrompt({ onContinue }: MobileAppPromptProps) {
           </p>
         </div>
 
-        {/* Features */}
         <div className="bg-muted/30 rounded-lg p-4 space-y-2">
           <div className="flex items-center gap-2 text-sm">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span>Exclusive board styles</span>
+            <span>Custom board styles</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Smartphone className="w-4 h-4 text-primary" />
-            <span>Optimized mobile experience</span>
+            <span>Optimised mobile experience</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <GamepadIcon className="w-4 h-4 text-primary" />
-            <span>Enhanced gameplay features</span>
+            <span>Enhanced gameplay features and more</span>
           </div>
         </div>
 
-        {/* Buttons */}
         <div className="space-y-3">
           <Button 
             onClick={handleAppStore}

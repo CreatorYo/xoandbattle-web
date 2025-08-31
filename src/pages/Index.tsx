@@ -13,10 +13,8 @@ const Index = () => {
 
   return (
     <>
-      {/* Always show the game */}
       <GameLayout />
       
-      {/* Show mobile prompt as overlay if on mobile and not dismissed */}
       {isMobile && showMobilePrompt && (
         <MobileAppPrompt onContinue={handleContinueOnWeb} />
       )}

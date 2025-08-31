@@ -78,6 +78,29 @@ export function OnboardingTour() {
     }
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (showWelcome) {
+          setShowWelcome(false);
+          setWelcomeFading(false);
+          setIsVisible(false);
+          localStorage.setItem('xobattle-onboarding-seen', 'true');
+        } else if (isVisible) {
+          completeTour();
+        }
+      }
+    };
+
+    if (showWelcome || isVisible) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showWelcome, isVisible]);
+
   const nextStep = () => {
     if (currentStep < tourSteps.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -126,7 +149,6 @@ export function OnboardingTour() {
 
   return (
     <>
-      {/* Welcome Screen */}
       {showWelcome && (
         <div 
           className={`fixed inset-0 z-50 bg-black/80 backdrop-blur-sm transition-all duration-1000 ease-in-out flex items-center justify-center ${
@@ -142,15 +164,12 @@ export function OnboardingTour() {
         </div>
       )}
 
-      {/* Tour Overlay */}
       {isVisible && (
         <>
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-all duration-500 ease-out animate-fade-in" />
           
-          {/* Tour Container */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
             <div className="relative bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
-              {/* Header */}
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -182,7 +201,6 @@ export function OnboardingTour() {
                   )}
                 </div>
 
-                {/* Progress Bar */}
                 <div className="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-2 mb-6">
                   <div 
                     className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
@@ -190,7 +208,6 @@ export function OnboardingTour() {
                   />
                 </div>
 
-                {/* Navigation */}
                 <div className="flex items-center justify-between">
                   <Button
                     variant="outline"
@@ -212,7 +229,6 @@ export function OnboardingTour() {
                 </div>
               </div>
 
-              {/* Skip Button */}
               <div className="px-6 pb-4 text-center">
                 <button
                   onClick={skipTour}

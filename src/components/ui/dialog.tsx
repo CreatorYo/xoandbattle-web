@@ -106,7 +106,6 @@ const DialogDescription = React.forwardRef<
 ))
 DialogDescription.displayName = DialogPrimitive.Description.displayName
 
-// Enhanced Confirmation Dialog Components
 interface ConfirmationDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -215,7 +214,6 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   )
 }
 
-// Simple Confirmation Dialog for quick use
 const SimpleConfirmDialog: React.FC<{
   open: boolean
   onOpenChange: (open: boolean) => void

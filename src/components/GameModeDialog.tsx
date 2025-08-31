@@ -49,7 +49,6 @@ export function GameModeDialog({ children }: GameModeDialogProps) {
         </DialogHeader>
         
         <div className="space-y-4 mt-4">
-          {/* Game Mode Selection */}
           <div className="grid grid-cols-2 gap-3">
             <Card 
               className={`cursor-pointer transition-all border-2 ${
@@ -82,9 +81,6 @@ export function GameModeDialog({ children }: GameModeDialogProps) {
             </Card>
           </div>
 
-
-
-          {/* Action Buttons */}
           <div className="flex gap-2 pt-2">
             <Button variant="outline" onClick={() => setIsOpen(false)} className="flex-1">
               Cancel

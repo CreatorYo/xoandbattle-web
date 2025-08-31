@@ -187,7 +187,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete }: 
         </DialogHeader>
         
         <div className="space-y-8">
-          {/* Theme Info */}
           <Card className="border border-border/50 bg-transparent">
             <CardContent className="p-6">
               <div className="space-y-4">
@@ -218,7 +217,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete }: 
             </CardContent>
           </Card>
 
-          {/* Color Selection */}
           <Card className="border border-border/50 bg-transparent">
             <CardContent className="p-6">
               <div className="space-y-6">
@@ -245,7 +243,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete }: 
             </CardContent>
           </Card>
 
-          {/* Theme Effects */}
           <Card className="border border-border/50 bg-transparent">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -266,7 +263,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete }: 
             </CardContent>
           </Card>
 
-          {/* Action Button */}
           <div className="pt-4">
             <Button 
               onClick={handleCreateTheme}

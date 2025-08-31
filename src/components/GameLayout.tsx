@@ -5,7 +5,8 @@ import { SettingsDialog } from './SettingsDialog';
 import { useGame } from '@/contexts/GameContext';
 import { useUIVisibility } from '@/hooks/use-ui-visibility';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Sparkles, RotateCcw, Gamepad2, Settings } from 'lucide-react';
+import { GameModeDialog } from './GameModeDialog';
 
 function TurnIndicator() {
   const { winner, currentPlayer, gameSettings, board } = useGame();
@@ -22,8 +23,8 @@ function TurnIndicator() {
   const playerColor = currentPlayer === 'X' ? gameSettings.theme.xColor : gameSettings.theme.oColor;
   
   return (
-    <p className="text-sm font-semibold" style={{ color: playerColor }}>
-      Please proceed with your turn, Player {currentPlayer}
+    <p className="text-base font-semibold" style={{ color: playerColor }}>
+      Please proceed with your turn Player {currentPlayer}
     </p>
   );
 }
@@ -31,17 +32,18 @@ function TurnIndicator() {
 export function GameLayout() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { isUIVisible, toggleUIVisibility } = useUIVisibility();
+  const { resetGame, gameSettings, winner, currentPlayer, board } = useGame();
 
   return (
-    <div className="min-h-screen bg-background relative">      
-      {/* Floating UI Toggle Button - Only show when UI is hidden */}
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10 relative overflow-hidden">      
+
       {!isUIVisible && (
-        <div className="fixed top-4 right-4 z-50">
+        <div className="fixed top-6 right-6 z-50">
           <Button
             onClick={toggleUIVisibility}
             variant="outline"
             size="sm"
-            className="bg-background/80 backdrop-blur-sm border-border/50 shadow-lg hover:bg-background/90"
+            className="bg-background/90 backdrop-blur-md border-border/50 shadow-xl hover:bg-background transition-all duration-300 hover:scale-105"
             title="Show UI (Ctrl+/ or Cmd+/)"
           >
             <Eye className="h-4 w-4 mr-2" />
@@ -50,25 +52,115 @@ export function GameLayout() {
         </div>
       )}
 
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <div className="text-center mb-12">
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
-            Tic Tac Toe
-          </h1>
-          <p className="text-muted-foreground text-sm mb-2">
-            Play against AI or with a friend
+      <div className={`container mx-auto px-6 py-8 max-w-6xl relative z-10 ${!gameSettings.showGameStatus ? 'pt-20' : ''}`}>
+        <div className="text-center mb-8">
+          <div className="mb-4">
+            <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+              Tic Tac Toe
+            </h1>
+          </div>
+          <p className="text-muted-foreground text-base mb-4 max-w-md mx-auto">
+            Play with AI or a friend
           </p>
           <TurnIndicator />
         </div>
 
         <div className="flex flex-col items-center space-y-8">
-          <GameBoard />
+          <div className="flex justify-center">
+            <GameBoard />
+          </div>
           
-          {isUIVisible && <GameStatus />}
+          {isUIVisible && !gameSettings.showGameStatus && (
+            <div className="text-center space-y-6">
+              {winner ? (
+                <div className="text-2xl font-bold text-yellow-500">
+                  Player {winner} Wins!
+                </div>
+              ) : board.every(cell => cell !== null) ? (
+                <div className="text-2xl font-bold text-blue-500">
+                  It's a draw!
+                </div>
+              ) : null}
+              
+              <div className="space-y-3">
+                <div className="flex gap-3 justify-center">
+                  <Button 
+                    onClick={resetGame} 
+                    variant="outline"
+                    size="sm"
+                    className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-red-500/30 hover:border-red-500/50 hover:bg-red-500/20 transition-all duration-200 shadow-lg hover:shadow-red-500/25 hover:scale-105"
+                  >
+                    <RotateCcw className="!h-5 !w-5 text-red-500" />
+                  </Button>
+                  
+                  <GameModeDialog>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="w-12 h-12 p-0 rounded-full bg-blue-500/10 border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/20 transition-all duration-200 shadow-lg hover:shadow-blue-500/25 hover:scale-105"
+                    >
+                      <Gamepad2 className="!h-5 !w-5 text-blue-500" />
+                    </Button>
+                  </GameModeDialog>
 
-          {isUIVisible && (
-            <div className="flex gap-3">
-              <SettingsDialog />
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-green-500/30 hover:border-green-500/50 hover:bg-green-500/20 transition-all duration-200 shadow-lg hover:shadow-green-500/25 hover:scale-105"
+                    onClick={() => {
+                      if ((window as any).showSettings) {
+                        (window as any).showSettings();
+                      }
+                    }}
+                  >
+                    <Settings className="!h-5 !w-5 text-green-500" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {isUIVisible && gameSettings.showGameStatus && (
+            <div className="w-full max-w-md">
+              <div className="space-y-6">
+                <GameStatus />
+                
+                <div className="space-y-3">
+                  <div className="flex gap-3 justify-center">
+                    <Button 
+                      onClick={resetGame} 
+                      variant="outline"
+                      size="sm"
+                      className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-red-500/30 hover:border-red-500/50 hover:bg-red-500/20 transition-all duration-200 shadow-lg hover:shadow-red-500/25 hover:scale-105"
+                    >
+                      <RotateCcw className="!h-5 !w-5 text-red-500" />
+                    </Button>
+                    
+                    <GameModeDialog>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className="w-12 h-12 p-0 rounded-full bg-blue-500/10 border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/20 transition-all duration-200 shadow-lg hover:shadow-blue-500/25 hover:scale-105"
+                      >
+                        <Gamepad2 className="!h-5 !w-5 text-blue-500" />
+                      </Button>
+                    </GameModeDialog>
+
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-green-500/30 hover:border-green-500/50 hover:bg-green-500/20 transition-all duration-200 shadow-lg hover:shadow-green-500/25 hover:scale-105"
+                      onClick={() => {
+                        if ((window as any).showSettings) {
+                          (window as any).showSettings();
+                        }
+                      }}
+                    >
+                      <Settings className="!h-5 !w-5 text-green-500" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

@@ -71,7 +71,6 @@ export function GameBoard() {
         </button>
       ))}
       
-      {/* AI Thinking Indicator */}
       {isAiThinking && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="bg-background/90 backdrop-blur-sm rounded-lg px-4 py-2 shadow-lg border">

@@ -2,32 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Modern Tic-Tac-Toe Design System - All colors MUST be HSL */
-
 @layer base {
   :root {
-    /* Base colors */
     --background: 210 20% 98%;
     --foreground: 222.2 84% 4.9%;
 
-    /* Card system */
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* Gaming primary colors - Modern blue theme */
     --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
     --primary-glow: 210 100% 70%;
     
-    /* Game elements */
     --game-x: 0 84% 60%;
     --game-o: 142 76% 36%;
     --game-winner: 45 100% 51%;
     
-    /* Board colors */
     --board-bg: 0 0% 100%;
     --board-border: 220 13% 91%;
     --cell: 0 0% 100%;
@@ -49,16 +42,13 @@
     --input: 220 13% 91%;
     --ring: 217 91% 60%;
 
-    /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-game: linear-gradient(45deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%);
     
-    /* Shadows and glows */
     --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.1);
     --shadow-glow: 0 0 20px hsl(var(--primary-glow) / 0.3);
     --shadow-winner: 0 0 30px hsl(var(--game-winner) / 0.5);
     
-    /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
@@ -75,23 +65,19 @@
   }
 
   .dark {
-    /* Pitch black background as requested */
     --background: 0 0% 0%;
     --foreground: 0 0% 98%;
 
-    /* Dark cards */
     --card: 0 0% 8%;
     --card-foreground: 0 0% 98%;
 
     --popover: 0 0% 8%;
     --popover-foreground: 0 0% 98%;
 
-    /* Keep primary bright in dark mode */
     --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
     --primary-glow: 210 100% 70%;
     
-    /* Dark game elements - zinc as requested for boxes */
     --board-bg: 0 0% 8%;
     --board-border: 240 4% 16%;
     --cell: 240 4% 16%;
@@ -113,7 +99,6 @@
     --input: 240 4% 16%;
     --ring: 217 91% 60%;
     
-    /* Dark gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.3);
     --shadow-glow: 0 0 20px hsl(var(--primary-glow) / 0.4);
@@ -138,30 +123,31 @@
     @apply bg-background text-foreground;
   }
 
-  /* Hide scrollbars across the entire application */
   * {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
   *::-webkit-scrollbar {
-    display: none; /* WebKit browsers (Chrome, Safari, Edge) */
+    display: none;
   }
 
-  /* Ensure smooth scrolling behavior */
   html {
     scroll-behavior: smooth;
+  }
+
+  button {
+    cursor: pointer;
+    user-select: none;
   }
 }
 
 @layer components {
-  /* Game animations */
   .game-cell {
     @apply relative overflow-hidden bg-cell border border-border rounded-lg 
            transition-all duration-300 hover:bg-cell-hover hover:shadow-lg;
   }
   
-  /* Button hover effects */
   .btn-hover-blue {
     @apply transition-colors duration-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200;
   }
@@ -197,7 +183,6 @@
     @apply bg-gradient-to-r from-primary to-primary-glow text-primary-foreground;
   }
 
-  /* Fade in animation */
   @keyframes fadeIn {
     0% {
       opacity: 0;
@@ -207,7 +192,6 @@
     }
   }
 
-  /* Slide animations for theme marketplace */
   @keyframes slideInUp {
     0% {
       opacity: 0;
@@ -241,7 +225,6 @@
     }
   }
 
-  /* Ripple animation for Material Design effect */
   @keyframes ripple {
     0% {
       transform: scale(0);
@@ -279,17 +262,14 @@
     transition: var(--transition-bounce);
   }
 
-  /* Fade in animation utility */
   .animate-fade-in {
     animation: fadeIn 1s ease-in-out;
   }
 
-  /* Ripple animation utility */
   .animate-ripple {
     animation: ripple 0.6s ease-out;
   }
 
-  /* Reduce Motion Accessibility */
   .reduce-motion *,
   .reduce-motion *::before,
   .reduce-motion *::after {

@@ -65,7 +65,6 @@ export function SettingsDialog() {
   const [showResetThemesDialog, setShowResetThemesDialog] = useState(false);
   const [showResetEverythingDialog, setShowResetEverythingDialog] = useState(false);
 
-  // Apply reduce motion class to body
   useEffect(() => {
     if (reduceMotion) {
       document.body.classList.add('reduce-motion');
@@ -74,6 +73,10 @@ export function SettingsDialog() {
     }
     localStorage.setItem('tic-tac-toe-reduce-motion', reduceMotion.toString());
   }, [reduceMotion]);
+
+  useEffect(() => {
+    (window as any).showSettings = () => setOpen(true);
+  }, []);
 
   const resetStatistics = () => {
     resetPersistentStats();
@@ -85,7 +88,8 @@ export function SettingsDialog() {
       gameMode: 'human',
       difficulty: 'medium',
       winAnimation: 'confetti',
-      theme: defaultThemes[0]
+      theme: defaultThemes[0],
+      showGameStatus: true
     });
     setShowResetSettingsDialog(false);
   };
@@ -156,7 +160,6 @@ export function SettingsDialog() {
                     )}
                   </div>
 
-                  {/* Dark Theme Card */}
                   <div
                     onClick={() => setTheme('dark')}
                     className={`relative cursor-pointer rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
@@ -166,7 +169,6 @@ export function SettingsDialog() {
                     }`}
                   >
                     <div className="p-4">
-                      {/* Preview Content */}
                       <div className="mb-3 flex justify-center">
                         <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                           <Moon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -187,7 +189,6 @@ export function SettingsDialog() {
                     )}
                   </div>
 
-                  {/* System Theme Card */}
                   <div
                     onClick={() => setTheme('system')}
                     className={`relative cursor-pointer rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
@@ -197,7 +198,6 @@ export function SettingsDialog() {
                     }`}
                   >
                     <div className="p-4">
-                      {/* Preview Content */}
                       <div className="mb-3 flex justify-center">
                         <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                           <Monitor className="h-6 w-6 text-slate-600 dark:text-slate-400" />
@@ -328,6 +328,34 @@ export function SettingsDialog() {
                   </Select>
                 </div>
               )}
+
+              <div className="bg-card/50 rounded-lg border border-border/50 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-foreground">Game Status Panel</h3>
+                    <p className="text-sm text-muted-foreground">Show detailed game statistics and status</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="show-game-status" className="text-sm font-medium">
+                    {gameSettings.showGameStatus ? 'Enabled' : 'Disabled'}
+                  </Label>
+                  <Switch
+                    id="show-game-status"
+                    checked={gameSettings.showGameStatus}
+                    onCheckedChange={(checked) => updateSettings({ showGameStatus: checked })}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {gameSettings.showGameStatus 
+                    ? 'Detailed game panel with statistics is visible' 
+                    : 'Simple game status with basic turn information'
+                  }
+                </p>
+              </div>
             </div>
           </SettingsSection>
         );
@@ -479,9 +507,7 @@ export function SettingsDialog() {
             </div>
 
             <div className="space-y-6">
-              {/* Top Row - Side by Side */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Reset Settings Section */}
                 <div className="bg-card/50 rounded-lg border border-border/50 p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -502,7 +528,6 @@ export function SettingsDialog() {
                   </Button>
                 </div>
 
-                {/* Reset Themes Section */}
                 <div className="bg-card/50 rounded-lg border border-border/50 p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -524,7 +549,6 @@ export function SettingsDialog() {
                 </div>
               </div>
 
-              {/* Bottom Section - Full Width */}
               <div className="bg-card/50 rounded-lg border-2 border-destructive/50 p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
@@ -640,7 +664,6 @@ export function SettingsDialog() {
       </DialogTrigger>
       <DialogContent className="max-w-6xl w-[95vw] h-[85vh] p-0 gap-0 overflow-hidden md:overflow-auto bg-background/95 backdrop-blur-md border-border/50">
         <div className="flex h-full">
-          {/* Ultra Clean Sidebar */}
           <div className="w-64 bg-muted/20 border-r border-border/30 flex flex-col">
             <div className="p-6 border-b border-border/20">
               <div className="flex items-center gap-3">
@@ -686,7 +709,6 @@ export function SettingsDialog() {
             </nav>
           </div>
 
-          {/* Ultra Clean Main Content */}
           <div className="flex-1 flex flex-col min-h-0">
             <div className="flex-1 overflow-y-auto">
               <div className="p-8 max-w-4xl mx-auto">
@@ -699,7 +721,6 @@ export function SettingsDialog() {
         </div>
       </DialogContent>
 
-      {/* Reset Statistics Confirmation Dialog */}
       <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -732,7 +753,6 @@ export function SettingsDialog() {
         </DialogContent>
       </Dialog>
 
-      {/* Reset Settings Confirmation Dialog */}
       <Dialog open={showResetSettingsDialog} onOpenChange={setShowResetSettingsDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -765,7 +785,6 @@ export function SettingsDialog() {
         </DialogContent>
       </Dialog>
 
-      {/* Reset Themes Confirmation Dialog */}
       <Dialog open={showResetThemesDialog} onOpenChange={setShowResetThemesDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -798,7 +817,6 @@ export function SettingsDialog() {
         </DialogContent>
       </Dialog>
 
-      {/* Reset Everything Confirmation Dialog */}
       <Dialog open={showResetEverythingDialog} onOpenChange={setShowResetEverythingDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>

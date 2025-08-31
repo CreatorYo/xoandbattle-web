@@ -53,14 +53,12 @@ export function ThemeSelector() {
     }
   }, [viewMode]);
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (openMenuId) {
         const menuElement = menuRefs.current[openMenuId];
         const buttonElement = event.target as Element;
         
-        // Check if click is on the three-dot button or inside the menu
         if (menuElement && !menuElement.contains(event.target as Node) && 
             !buttonElement.closest('button')) {
           closeMenu(openMenuId);
@@ -145,7 +143,6 @@ export function ThemeSelector() {
     if (openMenuId === themeId) {
       closeMenu(themeId);
     } else {
-      // Close any other open menu first
       if (openMenuId) {
         closeMenu(openMenuId);
       }
@@ -201,7 +198,6 @@ export function ThemeSelector() {
           
           return (
             <div key={theme.id} className="relative group">
-              {/* Three-dot menu overlay */}
               <div className={`absolute top-2 right-2 transition-opacity duration-200 z-10 ${
                 isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
               }`}>
@@ -218,7 +214,6 @@ export function ThemeSelector() {
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                   
-                  {/* Dropdown Menu */}
                   <div 
                     ref={(el) => (menuRefs.current[theme.id] = el)}
                     className={`absolute right-0 top-full mt-0.5 w-44 bg-background border border-border rounded-md shadow-lg z-20 transition-all duration-200 origin-top-right ${
@@ -370,7 +365,6 @@ export function ThemeSelector() {
         })}
       </div>
 
-      {/* Theme Info Dialog */}
       {showInfo && (
         <Dialog open={!!showInfo} onOpenChange={() => setShowInfo(null)}>
           <DialogContent className="max-w-md">
