@@ -30,7 +30,8 @@ import {
   Upload,
   ChevronDown,
   Trash2,
-  Play
+  Play,
+  Check
 } from 'lucide-react';
 import { ThemeSelector } from './ThemeSelector';
 import { Ripple } from '@/components/ui/ripple';
@@ -60,6 +61,9 @@ export function SettingsDialog() {
   const [activeSection, setActiveSection] = useState('appearance');
   const [open, setOpen] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [showResetSettingsDialog, setShowResetSettingsDialog] = useState(false);
+  const [showResetThemesDialog, setShowResetThemesDialog] = useState(false);
+  const [showResetEverythingDialog, setShowResetEverythingDialog] = useState(false);
 
   // Apply reduce motion class to body
   useEffect(() => {
@@ -74,6 +78,26 @@ export function SettingsDialog() {
   const resetStatistics = () => {
     resetPersistentStats();
     setShowResetDialog(false);
+  };
+
+  const resetSettings = () => {
+    updateSettings({
+      gameMode: 'human',
+      difficulty: 'medium',
+      winAnimation: 'confetti',
+      theme: defaultThemes[0]
+    });
+    setShowResetSettingsDialog(false);
+  };
+
+  const resetThemes = () => {
+    localStorage.removeItem('tic-tac-toe-custom-themes');
+    window.location.reload();
+  };
+
+  const resetEverything = () => {
+    localStorage.clear();
+    window.location.reload();
   };
 
   const sidebarItems = [
@@ -186,7 +210,9 @@ export function SettingsDialog() {
                         <div className="h-2 bg-gray-300 dark:bg-gray-600 rounded-full w-3/4"></div>
                       </div>
                       <div className="mt-3 text-center">
-                        <span className="text-sm font-medium text-foreground">System</span>
+                        <span className="text-sm font-medium text-foreground">
+                          System {window.matchMedia('(prefers-color-scheme: dark)').matches ? '(dark)' : '(light)'}
+                        </span>
                       </div>
                     </div>
                     {theme === 'system' && (
@@ -250,7 +276,7 @@ export function SettingsDialog() {
               </div>
 
               {gameSettings.gameMode === 'ai' && (
-                <div className="bg-card/50 rounded-lg border border-border/50 p-6 animate-fade-in">
+                <div className="bg-card/50 rounded-lg border border-border/50 p-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                       <Bot className="h-4 w-4 text-primary" />
@@ -469,14 +495,7 @@ export function SettingsDialog() {
                     </div>
                   </div>
                   <Button 
-                    onClick={() => {
-                      updateSettings({
-                        gameMode: 'human',
-                        difficulty: 'medium',
-                        winAnimation: 'confetti',
-                        theme: defaultThemes[0]
-                      });
-                    }}
+                    onClick={() => setShowResetSettingsDialog(true)}
                     variant="outline"
                     className="w-full"
                   >
@@ -497,10 +516,7 @@ export function SettingsDialog() {
                     </div>
                   </div>
                   <Button 
-                    onClick={() => {
-                      localStorage.removeItem('tic-tac-toe-custom-themes');
-                      window.location.reload();
-                    }}
+                    onClick={() => setShowResetThemesDialog(true)}
                     variant="outline"
                     className="w-full"
                   >
@@ -522,10 +538,7 @@ export function SettingsDialog() {
                   </div>
                 </div>
                 <Button 
-                  onClick={() => {
-                    localStorage.clear();
-                    window.location.reload();
-                  }}
+                  onClick={() => setShowResetEverythingDialog(true)}
                   variant="destructive"
                   className="w-full"
                 >
@@ -662,9 +675,9 @@ export function SettingsDialog() {
           <div className="flex-1 flex flex-col min-h-0">
             <div className="flex-1 overflow-y-auto">
               <div className="p-8 max-w-4xl mx-auto">
-                <div className="animate-fade-in">
-                  {renderContent()}
-                </div>
+                              <div>
+                {renderContent()}
+              </div>
               </div>
             </div>
           </div>
@@ -698,6 +711,105 @@ export function SettingsDialog() {
                 onClick={resetStatistics}
               >
                 Reset All Statistics
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Settings Confirmation Dialog */}
+      <Dialog open={showResetSettingsDialog} onOpenChange={setShowResetSettingsDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RotateCcw className="h-5 w-5 text-destructive" />
+              Reset All Settings
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-muted-foreground">
+              Are you sure you want to reset all game settings? This will restore default game mode, difficulty, animations, and theme.
+            </p>
+            
+            <div className="flex gap-3 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowResetSettingsDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={resetSettings}
+              >
+                Reset All Settings
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Themes Confirmation Dialog */}
+      <Dialog open={showResetThemesDialog} onOpenChange={setShowResetThemesDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Palette className="h-5 w-5 text-destructive" />
+              Reset All Themes
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-muted-foreground">
+              Are you sure you want to reset all custom themes? This will remove all your custom themes and restore the default themes. This action cannot be undone.
+            </p>
+            
+            <div className="flex gap-3 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowResetThemesDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={resetThemes}
+              >
+                Reset All Themes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Everything Confirmation Dialog */}
+      <Dialog open={showResetEverythingDialog} onOpenChange={setShowResetEverythingDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-destructive" />
+              Reset Everything
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-muted-foreground">
+              <strong>Warning:</strong> This will permanently delete ALL your data including settings, themes, statistics, and customizations. This action cannot be undone and will restart the application.
+            </p>
+            
+            <div className="flex gap-3 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowResetEverythingDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={resetEverything}
+              >
+                Reset Everything
               </Button>
             </div>
           </div>

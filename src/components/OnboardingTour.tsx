@@ -15,14 +15,14 @@ const tourSteps: TourStep[] = [
   {
     id: 'welcome',
     title: 'Welcome to X&O Battle Web!',
-    description: 'Let\'s take a quick tour to get you familiar with the game.',
+    description: 'Let\'s take a quick tour to get you familiar with the game. Please **note** that this is different from the official app experience.',
     icon: Play,
     position: 'center'
   },
   {
     id: 'game-modes',
     title: 'Game Modes',
-    description: 'Choose between playing with a friend or challenging our AI opponent.',
+    description: 'Choose between playing with a friend or challenging our computer opponent.',
     icon: Users,
     target: 'game-mode-section',
     position: 'bottom'
@@ -30,31 +30,25 @@ const tourSteps: TourStep[] = [
   {
     id: 'themes',
     title: 'Custom Themes',
-    description: 'Personalize your game with beautiful themes and create your own.',
+    description: 'Make your game look amazing with beautiful themes and create your own.',
     icon: Palette,
     target: 'themes-section',
     position: 'top'
   },
   {
     id: 'settings',
-    title: 'Settings & Customization',
-    description: 'Fine-tune your experience with comprehensive settings and preferences.',
+    title: 'Settings & Customisation',
+    description: 'Change your game to exactly how you like it with lots of options.',
     icon: Settings,
     target: 'settings-section',
     position: 'right'
-  },
-  {
-    id: 'ai-opponent',
-    title: 'AI Opponent',
-    description: 'Challenge our intelligent AI with multiple difficulty levels.',
-    icon: Bot,
-    target: 'ai-section',
-    position: 'left'
   }
 ];
 
 export function OnboardingTour() {
   const [isVisible, setIsVisible] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeFading, setWelcomeFading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [isHighlighting, setIsHighlighting] = useState(false);
 
@@ -75,7 +69,17 @@ export function OnboardingTour() {
     const hasSeenTour = localStorage.getItem('xobattle-onboarding-seen');
     
     if (!hasSeenTour) {
-      setIsVisible(true);
+      setShowWelcome(true);
+      // Show welcome for 2.5 seconds, then start fade out
+      setTimeout(() => {
+        setWelcomeFading(true);
+        // After fade out completes, show onboarding
+        setTimeout(() => {
+          setShowWelcome(false);
+          setWelcomeFading(false);
+          setIsVisible(true);
+        }, 1000); // Wait for fade out transition to complete
+      }, 2500);
     }
   }, []);
 
@@ -119,7 +123,7 @@ export function OnboardingTour() {
     }
   };
 
-  if (!isVisible) return null;
+  if (!isVisible && !showWelcome) return null;
 
   const currentTourStep = tourSteps[currentStep];
   const isFirstStep = currentStep === 0;
@@ -127,80 +131,106 @@ export function OnboardingTour() {
 
   return (
     <>
-      {/* Overlay */}
-      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-300" />
-      
-      {/* Tour Container */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="relative bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                  <currentTourStep.icon className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold">{currentTourStep.title}</h2>
-                  <p className="text-blue-100 text-sm">{currentStep + 1} of {tourSteps.length}</p>
-                </div>
-              </div>
-              <button
-                onClick={skipTour}
-                className="text-white/80 hover:text-white transition-colors"
-              >
-                <SkipForward className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-6">
-            <p className="text-gray-600 dark:text-gray-300 text-center leading-relaxed mb-6">
-              {currentTourStep.description}
-            </p>
-
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-2 mb-6">
-              <div 
-                className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${((currentStep + 1) / tourSteps.length) * 100}%` }}
-              />
-            </div>
-
-            {/* Navigation */}
-            <div className="flex items-center justify-between">
-              <Button
-                variant="outline"
-                onClick={previousStep}
-                disabled={isFirstStep}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Previous
-              </Button>
-
-              <Button
-                onClick={nextStep}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white flex items-center gap-2"
-              >
-                {isLastStep ? 'Get Started' : 'Next'}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Skip Button */}
-          <div className="px-6 pb-4 text-center">
-            <button
-              onClick={skipTour}
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm transition-colors"
-            >
-              Skip tour
-            </button>
+      {/* Welcome Screen */}
+      {showWelcome && (
+        <div 
+          className={`fixed inset-0 z-50 bg-black/80 backdrop-blur-sm transition-all duration-1000 ease-in-out flex items-center justify-center ${
+            welcomeFading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+          }`}
+        >
+          <div className="text-center">
+            <h1 className="text-5xl md:text-7xl font-bold text-white dark:text-[#eee] mb-4 tracking-tight">
+              Welcome to X&O Battle{' '}
+              <span style={{ color: '#0972c3' }}>Web</span>
+            </h1>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Tour Overlay */}
+      {isVisible && (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-all duration-500 ease-out animate-fade-in" />
+          
+          {/* Tour Container */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+            <div className="relative bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                      <currentTourStep.icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold">{currentTourStep.title}</h2>
+                      <p className="text-blue-100 text-sm">{currentStep + 1} of {tourSteps.length}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={skipTour}
+                    className="text-white/80 hover:text-white transition-colors"
+                  >
+                    <SkipForward className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <div className="text-gray-600 dark:text-gray-300 text-center leading-relaxed mb-6">
+                  {currentTourStep.description.split('**').map((part, index) => 
+                    index % 2 === 0 ? (
+                      <span key={index}>{part}</span>
+                    ) : (
+                      <strong key={index} className="font-bold">{part}</strong>
+                    )
+                  )}
+                </div>
+
+                {/* Progress Bar */}
+                <div className="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-2 mb-6">
+                  <div 
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${((currentStep + 1) / tourSteps.length) * 100}%` }}
+                  />
+                </div>
+
+                {/* Navigation */}
+                <div className="flex items-center justify-between">
+                  <Button
+                    variant="outline"
+                    onClick={previousStep}
+                    disabled={isFirstStep}
+                    className="flex items-center gap-2"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+
+                  <Button
+                    onClick={nextStep}
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white flex items-center gap-2"
+                  >
+                    {isLastStep ? 'Get Started' : 'Next'}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Skip Button */}
+              <div className="px-6 pb-4 text-center">
+                <button
+                  onClick={skipTour}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm transition-colors"
+                >
+                  Skip tour
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }

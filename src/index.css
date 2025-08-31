@@ -197,6 +197,16 @@
     @apply bg-gradient-to-r from-primary to-primary-glow text-primary-foreground;
   }
 
+  /* Fade in animation */
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
   /* Slide animations for theme marketplace */
   @keyframes slideInUp {
     0% {
@@ -267,6 +277,11 @@
   
   .transition-bounce {
     transition: var(--transition-bounce);
+  }
+
+  /* Fade in animation utility */
+  .animate-fade-in {
+    animation: fadeIn 1s ease-in-out;
   }
 
   /* Ripple animation utility */
