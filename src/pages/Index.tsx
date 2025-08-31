@@ -5,17 +5,23 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const Index = () => {
   const isMobile = useIsMobile();
-  const [showMobilePrompt, setShowMobilePrompt] = useState(isMobile);
+  const [showMobilePrompt, setShowMobilePrompt] = useState(true);
 
   const handleContinueOnWeb = () => {
     setShowMobilePrompt(false);
   };
 
-  if (showMobilePrompt && isMobile) {
-    return <MobileAppPrompt onContinue={handleContinueOnWeb} />;
-  }
-
-  return <GameLayout />;
+  return (
+    <>
+      {/* Always show the game */}
+      <GameLayout />
+      
+      {/* Show mobile prompt as overlay if on mobile and not dismissed */}
+      {isMobile && showMobilePrompt && (
+        <MobileAppPrompt onContinue={handleContinueOnWeb} />
+      )}
+    </>
+  );
 };
 
 export default Index;

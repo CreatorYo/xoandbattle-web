@@ -17,7 +17,6 @@ export function GameModeDialog({ children }: GameModeDialogProps) {
   const [selectedMode, setSelectedMode] = useState<GameMode>(gameSettings.gameMode);
 
 
-  // Update local state when dialog opens to reflect current settings
   const handleOpenChange = (open: boolean) => {
     if (open) {
       setSelectedMode(gameSettings.gameMode);

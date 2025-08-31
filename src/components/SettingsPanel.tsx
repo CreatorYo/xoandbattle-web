@@ -12,13 +12,10 @@ export function SettingsPanel() {
   const { theme, setTheme } = useTheme();
 
   const resetStats = () => {
-    // Note: This would need to be implemented in the GameContext
-    // For now, just showing the UI
   };
 
   return (
     <div className="space-y-6">
-      {/* Theme Mode */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -62,7 +59,6 @@ export function SettingsPanel() {
         </CardContent>
       </Card>
 
-      {/* Game Mode */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -119,7 +115,7 @@ export function SettingsPanel() {
         </CardContent>
       </Card>
 
-      {/* Win Animations */}
+      { Win Animations */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -154,7 +150,7 @@ export function SettingsPanel() {
       </Card>
 
 
-      {/* Game Statistics */}
+      { Game Statistics */}
       <Card>
         <CardHeader>
           <CardTitle>Game Statistics</CardTitle>

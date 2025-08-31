@@ -17,7 +17,6 @@ export function GameStatus() {
       );
     }
 
-    // Check if it's actually a draw (board is full and no winner)
     const isDraw = !winner && board.every(cell => cell !== null);
 
     if (isDraw) {

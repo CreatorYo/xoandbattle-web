@@ -7,11 +7,9 @@ export function useIsMobile() {
     const checkDevice = () => {
       const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
       
-      // Check for mobile devices
       const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
       const isMobileDevice = mobileRegex.test(userAgent.toLowerCase());
       
-      // Also check screen size as additional verification
       const isSmallScreen = window.innerWidth <= 768;
       
       setIsMobile(isMobileDevice || isSmallScreen);

@@ -11,12 +11,12 @@ function TurnIndicator() {
   const { winner, currentPlayer, gameSettings, board } = useGame();
   
   if (winner) {
-    return null; // GameStatus will handle winner display
+    return null;
   }
   
   const isDraw = board.every(cell => cell !== null) && !winner;
   if (isDraw) {
-    return null; // Don't show draw message
+    return null;
   }
   
   const playerColor = currentPlayer === 'X' ? gameSettings.theme.xColor : gameSettings.theme.oColor;
@@ -50,28 +50,22 @@ export function GameLayout() {
         </div>
       )}
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-12 max-w-4xl">
-        {/* Header - Always visible */}
         <div className="text-center mb-12">
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
-            Tic-Tac-Toe
+            Tic Tac Toe
           </h1>
           <p className="text-muted-foreground text-sm mb-2">
-            Play against AI or with friends
+            Play against AI or with a friend
           </p>
           <TurnIndicator />
         </div>
 
-        {/* Game Content */}
         <div className="flex flex-col items-center space-y-8">
-          {/* Game Board */}
           <GameBoard />
           
-          {/* Game Status - Only show if UI is visible */}
           {isUIVisible && <GameStatus />}
 
-          {/* Settings Controls - Only show if UI is visible */}
           {isUIVisible && (
             <div className="flex gap-3">
               <SettingsDialog />

@@ -23,15 +23,12 @@ export function Ripple({ children, className = '', color = 'rgba(255, 255, 255, 
 
     setRipples(prev => [...prev, { id, x, y, size }]);
 
-    // Remove ripple after animation completes
     setTimeout(() => {
       setRipples(prev => prev.filter(ripple => ripple.id !== id));
     }, duration);
   };
 
-  // Pass through click events to children
   const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    // Find the button element and trigger its click
     const button = event.currentTarget.querySelector('button');
     if (button) {
       button.click();

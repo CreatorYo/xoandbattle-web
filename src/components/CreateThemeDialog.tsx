@@ -68,7 +68,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete }: 
     enableBoxFill: false,
   });
 
-  // Update form when editTheme changes
   useEffect(() => {
     if (editTheme) {
       setIsDuplicating(editTheme.name.includes('Copy'));
@@ -83,7 +82,7 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete }: 
         boardBg: editTheme.boardBg,
         enableBoxFill: editTheme.enableBoxFill,
       });
-      setOpen(true); // Auto-open dialog when editing
+      setOpen(true);
     } else {
       setIsDuplicating(false);
       setNewTheme({
@@ -117,7 +116,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete }: 
 
     onCreateTheme(theme);
     
-    // Reset form and close dialog
     setNewTheme({
       name: '',
       description: '',
@@ -130,7 +128,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete }: 
       enableBoxFill: false,
     });
     
-    // Clear editing state if we were editing
     if (editTheme && onEditComplete) {
       onEditComplete();
     }
@@ -138,16 +135,13 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete }: 
     setOpen(false);
   };
 
-  // Reset editTheme when dialog closes
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (!isOpen) {
-      // Clear the editing state when dialog closes
       if (onEditComplete) {
         onEditComplete();
       }
       
-      // Reset form to default values
       setNewTheme({
         name: '',
         description: '',

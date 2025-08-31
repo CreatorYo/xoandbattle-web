@@ -123,11 +123,10 @@ export function SettingsDialog() {
             <div className="space-y-6">
               <div className="bg-card/50 rounded-lg border border-border/50 p-6">
                 <div className="mb-6">
-                  <h3 className="text-lg font-medium text-foreground mb-1">App Theme</h3>
+                  <h3 className="text-lg font-medium text-foreground mb-1">Theme</h3>
                   <p className="text-sm text-muted-foreground">Choose between light, dark, or system theme</p>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
-                  {/* Light Theme Card */}
                   <div
                     onClick={() => setTheme('light')}
                     className={`relative cursor-pointer rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
@@ -137,7 +136,6 @@ export function SettingsDialog() {
                     }`}
                   >
                     <div className="p-4">
-                      {/* Preview Content */}
                       <div className="mb-3 flex justify-center">
                         <div className="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
                           <Sun className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
@@ -597,7 +595,7 @@ export function SettingsDialog() {
                     if ((window as any).showOnboardingAgain) {
                       (window as any).showOnboardingAgain();
                     }
-                    setOpen(false); // Close the settings dialog
+                    setOpen(false);
                   }}
                   variant="outline"
                   className="w-full"
@@ -605,6 +603,23 @@ export function SettingsDialog() {
                   <Play className="h-4 w-4 mr-2" />
                   Show Onboarding Again
                 </Button>
+              </div>
+
+              <div className="bg-card/50 rounded-lg border border-border/50 p-6">
+                <div className="mb-4">
+                  <h3 className="text-lg font-medium text-foreground mb-1">Version Information</h3>
+                  <p className="text-sm text-muted-foreground">Version and app details</p>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <span className="text-sm font-medium text-foreground">Version</span>
+                    <span className="text-sm text-muted-foreground font-mono">1.0.0</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                    <span className="text-sm font-medium text-foreground">Platform</span>
+                    <span className="text-sm text-muted-foreground">X&O Battle Web</span>
+                  </div>
+                </div>
               </div>
             </div>
           </SettingsSection>
@@ -729,7 +744,7 @@ export function SettingsDialog() {
           
           <div className="space-y-4">
             <p className="text-muted-foreground">
-              Are you sure you want to reset all game settings? This will restore default game mode, difficulty, animations, and theme.
+              Are you sure you want to reset all game settings? This action <b>cannot</b> be undone.
             </p>
             
             <div className="flex gap-3 justify-end">
@@ -762,7 +777,7 @@ export function SettingsDialog() {
           
           <div className="space-y-4">
             <p className="text-muted-foreground">
-              Are you sure you want to reset all custom themes? This will remove all your custom themes and restore the default themes. This action cannot be undone.
+              Are you sure you want to reset all custom themes? This action <b>cannot</b> be undone.
             </p>
             
             <div className="flex gap-3 justify-end">
@@ -795,7 +810,7 @@ export function SettingsDialog() {
           
           <div className="space-y-4">
             <p className="text-muted-foreground">
-              <strong>Warning:</strong> This will permanently delete ALL your data including settings, themes, statistics, and customizations. This action cannot be undone and will restart the application.
+              This action will restore all settings to their default values and <b>cannot</b> be undone.
             </p>
             
             <div className="flex gap-3 justify-end">

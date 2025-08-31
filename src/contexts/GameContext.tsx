@@ -124,7 +124,6 @@ const defaultSettings: GameSettings = {
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: ReactNode }) {
-  // Load saved data from localStorage
   const loadSavedSettings = (): GameSettings => {
     try {
       const saved = localStorage.getItem('tic-tac-toe-settings');
@@ -135,7 +134,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
   };
 
   const loadSavedStats = () => {
-    // Don't load stats from localStorage - start fresh each time
     return { xWins: 0, oWins: 0, draws: 0 };
   };
 
@@ -185,7 +183,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
       return availableMoves[Math.floor(Math.random() * availableMoves.length)];
     }
 
-    // For medium, hard, and unbeatable, use minimax with depth control
     const minimax = (squares: Player[], depth: number, isMaximizing: boolean, alpha: number = -Infinity, beta: number = Infinity): number => {
       const { winner } = checkWinner(squares);
       
@@ -193,10 +190,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       if (winner === 'X') return depth - 10;
       if (squares.every(square => square !== null)) return 0;
       
-      // Depth limits for different difficulties
       if (difficulty === 'medium' && depth > 4) return 0;
       if (difficulty === 'hard' && depth > 6) return 0;
-      // Unbeatable has no depth limit
 
       if (isMaximizing) {
         let bestScore = -Infinity;
@@ -259,9 +254,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         ...(gameWinner === 'X' ? { xWins: gameStats.xWins + 1 } : { oWins: gameStats.oWins + 1 })
       };
       setGameStats(newStats);
-      // Don't save to localStorage - stats are only for display
       
-      // Update persistent stats for settings page
       const newPersistentStats = {
         ...persistentStats,
         ...(gameWinner === 'X' ? { xWins: persistentStats.xWins + 1 } : { oWins: persistentStats.oWins + 1 })
@@ -276,9 +269,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (newBoard.every(square => square !== null)) {
       const newStats = { ...gameStats, draws: gameStats.draws + 1 };
       setGameStats(newStats);
-      // Don't save to localStorage - stats are only for display
       
-      // Update persistent stats for settings page
       const newPersistentStats = { ...persistentStats, draws: persistentStats.draws + 1 };
       setPersistentStats(newPersistentStats);
       localStorage.setItem('tic-tac-toe-persistent-stats', JSON.stringify(newPersistentStats));
@@ -289,7 +280,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const nextPlayer = currentPlayer === 'X' ? 'O' : 'X';
     setCurrentPlayer(nextPlayer);
 
-    // AI move
     if (gameSettings.gameMode === 'ai' && nextPlayer === 'O') {
       setIsAiThinking(true);
       setTimeout(() => {
@@ -304,9 +294,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           setWinningLine(aiLine);
           const newStats = { ...gameStats, oWins: gameStats.oWins + 1 };
           setGameStats(newStats);
-          // Don't save to localStorage - stats are only for display
           
-          // Update persistent stats for settings page
           const newPersistentStats = { ...persistentStats, oWins: persistentStats.oWins + 1 };
           setPersistentStats(newPersistentStats);
           localStorage.setItem('tic-tac-toe-persistent-stats', JSON.stringify(newPersistentStats));
@@ -319,9 +307,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         if (aiBoard.every(square => square !== null)) {
           const newStats = { ...gameStats, draws: gameStats.draws + 1 };
           setGameStats(newStats);
-          // Don't save to localStorage - stats are only for display
           
-          // Update persistent stats for settings page
           const newPersistentStats = { ...persistentStats, draws: persistentStats.draws + 1 };
           setPersistentStats(newPersistentStats);
           localStorage.setItem('tic-tac-toe-persistent-stats', JSON.stringify(newPersistentStats));
@@ -360,13 +346,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
         });
         break;
       case 'sparkle':
-        // Sparkle animation handled by CSS
         break;
       case 'glow':
-        // Glow animation handled by CSS
         break;
       case 'none':
-        // No animation
         break;
     }
   };
@@ -374,7 +357,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const resetStats = () => {
     const newStats = { xWins: 0, oWins: 0, draws: 0 };
     setGameStats(newStats);
-    // Don't save to localStorage - stats are only for display
   };
 
   const resetPersistentStats = () => {

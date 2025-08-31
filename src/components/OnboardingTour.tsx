@@ -52,33 +52,28 @@ export function OnboardingTour() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isHighlighting, setIsHighlighting] = useState(false);
 
-  // Function to show onboarding again (can be called from other components)
   const showOnboardingAgain = () => {
     localStorage.removeItem('xobattle-onboarding-seen');
     setCurrentStep(0);
     setIsVisible(true);
   };
 
-  // Expose the function globally so other components can access it
   useEffect(() => {
     (window as any).showOnboardingAgain = showOnboardingAgain;
   }, []);
 
   useEffect(() => {
-    // Check if user has seen the onboarding tour before
     const hasSeenTour = localStorage.getItem('xobattle-onboarding-seen');
     
     if (!hasSeenTour) {
       setShowWelcome(true);
-      // Show welcome for 2.5 seconds, then start fade out
       setTimeout(() => {
         setWelcomeFading(true);
-        // After fade out completes, show onboarding
         setTimeout(() => {
           setShowWelcome(false);
           setWelcomeFading(false);
           setIsVisible(true);
-        }, 1000); // Wait for fade out transition to complete
+        }, 1000);
       }, 2500);
     }
   }, []);
@@ -176,7 +171,6 @@ export function OnboardingTour() {
                 </div>
               </div>
 
-              {/* Content */}
               <div className="p-6">
                 <div className="text-gray-600 dark:text-gray-300 text-center leading-relaxed mb-6">
                   {currentTourStep.description.split('**').map((part, index) => 

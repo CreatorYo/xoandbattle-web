@@ -53,7 +53,6 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				// Game-specific colors
 				game: {
 					x: 'hsl(var(--game-x))',
 					o: 'hsl(var(--game-o))',
@@ -109,7 +108,6 @@ export default {
 						height: '0'
 					}
 				},
-				// Game animations
 				'piece-appear': {
 					'0%': {
 						opacity: '0',
