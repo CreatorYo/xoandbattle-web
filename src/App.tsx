@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { GameProvider } from "@/contexts/GameContext";
+import { OnboardingTour } from "@/components/OnboardingTour";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -15,6 +16,7 @@ const App = () => (
     <ThemeProvider defaultTheme="system" storageKey="tic-tac-toe-theme">
       <GameProvider>
         <TooltipProvider>
+          <OnboardingTour />
           <Toaster />
           <Sonner />
           <BrowserRouter>

@@ -165,7 +165,7 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete }: 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button variant="outline" size="sm" className="gap-2 border-2 border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-none hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-blue-600 dark:hover:bg-blue-500/20 dark:hover:text-blue-400 transition-all duration-300">
           <Plus className="h-4 w-4" />
           Create Theme
         </Button>

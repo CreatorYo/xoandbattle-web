@@ -15,13 +15,12 @@ export function GameModeDialog({ children }: GameModeDialogProps) {
   const { gameSettings, updateSettings, resetGame } = useGame();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedMode, setSelectedMode] = useState<GameMode>(gameSettings.gameMode);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>(gameSettings.difficulty);
+
 
   // Update local state when dialog opens to reflect current settings
   const handleOpenChange = (open: boolean) => {
     if (open) {
       setSelectedMode(gameSettings.gameMode);
-      setSelectedDifficulty(gameSettings.difficulty);
     }
     setIsOpen(open);
   };
@@ -29,7 +28,6 @@ export function GameModeDialog({ children }: GameModeDialogProps) {
   const handleModeChange = () => {
     updateSettings({
       gameMode: selectedMode,
-      difficulty: selectedDifficulty,
     });
     resetGame();
     setIsOpen(false);
@@ -85,23 +83,7 @@ export function GameModeDialog({ children }: GameModeDialogProps) {
             </Card>
           </div>
 
-          {/* AI Difficulty Selection */}
-          {selectedMode === 'ai' && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium">AI Difficulty</label>
-              <Select value={selectedDifficulty} onValueChange={(value) => setSelectedDifficulty(value as Difficulty)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="easy">Easy - Random moves</SelectItem>
-                  <SelectItem value="medium">Medium - Some strategy</SelectItem>
-                  <SelectItem value="hard">Hard - Good strategy</SelectItem>
-                  <SelectItem value="unbeatable">Unbeatable - Perfect play</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+
 
           {/* Action Buttons */}
           <div className="flex gap-2 pt-2">

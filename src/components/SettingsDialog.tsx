@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useGame } from '@/contexts/GameContext';
+import { useGame, defaultThemes } from '@/contexts/GameContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -24,9 +24,16 @@ import {
   Sun,
   Moon,
   Monitor,
-  Accessibility
+  Accessibility,
+  Database,
+  Download,
+  Upload,
+  ChevronDown,
+  Trash2,
+  Play
 } from 'lucide-react';
 import { ThemeSelector } from './ThemeSelector';
+import { Ripple } from '@/components/ui/ripple';
 
 interface SettingsSectionProps {
   children: React.ReactNode;
@@ -74,6 +81,7 @@ export function SettingsDialog() {
     { id: 'gameplay', label: 'Gameplay', icon: Layout },
     { id: 'effects', label: 'Effects', icon: Sparkles },
     { id: 'statistics', label: 'Statistics', icon: BarChart3 },
+    { id: 'data', label: 'Data', icon: Database },
     { id: 'accessibility', label: 'Accessibility', icon: Accessibility },
     { id: 'help', label: 'Help & Support', icon: HelpCircle },
   ];
@@ -90,35 +98,103 @@ export function SettingsDialog() {
             
             <div className="space-y-6">
               <div className="bg-card/50 rounded-lg border border-border/50 p-6">
-                <div className="mb-4">
+                <div className="mb-6">
                   <h3 className="text-lg font-medium text-foreground mb-1">App Theme</h3>
                   <p className="text-sm text-muted-foreground">Choose between light, dark, or system theme</p>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <Button
-                    variant={theme === 'light' ? 'default' : 'outline'}
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Light Theme Card */}
+                  <div
                     onClick={() => setTheme('light')}
-                    className="flex flex-col items-center gap-2 h-16"
+                    className={`relative cursor-pointer rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
+                      theme === 'light' 
+                        ? 'border-primary bg-primary/5 shadow-lg' 
+                        : 'border-border/50 bg-card hover:border-primary/30 hover:shadow-md'
+                    }`}
                   >
-                    <Sun className="h-4 w-4" />
-                    <span className="text-xs">Light</span>
-                  </Button>
-                  <Button
-                    variant={theme === 'dark' ? 'default' : 'outline'}
+                    <div className="p-4">
+                      {/* Preview Content */}
+                      <div className="mb-3 flex justify-center">
+                        <div className="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                          <Sun className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full w-3/4"></div>
+                      </div>
+                      <div className="mt-3 text-center">
+                        <span className="text-sm font-medium text-foreground">Light</span>
+                      </div>
+                    </div>
+                    {theme === 'light' && (
+                      <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="h-3 w-3 text-primary-foreground" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Dark Theme Card */}
+                  <div
                     onClick={() => setTheme('dark')}
-                    className="flex flex-col items-center gap-2 h-16"
+                    className={`relative cursor-pointer rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
+                      theme === 'dark' 
+                        ? 'border-primary bg-primary/5 shadow-lg' 
+                        : 'border-border/50 bg-card hover:border-primary/30 hover:shadow-md'
+                    }`}
                   >
-                    <Moon className="h-4 w-4" />
-                    <span className="text-xs">Dark</span>
-                  </Button>
-                  <Button
-                    variant={theme === 'system' ? 'default' : 'outline'}
+                    <div className="p-4">
+                      {/* Preview Content */}
+                      <div className="mb-3 flex justify-center">
+                        <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                          <Moon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-2 bg-gray-700 dark:bg-gray-600 rounded-full"></div>
+                        <div className="h-2 bg-gray-700 dark:bg-gray-600 rounded-full w-3/4"></div>
+                      </div>
+                      <div className="mt-3 text-center">
+                        <span className="text-sm font-medium text-foreground">Dark</span>
+                      </div>
+                    </div>
+                    {theme === 'dark' && (
+                      <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="h-3 w-3 text-primary-foreground" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* System Theme Card */}
+                  <div
                     onClick={() => setTheme('system')}
-                    className="flex flex-col items-center gap-2 h-16"
+                    className={`relative cursor-pointer rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
+                      theme === 'system' 
+                        ? 'border-primary bg-primary/5 shadow-lg' 
+                        : 'border-border/50 bg-card hover:border-primary/30 hover:shadow-md'
+                    }`}
                   >
-                    <Monitor className="h-4 w-4" />
-                    <span className="text-xs">System</span>
-                  </Button>
+                    <div className="p-4">
+                      {/* Preview Content */}
+                      <div className="mb-3 flex justify-center">
+                        <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                          <Monitor className="h-6 w-6 text-slate-600 dark:text-slate-400" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-2 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                        <div className="h-2 bg-gray-300 dark:bg-gray-600 rounded-full w-3/4"></div>
+                      </div>
+                      <div className="mt-3 text-center">
+                        <span className="text-sm font-medium text-foreground">System</span>
+                      </div>
+                    </div>
+                    {theme === 'system' && (
+                      <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="h-3 w-3 text-primary-foreground" />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -192,10 +268,38 @@ export function SettingsDialog() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="easy">Easy</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="hard">Hard</SelectItem>
-                      <SelectItem value="unbeatable">Unbeatable</SelectItem>
+                      <SelectItem value="easy">
+                        <div className="flex items-center gap-3">
+                          <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">1</span>
+                          </div>
+                          <span>Easy</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="medium">
+                        <div className="flex items-center gap-3">
+                          <div className="w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">2</span>
+                          </div>
+                          <span>Medium</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="hard">
+                        <div className="flex items-center gap-3">
+                          <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">3</span>
+                          </div>
+                          <span>Hard</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="unbeatable">
+                        <div className="flex items-center gap-3">
+                          <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">4</span>
+                          </div>
+                          <span>Unbeatable</span>
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -342,6 +446,97 @@ export function SettingsDialog() {
           </SettingsSection>
         );
 
+      case 'data':
+        return (
+          <SettingsSection>
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold text-foreground mb-1">Data</h1>
+              <p className="text-muted-foreground">Reset and manage your game data, settings, and themes</p>
+            </div>
+
+            <div className="space-y-6">
+              {/* Top Row - Side by Side */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Reset Settings Section */}
+                <div className="bg-card/50 rounded-lg border border-border/50 p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <RotateCcw className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-medium text-foreground">Reset All Settings</h3>
+                      <p className="text-sm text-muted-foreground">Reset all game settings to default values.</p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      updateSettings({
+                        gameMode: 'human',
+                        difficulty: 'medium',
+                        winAnimation: 'confetti',
+                        theme: defaultThemes[0]
+                      });
+                    }}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Reset All Settings
+                  </Button>
+                </div>
+
+                {/* Reset Themes Section */}
+                <div className="bg-card/50 rounded-lg border border-border/50 p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Palette className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-medium text-foreground">Reset All Themes</h3>
+                      <p className="text-sm text-muted-foreground">Remove all custom themes and restore defaults.</p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      localStorage.removeItem('tic-tac-toe-custom-themes');
+                      window.location.reload();
+                    }}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <Palette className="h-4 w-4 mr-2" />
+                    Reset All Themes
+                  </Button>
+                </div>
+              </div>
+
+              {/* Bottom Section - Full Width */}
+              <div className="bg-card/50 rounded-lg border-2 border-destructive/50 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-foreground">Reset Everything</h3>
+                    <p className="text-sm text-muted-foreground">Reset all data including settings, themes, and statistics.</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => {
+                    localStorage.clear();
+                    window.location.reload();
+                  }}
+                  variant="destructive"
+                  className="w-full"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Reset Everything
+                </Button>
+              </div>
+            </div>
+          </SettingsSection>
+        );
+
 
       case 'help':
         return (
@@ -377,15 +572,26 @@ export function SettingsDialog() {
                 </div>
               </div>
 
+
+
               <div className="bg-card/50 rounded-lg border border-border/50 p-6">
                 <div className="mb-4">
-                  <h3 className="text-lg font-medium text-foreground mb-1">About</h3>
-                  <p className="text-sm text-muted-foreground">Information about this application</p>
+                  <h3 className="text-lg font-medium text-foreground mb-1">Onboarding Tour</h3>
+                  <p className="text-sm text-muted-foreground">Replay the introduction tour</p>
                 </div>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  A modern Tic-Tac-Toe game with customizable themes, AI opponents, and smooth animations.
-                  Built with React and Tailwind CSS for the ultimate gaming experience.
-                </p>
+                <Button 
+                  onClick={() => {
+                    if ((window as any).showOnboardingAgain) {
+                      (window as any).showOnboardingAgain();
+                    }
+                    setOpen(false); // Close the settings dialog
+                  }}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Play className="h-4 w-4 mr-2" />
+                  Show Onboarding Again
+                </Button>
               </div>
             </div>
           </SettingsSection>
@@ -424,28 +630,29 @@ export function SettingsDialog() {
                 const Icon = item.icon;
                 const isActive = activeSection === item.id;
                 return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveSection(item.id)}
-                    className={`w-full group flex items-center gap-4 p-3 rounded-lg text-left transition-all duration-200 mb-2 ${
-                      isActive
-                        ? 'bg-blue-500/20 text-blue-700 dark:text-blue-300'
-                        : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
-                      isActive 
-                        ? 'bg-blue-500/30 text-blue-700 dark:text-blue-300' 
-                        : 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
-                    }`}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className={`font-medium text-sm ${isActive ? 'text-blue-700 dark:text-blue-300' : ''}`}>
-                        {item.label}
+                  <Ripple key={item.id} color={isActive ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255, 255, 255, 0.3)'} className="mb-2">
+                    <button
+                      onClick={() => setActiveSection(item.id)}
+                      className={`w-full group flex items-center gap-4 p-3 rounded-lg text-left transition-all duration-200 ${
+                        isActive
+                          ? 'bg-blue-500/20 text-blue-700 dark:text-blue-300'
+                          : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                        isActive 
+                          ? 'bg-blue-500/30 text-blue-700 dark:text-blue-300' 
+                          : 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                      }`}>
+                        <Icon className="h-4 w-4" />
                       </div>
-                    </div>
-                  </button>
+                      <div className="flex-1 min-w-0">
+                        <div className={`font-medium text-sm ${isActive ? 'text-blue-700 dark:text-blue-300' : ''}`}>
+                          {item.label}
+                        </div>
+                      </div>
+                    </button>
+                  </Ripple>
                 );
               })}
             </nav>
