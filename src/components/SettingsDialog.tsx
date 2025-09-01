@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useGame, defaultThemes } from '@/contexts/GameContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 import { 
   Settings, 
   Palette, 
@@ -40,11 +38,16 @@ interface SettingsSectionProps {
   children: React.ReactNode;
 }
 
+interface SettingsDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
 const SettingsSection = ({ children }: SettingsSectionProps) => (
   <div className="space-y-6">{children}</div>
 );
 
-export function SettingsDialog() {
+export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpenChange }: SettingsDialogProps) {
   const { gameSettings, updateSettings, persistentStats, resetPersistentStats } = useGame();
   const { theme, setTheme } = useTheme();
   const [reduceMotion, setReduceMotion] = useState(() => {
@@ -59,11 +62,14 @@ export function SettingsDialog() {
     updateSettings({ theme });
   };
   const [activeSection, setActiveSection] = useState('appearance');
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showResetSettingsDialog, setShowResetSettingsDialog] = useState(false);
   const [showResetThemesDialog, setShowResetThemesDialog] = useState(false);
   const [showResetEverythingDialog, setShowResetEverythingDialog] = useState(false);
+
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = externalOnOpenChange || setInternalOpen;
 
   useEffect(() => {
     if (reduceMotion) {
@@ -76,7 +82,7 @@ export function SettingsDialog() {
 
   useEffect(() => {
     (window as any).showSettings = () => setOpen(true);
-  }, []);
+  }, [setOpen]);
 
   const resetStatistics = () => {
     resetPersistentStats();
@@ -89,7 +95,9 @@ export function SettingsDialog() {
       difficulty: 'medium',
       winAnimation: 'confetti',
       theme: defaultThemes[0],
-      showGameStatus: true
+      showGameStatus: true,
+      enableAnimations: true,
+      gridFontSize: 'medium'
     });
     setShowResetSettingsDialog(false);
   };
@@ -409,6 +417,31 @@ export function SettingsDialog() {
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="bg-card/50 rounded-lg border border-border/50 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Zap className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-foreground">Enable Animations</h3>
+                    <p className="text-sm text-muted-foreground">Show fun animations and effects during gameplay</p>
+                  </div>
+                </div>
+                <Switch
+                  id="enable-animations"
+                  checked={gameSettings.enableAnimations}
+                  onCheckedChange={(checked) => updateSettings({ enableAnimations: checked })}
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {gameSettings.enableAnimations 
+                  ? 'Fun animations and effects are enabled for an engaging experience' 
+                  : 'Animations are disabled for a minimal, distraction-free experience'
+                }
+              </p>
+            </div>
           </SettingsSection>
         );
 
@@ -439,6 +472,56 @@ export function SettingsDialog() {
               </div>
               <p className="text-sm text-muted-foreground">
                 Disabling animations and transitions can improve performance and reduce motion sickness for some users.
+              </p>
+            </div>
+
+            <div className="bg-card/50 rounded-lg border border-border/50 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <div className="text-sm font-bold text-primary">Aa</div>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-foreground">Grid Font Size</h3>
+                  <p className="text-sm text-muted-foreground">Adjust the size of X and O pieces on the game board</p>
+                </div>
+              </div>
+              <Select 
+                value={gameSettings.gridFontSize} 
+                onValueChange={(value: 'very-small' | 'small' | 'medium' | 'large' | 'very-large') => updateSettings({ gridFontSize: value })}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="very-small">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">Very Small</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="small">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">Small</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="medium">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">Medium</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="large">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">Large</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="very-large">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">Very Large</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground mt-2">
+                Choose the size that's most comfortable for your vision and preferences.
               </p>
             </div>
           </SettingsSection>
@@ -654,17 +737,11 @@ export function SettingsDialog() {
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="btn-hover-blue">
-          <Settings className="h-4 w-4 mr-2" />
-          Settings
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-6xl w-[95vw] h-[85vh] p-0 gap-0 overflow-hidden md:overflow-auto bg-background/95 backdrop-blur-md border-border/50">
+      return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-6xl w-[95vw] h-[85vh] p-0 gap-0 overflow-hidden md:overflow-auto bg-background/95 backdrop-blur-md border-border/50">
         <div className="flex h-full">
-          <div className="w-64 bg-muted/20 border-r border-border/30 flex flex-col">
+          <div className="w-64 bg-muted/20 border-r border-border/30 flex flex-col" style={{ boxShadow: 'none', outline: 'none' }}>
             <div className="p-6 border-b border-border/20">
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center">
@@ -732,7 +809,7 @@ export function SettingsDialog() {
           
           <div className="space-y-4">
             <p className="text-muted-foreground">
-              Are you sure you want to reset all statistics? This action cannot be undone and will permanently delete all your game data.
+              Are you sure you want to reset all statistics? This action <b>cannot</b> be undone.
             </p>
             
             <div className="flex gap-3 justify-end">

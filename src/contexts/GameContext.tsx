@@ -25,6 +25,8 @@ export interface GameSettings {
   difficulty: Difficulty;
   winAnimation: WinAnimation;
   showGameStatus: boolean;
+  enableAnimations: boolean;
+  gridFontSize: 'very-small' | 'small' | 'medium' | 'large' | 'very-large';
 }
 
 interface GameContextType {
@@ -120,7 +122,9 @@ const defaultSettings: GameSettings = {
   gameMode: 'human',
   difficulty: 'medium',
   winAnimation: 'confetti',
-  showGameStatus: true,
+  showGameStatus: false,
+  enableAnimations: true,
+  gridFontSize: 'medium',
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);

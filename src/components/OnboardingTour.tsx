@@ -181,12 +181,14 @@ export function OnboardingTour() {
                       <p className="text-blue-100 text-sm">{currentStep + 1} of {tourSteps.length}</p>
                     </div>
                   </div>
-                  <button
-                    onClick={skipTour}
-                    className="text-white/80 hover:text-white transition-colors"
-                  >
-                    <SkipForward className="h-5 w-5" />
-                  </button>
+                  {!isLastStep && (
+                    <button
+                      onClick={skipTour}
+                      className="text-white/80 hover:text-white transition-colors"
+                    >
+                      <SkipForward className="h-5 w-5" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -229,14 +231,16 @@ export function OnboardingTour() {
                 </div>
               </div>
 
-              <div className="px-6 pb-4 text-center">
-                <button
-                  onClick={skipTour}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm transition-colors"
-                >
-                  Skip tour
-                </button>
-              </div>
+              {!isLastStep && (
+                <div className="px-6 pb-4 text-center">
+                  <button
+                    onClick={skipTour}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm transition-colors"
+                  >
+                    Skip tour
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </>

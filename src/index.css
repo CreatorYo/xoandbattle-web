@@ -3,6 +3,16 @@
 @tailwind utilities;
 
 @layer base {
+  ::selection {
+    background-color: hsl(var(--selection-bg));
+    color: hsl(var(--selection-text));
+  }
+  
+  ::-moz-selection {
+    background-color: hsl(var(--selection-bg));
+    color: hsl(var(--selection-text));
+  }
+  
   :root {
     --background: 210 20% 98%;
     --foreground: 222.2 84% 4.9%;
@@ -19,7 +29,7 @@
     
     --game-x: 0 84% 60%;
     --game-o: 142 76% 36%;
-    --game-winner: 45 100% 51%;
+    --game-winner: 0 0% 50%;
     
     --board-bg: 0 0% 100%;
     --board-border: 220 13% 91%;
@@ -47,8 +57,7 @@
     
     --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.1);
     --shadow-glow: 0 0 20px hsl(var(--primary-glow) / 0.3);
-    --shadow-winner: 0 0 30px hsl(var(--game-winner) / 0.5);
-    
+
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
@@ -62,6 +71,9 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    --selection-bg: 217 100% 77%;
+    --selection-text: 217 100% 27%;
   }
 
   .dark {
@@ -98,6 +110,9 @@
     --border: 240 4% 16%;
     --input: 240 4% 16%;
     --ring: 217 91% 60%;
+    
+    --selection-bg: 217 100% 20%;
+    --selection-text: 217 100% 75%;
     
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.3);
@@ -156,6 +171,10 @@
     @apply hover:bg-blue-950/50 hover:text-blue-400 hover:border-blue-800;
   }
   
+  .winning-cell-hover:hover {
+    box-shadow: none !important;
+  }
+  
   .game-piece {
     @apply absolute inset-0 flex items-center justify-center text-4xl font-bold
            transition-all duration-300;
@@ -179,9 +198,7 @@
     animation: sparkle 2s ease-in-out infinite;
   }
   
-  .app-banner {
-    @apply bg-gradient-to-r from-primary to-primary-glow text-primary-foreground;
-  }
+
 
   @keyframes fadeIn {
     0% {
@@ -235,6 +252,17 @@
       opacity: 0;
     }
   }
+
+  @keyframes fadeInScale {
+    0% {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 }
 
 @layer utilities {
@@ -250,9 +278,7 @@
     box-shadow: var(--shadow-glow);
   }
   
-  .shadow-winner {
-    box-shadow: var(--shadow-winner);
-  }
+
   
   .transition-smooth {
     transition: var(--transition-smooth);

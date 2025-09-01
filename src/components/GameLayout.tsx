@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GameBoard } from './GameBoard';
 import { GameStatus } from './GameStatus';
 import { SettingsDialog } from './SettingsDialog';
@@ -31,11 +31,35 @@ function TurnIndicator() {
 
 export function GameLayout() {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [gameModeOpen, setGameModeOpen] = useState(false);
   const { isUIVisible, toggleUIVisibility } = useUIVisibility();
   const { resetGame, gameSettings, winner, currentPlayer, board } = useGame();
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isUIVisible || settingsOpen || gameModeOpen) return;
+
+      if (event.key.toLowerCase() === 'r' && !event.ctrlKey && !event.altKey && !event.metaKey) {
+        event.preventDefault();
+        resetGame();
+      } else if (event.key.toLowerCase() === 's' && !event.ctrlKey) {
+        event.preventDefault();
+        setGameModeOpen(true);
+      } else if (event.key === ',' && event.ctrlKey) {
+        event.preventDefault();
+        setSettingsOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isUIVisible, settingsOpen, gameModeOpen, resetGame]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/10 relative overflow-hidden">      
+    <div className="min-h-screen bg-background relative overflow-hidden">      
 
       {!isUIVisible && (
         <div className="fixed top-6 right-6 z-50">
@@ -52,7 +76,7 @@ export function GameLayout() {
         </div>
       )}
 
-      <div className={`container mx-auto px-6 py-8 max-w-6xl relative z-10 ${!gameSettings.showGameStatus ? 'pt-20' : ''}`}>
+              <div className={`container mx-auto px-6 py-8 max-w-6xl relative z-10 ${!gameSettings.showGameStatus ? 'pt-32' : ''}`}>
         <div className="text-center mb-8">
           <div className="mb-4">
             <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
@@ -60,12 +84,12 @@ export function GameLayout() {
             </h1>
           </div>
           <p className="text-muted-foreground text-base mb-4 max-w-md mx-auto">
-            Play with AI or a friend
+            Play against AI or a friend
           </p>
           <TurnIndicator />
         </div>
 
-        <div className="flex flex-col items-center space-y-8">
+        <div className="flex flex-col items-center space-y-4">
           <div className="flex justify-center">
             <GameBoard />
           </div>
@@ -73,12 +97,17 @@ export function GameLayout() {
           {isUIVisible && !gameSettings.showGameStatus && (
             <div className="text-center space-y-6">
               {winner ? (
-                <div className="text-2xl font-bold text-yellow-500">
+                <div className="text-2xl font-bold" style={{ color: winner === 'X' ? gameSettings.theme.xColor : gameSettings.theme.oColor }}>
                   Player {winner} Wins!
                 </div>
               ) : board.every(cell => cell !== null) ? (
-                <div className="text-2xl font-bold text-blue-500">
-                  It's a draw!
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-gray-500 mb-2">
+                    It's a draw!
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    Good luck next time
+                  </div>
                 </div>
               ) : null}
               
@@ -89,15 +118,17 @@ export function GameLayout() {
                     variant="outline"
                     size="sm"
                     className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-red-500/30 hover:border-red-500/50 hover:bg-red-500/20 transition-all duration-200 shadow-lg hover:shadow-red-500/25 hover:scale-105"
+                    title="Reset Game"
                   >
                     <RotateCcw className="!h-5 !w-5 text-red-500" />
                   </Button>
                   
-                  <GameModeDialog>
+                  <GameModeDialog open={gameModeOpen} onOpenChange={setGameModeOpen}>
                     <Button 
                       variant="outline"
                       size="sm"
                       className="w-12 h-12 p-0 rounded-full bg-blue-500/10 border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/20 transition-all duration-200 shadow-lg hover:shadow-blue-500/25 hover:scale-105"
+                      title="Change Game Mode"
                     >
                       <Gamepad2 className="!h-5 !w-5 text-blue-500" />
                     </Button>
@@ -107,11 +138,8 @@ export function GameLayout() {
                     variant="outline"
                     size="sm"
                     className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-green-500/30 hover:border-green-500/50 hover:bg-green-500/20 transition-all duration-200 shadow-lg hover:shadow-green-500/25 hover:scale-105"
-                    onClick={() => {
-                      if ((window as any).showSettings) {
-                        (window as any).showSettings();
-                      }
-                    }}
+                    onClick={() => setSettingsOpen(true)}
+                    title="Settings"
                   >
                     <Settings className="!h-5 !w-5 text-green-500" />
                   </Button>
@@ -150,11 +178,7 @@ export function GameLayout() {
                       variant="outline"
                       size="sm"
                       className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-green-500/30 hover:border-green-500/50 hover:bg-green-500/20 transition-all duration-200 shadow-lg hover:shadow-green-500/25 hover:scale-105"
-                      onClick={() => {
-                        if ((window as any).showSettings) {
-                          (window as any).showSettings();
-                        }
-                      }}
+                      onClick={() => setSettingsOpen(true)}
                     >
                       <Settings className="!h-5 !w-5 text-green-500" />
                     </Button>
@@ -165,6 +189,8 @@ export function GameLayout() {
           )}
         </div>
       </div>
+      
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }
