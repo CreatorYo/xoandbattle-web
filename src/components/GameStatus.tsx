@@ -7,11 +7,11 @@ export function GameStatus() {
 
   const getStatusMessage = () => {
     if (winner) {
+      const isAiWin = gameSettings.gameMode === 'ai' && winner === 'O';
       return (
-        <div className="flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-xl border border-yellow-500/30">
-          <Trophy className="h-6 w-6 text-yellow-500" />
-          <span className="text-lg font-bold text-yellow-600">Player {winner} Wins!</span>
-        </div>
+        <span className={`text-lg font-bold ${winner === 'X' ? 'text-game-x' : 'text-game-o'}`}>
+          {isAiWin ? 'AI Wins!' : `Player ${winner} Wins!`}
+        </span>
       );
     }
 
@@ -19,9 +19,7 @@ export function GameStatus() {
 
     if (isDraw) {
       return (
-        <div className="flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl border border-blue-500/30">
-          <span className="text-lg font-bold text-blue-600">It's a Draw!</span>
-        </div>
+        <span className="text-lg font-bold text-foreground">It's a Draw!</span>
       );
     }
 

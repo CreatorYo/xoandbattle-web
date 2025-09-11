@@ -92,16 +92,7 @@ export function GameBoard() {
         </button>
       ))}
       
-      {isAiThinking && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="bg-background/90 backdrop-blur-sm rounded-lg px-4 py-2 shadow-lg border">
-            <div className="flex items-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent"></div>
-              <span className="text-sm font-medium text-foreground">AI is thinking...</span>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }

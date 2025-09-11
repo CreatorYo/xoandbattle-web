@@ -3,13 +3,14 @@ import { GameBoard } from './GameBoard';
 import { GameStatus } from './GameStatus';
 import { SettingsDialog } from './SettingsDialog';
 import { useGame } from '@/contexts/GameContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useUIVisibility } from '@/hooks/use-ui-visibility';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, Sparkles, RotateCcw, Gamepad2, Settings } from 'lucide-react';
 import { GameModeDialog } from './GameModeDialog';
 
 function TurnIndicator() {
-  const { winner, currentPlayer, gameSettings, board } = useGame();
+  const { winner, currentPlayer, gameSettings, board, isAiThinking } = useGame();
   
   if (winner) {
     return null;
@@ -18,6 +19,21 @@ function TurnIndicator() {
   const isDraw = board.every(cell => cell !== null) && !winner;
   if (isDraw) {
     return null;
+  }
+  
+  if (gameSettings.gameMode === 'ai') {
+    if (isAiThinking) {
+      return (
+        <p className="text-base font-semibold" style={{ color: gameSettings.theme.oColor }}>
+          AI is thinking...
+        </p>
+      );
+    }
+    return (
+      <p className="text-base font-semibold" style={{ color: gameSettings.theme.xColor }}>
+        You're X and AI is O
+      </p>
+    );
   }
   
   const playerColor = currentPlayer === 'X' ? gameSettings.theme.xColor : gameSettings.theme.oColor;
@@ -34,6 +50,7 @@ export function GameLayout() {
   const [gameModeOpen, setGameModeOpen] = useState(false);
   const { isUIVisible, toggleUIVisibility } = useUIVisibility();
   const { resetGame, gameSettings, winner, currentPlayer, board } = useGame();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -48,6 +65,16 @@ export function GameLayout() {
       } else if (event.key === ',' && event.ctrlKey) {
         event.preventDefault();
         setSettingsOpen(true);
+      } else if (event.key.toLowerCase() === 't' && event.altKey && event.shiftKey) {
+        event.preventDefault();
+        // Cycle through themes: light -> dark -> system -> light
+        if (theme === 'light') {
+          setTheme('dark');
+        } else if (theme === 'dark') {
+          setTheme('system');
+        } else {
+          setTheme('light');
+        }
       }
     };
 
@@ -56,7 +83,7 @@ export function GameLayout() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isUIVisible, settingsOpen, gameModeOpen, resetGame]);
+  }, [isUIVisible, settingsOpen, gameModeOpen, resetGame, theme, setTheme]);
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">      
@@ -97,8 +124,11 @@ export function GameLayout() {
           {isUIVisible && !gameSettings.showGameStatus && (
             <div className="text-center space-y-6">
               {winner ? (
-                <div className="text-2xl font-bold" style={{ color: winner === 'X' ? gameSettings.theme.xColor : gameSettings.theme.oColor }}>
-                  Player {winner} Wins!
+                <div 
+                  className="text-2xl font-bold animate-in fade-in-0 zoom-in-95 duration-500 ease-out" 
+                  style={{ color: winner === 'X' ? gameSettings.theme.xColor : gameSettings.theme.oColor }}
+                >
+                  {gameSettings.gameMode === 'ai' && winner === 'O' ? 'AI Wins!' : `Player ${winner} Wins!`}
                 </div>
               ) : board.every(cell => cell !== null) ? (
                 <div className="text-center">

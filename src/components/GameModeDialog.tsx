@@ -56,10 +56,10 @@ export function GameModeDialog({ children, open: externalOpen, onOpenChange: ext
           <div className="grid grid-cols-2 gap-3">
             <Ripple color={selectedMode === 'human' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255, 255, 255, 0.1)'}>
               <Card 
-                className={`cursor-pointer transition-all border-2 ${
+                className={`cursor-pointer transition-all border-2 select-none ${
                   selectedMode === 'human' 
-                    ? 'border-blue-400 bg-blue-50/50 dark:bg-blue-950/30' 
-                    : 'border-transparent bg-blue-50/20 dark:bg-blue-950/10 hover:bg-blue-50/30 dark:hover:bg-blue-950/20'
+                    ? 'border-blue-600 bg-blue-100/70 dark:bg-blue-950/30' 
+                    : 'border-transparent bg-blue-100/60 dark:bg-blue-950/10 hover:bg-blue-100/80 dark:hover:bg-blue-950/20'
                 }`}
                 onClick={() => setSelectedMode('human')}
               >
@@ -75,10 +75,10 @@ export function GameModeDialog({ children, open: externalOpen, onOpenChange: ext
             
             <Ripple color={selectedMode === 'ai' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255, 255, 255, 0.1)'}>
               <Card 
-                className={`cursor-pointer transition-all border-2 ${
+                className={`cursor-pointer transition-all border-2 select-none ${
                   selectedMode === 'ai' 
-                    ? 'border-green-400 bg-green-50/50 dark:bg-green-950/30' 
-                    : 'border-transparent bg-green-50/20 dark:bg-green-950/10 hover:bg-green-50/30 dark:hover:bg-green-950/20'
+                    ? 'border-green-600 bg-green-100/70 dark:bg-green-950/30' 
+                    : 'border-transparent bg-green-100/60 dark:bg-green-950/10 hover:bg-green-100/80 dark:hover:bg-green-950/20'
                 }`}
                 onClick={() => setSelectedMode('ai')}
               >

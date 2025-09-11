@@ -29,7 +29,9 @@ import {
   ChevronDown,
   Trash2,
   Play,
-  Check
+  Check,
+  Minus,
+  PartyPopper
 } from 'lucide-react';
 import { ThemeSelector } from './ThemeSelector';
 import { Ripple } from '@/components/ui/ripple';
@@ -132,19 +134,19 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
               <p className="text-muted-foreground">Customise the look and feel of your game</p>
             </div>
             
-            <div className="space-y-6">
-              <div className="bg-card/50 rounded-lg border border-border/50 p-6">
-                <div className="mb-6">
+            <div className="space-y-4">
+              <div className="p-4">
+                <div className="mb-4">
                   <h3 className="text-lg font-medium text-foreground mb-1">Theme</h3>
                   <p className="text-sm text-muted-foreground">Choose between light, dark, or system theme</p>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-3">
                   <div
                     onClick={() => setTheme('light')}
-                    className={`relative cursor-pointer rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
+                    className={`relative cursor-pointer rounded-xl border-2 transition-all duration-200 ${
                       theme === 'light' 
-                        ? 'border-primary bg-primary/5 shadow-lg' 
-                        : 'border-border/50 bg-card hover:border-primary/30 hover:shadow-md'
+                        ? 'border-primary bg-primary/10 shadow-lg' 
+                        : 'border-border/50 bg-card/50 hover:border-primary/40 hover:bg-card/80'
                     }`}
                   >
                     <div className="p-4">
@@ -154,8 +156,8 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full w-3/4"></div>
+                        <div className="h-2 bg-zinc-300 dark:bg-zinc-600 rounded-full"></div>
+                        <div className="h-2 bg-zinc-300 dark:bg-zinc-600 rounded-full w-3/4"></div>
                       </div>
                       <div className="mt-3 text-center">
                         <span className="text-sm font-medium text-foreground">Light</span>
@@ -170,10 +172,10 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
 
                   <div
                     onClick={() => setTheme('dark')}
-                    className={`relative cursor-pointer rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
+                    className={`relative cursor-pointer rounded-xl border-2 transition-all duration-200 ${
                       theme === 'dark' 
-                        ? 'border-primary bg-primary/5 shadow-lg' 
-                        : 'border-border/50 bg-card hover:border-primary/30 hover:shadow-md'
+                        ? 'border-primary bg-primary/10 shadow-lg' 
+                        : 'border-border/50 bg-card/50 hover:border-primary/40 hover:bg-card/80'
                     }`}
                   >
                     <div className="p-4">
@@ -183,8 +185,8 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <div className="h-2 bg-gray-700 dark:bg-gray-600 rounded-full"></div>
-                        <div className="h-2 bg-gray-700 dark:bg-gray-600 rounded-full w-3/4"></div>
+                        <div className="h-2 bg-zinc-400 dark:bg-zinc-500 rounded-full"></div>
+                        <div className="h-2 bg-zinc-400 dark:bg-zinc-500 rounded-full w-3/4"></div>
                       </div>
                       <div className="mt-3 text-center">
                         <span className="text-sm font-medium text-foreground">Dark</span>
@@ -199,10 +201,10 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
 
                   <div
                     onClick={() => setTheme('system')}
-                    className={`relative cursor-pointer rounded-lg border-2 transition-all duration-200 hover:scale-105 ${
+                    className={`relative cursor-pointer rounded-xl border-2 transition-all duration-200 ${
                       theme === 'system' 
-                        ? 'border-primary bg-primary/5 shadow-lg' 
-                        : 'border-border/50 bg-card hover:border-primary/30 hover:shadow-md'
+                        ? 'border-primary bg-primary/10 shadow-lg' 
+                        : 'border-border/50 bg-card/50 hover:border-primary/40 hover:bg-card/80'
                     }`}
                   >
                     <div className="p-4">
@@ -212,8 +214,8 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <div className="h-2 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
-                        <div className="h-2 bg-gray-300 dark:bg-gray-600 rounded-full w-3/4"></div>
+                        <div className="h-2 bg-zinc-300 dark:bg-zinc-600 rounded-full"></div>
+                        <div className="h-2 bg-zinc-300 dark:bg-zinc-600 rounded-full w-3/4"></div>
                       </div>
                       <div className="mt-3 text-center">
                         <span className="text-sm font-medium text-foreground">
@@ -246,10 +248,10 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
               <p className="text-muted-foreground">Configure game modes and AI difficulty</p>
             </div>
 
-            <div className="space-y-6">
-              <div className="bg-card/50 rounded-lg border border-border/50 p-6">
+            <div className="space-y-4">
+              <div className="p-4">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                     <Users className="h-4 w-4 text-primary" />
                   </div>
                   <div>
@@ -282,9 +284,9 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
               </div>
 
               {gameSettings.gameMode === 'ai' && (
-                <div className="bg-card/50 rounded-lg border border-border/50 p-6">
+                <div className="p-4">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                       <Bot className="h-4 w-4 text-primary" />
                     </div>
                     <div>
@@ -337,9 +339,21 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                 </div>
               )}
 
-              <div className="bg-card/50 rounded-lg border border-border/50 p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <div className="flex items-center justify-between p-2">
+                <div 
+                  className="flex items-center gap-3 cursor-pointer"
+                  onClick={() => updateSettings({ showGameStatus: !gameSettings.showGameStatus })}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      updateSettings({ showGameStatus: !gameSettings.showGameStatus });
+                    }
+                  }}
+                  aria-label={`Toggle game status panel. Currently ${gameSettings.showGameStatus ? 'enabled' : 'disabled'}`}
+                >
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                     <BarChart3 className="h-4 w-4 text-primary" />
                   </div>
                   <div>
@@ -347,22 +361,11 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                     <p className="text-sm text-muted-foreground">Show detailed game statistics and status</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="show-game-status" className="text-sm font-medium">
-                    {gameSettings.showGameStatus ? 'Enabled' : 'Disabled'}
-                  </Label>
-                  <Switch
-                    id="show-game-status"
-                    checked={gameSettings.showGameStatus}
-                    onCheckedChange={(checked) => updateSettings({ showGameStatus: checked })}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {gameSettings.showGameStatus 
-                    ? 'Detailed game panel with statistics is visible' 
-                    : 'Simple game status with basic turn information'
-                  }
-                </p>
+                <Switch
+                  id="show-game-status"
+                  checked={gameSettings.showGameStatus}
+                  onCheckedChange={(checked) => updateSettings({ showGameStatus: checked })}
+                />
               </div>
             </div>
           </SettingsSection>
@@ -376,13 +379,13 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
               <p className="text-muted-foreground">Customise victory celebrations and animations</p>
             </div>
 
-            <div className="bg-card/50 rounded-lg border border-border/50 p-6">
+            <div className="p-2">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                   <Sparkles className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-foreground">Win Celebrations</h3>
+                  <h3 className="text-lg font-medium text-foreground">Win Animations</h3>
                   <p className="text-sm text-muted-foreground">Choose how victories are celebrated</p>
                 </div>
               </div>
@@ -396,21 +399,33 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                 <SelectContent>
                   <SelectItem value="none">
                     <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-muted-foreground/30 flex items-center justify-center">
+                        <Minus className="h-3 w-3 text-muted-foreground" />
+                      </div>
                       <span>None</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="confetti">
                     <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                        <PartyPopper className="h-3 w-3 text-yellow-500" />
+                      </div>
                       <span>Confetti</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="sparkle">
                     <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center">
+                        <Sparkles className="h-3 w-3 text-blue-500" />
+                      </div>
                       <span>Sparkle</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="glow">
                     <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded-full bg-purple-500/20 flex items-center justify-center">
+                        <Zap className="h-3 w-3 text-purple-500" />
+                      </div>
                       <span>Glow</span>
                     </div>
                   </SelectItem>
@@ -418,10 +433,22 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
               </Select>
             </div>
 
-            <div className="bg-card/50 rounded-lg border border-border/50 p-6">
+            <div className="p-2">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <div 
+                  className="flex items-center gap-3 cursor-pointer"
+                  onClick={() => updateSettings({ enableAnimations: !gameSettings.enableAnimations })}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      updateSettings({ enableAnimations: !gameSettings.enableAnimations });
+                    }
+                  }}
+                  aria-label={`Toggle animations. Currently ${gameSettings.enableAnimations ? 'enabled' : 'disabled'}`}
+                >
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                     <Zap className="h-4 w-4 text-primary" />
                   </div>
                   <div>
@@ -435,12 +462,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                   onCheckedChange={(checked) => updateSettings({ enableAnimations: checked })}
                 />
               </div>
-              <p className="text-sm text-muted-foreground">
-                {gameSettings.enableAnimations 
-                  ? 'Fun animations and effects are enabled for an engaging experience' 
-                  : 'Animations are disabled for a minimal, distraction-free experience'
-                }
-              </p>
+
             </div>
           </SettingsSection>
         );
@@ -453,31 +475,38 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
               <p className="text-muted-foreground">Customise your game for better usability</p>
             </div>
 
-            <div className="bg-card/50 rounded-lg border border-border/50 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Accessibility className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-foreground">Reduce Motion</h3>
-                    <p className="text-sm text-muted-foreground">Disable animations and transitions</p>
-                  </div>
+            <div className="flex items-center justify-between p-2">
+              <div 
+                className="flex items-center gap-3 cursor-pointer"
+                onClick={() => setReduceMotion(!reduceMotion)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setReduceMotion(!reduceMotion);
+                  }
+                }}
+                aria-label={`Toggle reduce motion. Currently ${reduceMotion ? 'enabled' : 'disabled'}`}
+              >
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+                  <Accessibility className="h-4 w-4 text-primary" />
                 </div>
-                <Switch
-                  id="reduce-motion"
-                  checked={reduceMotion}
-                  onCheckedChange={(checked) => setReduceMotion(checked)}
-                />
+                <div>
+                  <h3 className="text-lg font-medium text-foreground">Reduce Motion</h3>
+                  <p className="text-sm text-muted-foreground">Disable animations and transitions</p>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Disabling animations and transitions can improve performance and reduce motion sickness for some users.
-              </p>
+              <Switch
+                id="reduce-motion"
+                checked={reduceMotion}
+                onCheckedChange={(checked) => setReduceMotion(checked)}
+              />
             </div>
 
-            <div className="bg-card/50 rounded-lg border border-border/50 p-6">
+            <div className="p-2">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                   <div className="text-sm font-bold text-primary">Aa</div>
                 </div>
                 <div>
@@ -520,9 +549,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                   </SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-sm text-muted-foreground mt-2">
-                Choose the size that's most comfortable for your vision and preferences.
-              </p>
+
             </div>
           </SettingsSection>
         );
@@ -593,7 +620,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-card/50 rounded-lg border border-border/50 p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                       <RotateCcw className="h-4 w-4 text-primary" />
                     </div>
                     <div>
@@ -613,9 +640,9 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
 
                 <div className="bg-card/50 rounded-lg border border-border/50 p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Palette className="h-4 w-4 text-primary" />
-                    </div>
+                                      <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+                    <Palette className="h-4 w-4 text-primary" />
+                  </div>
                     <div>
                       <h3 className="text-lg font-medium text-foreground">Reset All Themes</h3>
                       <p className="text-sm text-muted-foreground">Remove all custom themes and restore defaults.</p>
@@ -634,7 +661,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
 
               <div className="bg-card/50 rounded-lg border-2 border-destructive/50 p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </div>
                   <div>
@@ -739,7 +766,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
 
       return (
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-6xl w-[95vw] h-[85vh] p-0 gap-0 overflow-hidden md:overflow-auto bg-background/95 backdrop-blur-md border-border/50">
+        <DialogContent className="max-w-6xl w-[95vw] h-[85vh] p-0 gap-0 overflow-hidden md:overflow-auto bg-background/95 backdrop-blur-md dark:bg-[#080808] border-border/50">
         <div className="flex h-full">
           <div className="w-64 bg-muted/20 border-r border-border/30 flex flex-col" style={{ boxShadow: 'none', outline: 'none' }}>
             <div className="p-6 border-b border-border/20">
