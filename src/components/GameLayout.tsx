@@ -116,6 +116,29 @@ export function GameLayout() {
           <TurnIndicator />
         </div>
 
+        {/* Win/Draw message positioned higher up */}
+        {isUIVisible && !gameSettings.showGameStatus && (winner || board.every(cell => cell !== null)) && (
+          <div className="text-center mb-6">
+            {winner ? (
+              <div 
+                className="text-3xl font-bold animate-in fade-in-0 zoom-in-95 duration-500 ease-out" 
+                style={{ color: winner === 'X' ? gameSettings.theme.xColor : gameSettings.theme.oColor }}
+              >
+                {gameSettings.gameMode === 'ai' && winner === 'O' ? 'AI Wins!' : `Player ${winner} Wins!`}
+              </div>
+            ) : board.every(cell => cell !== null) ? (
+              <div className="text-center">
+                <div className="text-3xl font-bold text-gray-500 mb-2">
+                  It's a draw!
+                </div>
+                <div className="text-sm text-gray-400">
+                  Good luck next time
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )}
+
         <div className="flex flex-col items-center space-y-4">
           <div className="flex justify-center">
             <GameBoard />
@@ -123,23 +146,6 @@ export function GameLayout() {
           
           {isUIVisible && !gameSettings.showGameStatus && (
             <div className="text-center space-y-6">
-              {winner ? (
-                <div 
-                  className="text-2xl font-bold animate-in fade-in-0 zoom-in-95 duration-500 ease-out" 
-                  style={{ color: winner === 'X' ? gameSettings.theme.xColor : gameSettings.theme.oColor }}
-                >
-                  {gameSettings.gameMode === 'ai' && winner === 'O' ? 'AI Wins!' : `Player ${winner} Wins!`}
-                </div>
-              ) : board.every(cell => cell !== null) ? (
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-500 mb-2">
-                    It's a draw!
-                  </div>
-                  <div className="text-sm text-gray-400">
-                    Good luck next time
-                  </div>
-                </div>
-              ) : null}
               
               <div className="space-y-3">
                 <div className="flex gap-3 justify-center">

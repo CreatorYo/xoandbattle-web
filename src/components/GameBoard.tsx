@@ -75,8 +75,8 @@ export function GameBoard() {
             "game-cell w-24 h-24 sm:w-28 sm:h-28",
             "flex items-center justify-center rounded-lg",
             "disabled:cursor-not-allowed transition-all duration-200",
-            !board[index] && !winner && !isAiThinking && "hover:scale-105 cursor-pointer hover:shadow-md",
-            winningLine?.includes(index) && "ring-2 ring-game-winner hover:scale-110 winning-cell-hover"
+            !board[index] && !winner && !isAiThinking && "cursor-pointer hover:shadow-md",
+            winningLine?.includes(index) && "ring-2 ring-game-winner winning-cell-hover"
           )}
           style={{
             backgroundColor: gameSettings.theme.enableBoxFill && board[index] 

@@ -66,8 +66,8 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete }: 
     primary: '#3B82F6',
     secondary: '#EF4444',
     accent: '#F59E0B',
-    xColor: '#EF4444',
-    oColor: '#22C55E',
+    xColor: '#1A73E8',
+    oColor: '#EA4335',
     boardBg: '#FFFFFF',
     enableBoxFill: false,
   });
@@ -83,9 +83,10 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete }: 
 
   useEffect(() => {
     if (editTheme) {
-      setIsDuplicating(editTheme.name.includes('Copy'));
+      const isDuplicating = !editTheme.name.includes('Copy') && !editTheme.id.startsWith('custom-');
+      setIsDuplicating(isDuplicating);
       setNewTheme({
-        name: editTheme.name,
+        name: isDuplicating ? `${editTheme.name} Copy` : editTheme.name,
         description: editTheme.description,
         primary: editTheme.primary,
         secondary: editTheme.secondary,
@@ -104,8 +105,8 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete }: 
         primary: '#3B82F6',
         secondary: '#EF4444',
         accent: '#F59E0B',
-        xColor: '#EF4444',
-        oColor: '#22C55E',
+        xColor: '#1A73E8',
+        oColor: '#EA4335',
         boardBg: '#FFFFFF',
         enableBoxFill: false,
       });

@@ -78,15 +78,30 @@ export function ThemeSelector() {
 
   const handleCreateTheme = (themeData: Omit<GameTheme, 'id'>) => {
     if (editingTheme) {
-      const updatedThemes = customThemes.map(theme =>
-        theme.id === editingTheme.id ? { ...themeData, id: editingTheme.id } : theme
-      );
-      setCustomThemes(updatedThemes);
+      // Check if this is an existing custom theme (editing) or a duplicate
+      const isExistingCustomTheme = customThemes.some(theme => theme.id === editingTheme.id);
+      
+      if (isExistingCustomTheme) {
+        // Editing existing custom theme
+        const updatedThemes = customThemes.map(theme =>
+          theme.id === editingTheme.id ? { ...themeData, id: editingTheme.id } : theme
+        );
+        setCustomThemes(updatedThemes);
 
-      if (gameSettings.theme.id === editingTheme.id) {
-        updateSettings({ theme: { ...themeData, id: editingTheme.id } });
+        if (gameSettings.theme.id === editingTheme.id) {
+          updateSettings({ theme: { ...themeData, id: editingTheme.id } });
+        }
+      } else {
+        // Duplicating a theme - create new theme with "Copy" in name
+        const theme: GameTheme = {
+          id: `custom-${Date.now()}`,
+          ...themeData,
+          name: `${editingTheme.name} Copy`,
+        };
+        setCustomThemes(prev => [...prev, theme]);
       }
     } else {
+      // Creating brand new theme
       const theme: GameTheme = {
         id: `custom-${Date.now()}`,
         ...themeData,
@@ -96,12 +111,9 @@ export function ThemeSelector() {
   };
 
   const handleDuplicateTheme = (theme: GameTheme) => {
-    const duplicatedTheme: GameTheme = {
-      ...theme,
-      id: `custom-${Date.now()}`,
-      name: `${theme.name} Copy`,
-    };
-    setEditingTheme(duplicatedTheme);
+    // Just set the original theme for duplication, don't create the duplicated theme yet
+    setEditingTheme(theme);
+    setDialogOpen(true);
   };
 
   const handleEditTheme = (theme: GameTheme) => {

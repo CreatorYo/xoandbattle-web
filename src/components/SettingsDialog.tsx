@@ -34,7 +34,6 @@ import {
   PartyPopper
 } from 'lucide-react';
 import { ThemeSelector } from './ThemeSelector';
-import { Ripple } from '@/components/ui/ripple';
 
 interface SettingsSectionProps {
   children: React.ReactNode;
@@ -785,29 +784,28 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                 const Icon = item.icon;
                 const isActive = activeSection === item.id;
                 return (
-                  <Ripple key={item.id} color={isActive ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255, 255, 255, 0.3)'} className="mb-2">
-                    <button
-                      onClick={() => setActiveSection(item.id)}
-                      className={`w-full group flex items-center gap-4 p-3 rounded-lg text-left transition-all duration-200 ${
-                        isActive
-                          ? 'bg-blue-500/20 text-blue-700 dark:text-blue-300'
-                          : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
-                        isActive 
-                          ? 'bg-blue-500/30 text-blue-700 dark:text-blue-300' 
-                          : 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
-                      }`}>
-                        <Icon className="h-4 w-4" />
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveSection(item.id)}
+                    className={`w-full group flex items-center gap-4 p-3 rounded-lg text-left transition-all duration-200 mb-2 ${
+                      isActive
+                        ? 'bg-blue-500/20 text-blue-700 dark:text-blue-300'
+                        : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                      isActive 
+                        ? 'bg-blue-500/30 text-blue-700 dark:text-blue-300' 
+                        : 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                    }`}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className={`font-medium text-sm ${isActive ? 'text-blue-700 dark:text-blue-300' : ''}`}>
+                        {item.label}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className={`font-medium text-sm ${isActive ? 'text-blue-700 dark:text-blue-300' : ''}`}>
-                          {item.label}
-                        </div>
-                      </div>
-                    </button>
-                  </Ripple>
+                    </div>
+                  </button>
                 );
               })}
             </nav>
