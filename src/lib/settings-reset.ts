@@ -1,9 +1,6 @@
 import { defaultThemes } from '@/contexts/GameContext';
 import type { GameSettings } from '@/contexts/GameContext';
 
-/**
- * Default game settings values
- */
 export const defaultGameSettings: Partial<GameSettings> = {
   gameMode: 'human',
   difficulty: 'medium',
@@ -24,25 +21,15 @@ export const defaultGameSettings: Partial<GameSettings> = {
   },
 };
 
-/**
- * Resets all game settings to default values
- */
 export function getDefaultGameSettings(): Partial<GameSettings> {
   return { ...defaultGameSettings };
 }
 
-/**
- * Resets accessibility settings
- * Removes reduce motion from localStorage and DOM
- */
 export function resetAccessibilitySettings(): void {
   localStorage.removeItem('tic-tac-toe-reduce-motion');
   document.body.classList.remove('reduce-motion');
 }
 
-/**
- * Resets appearance theme to system
- */
 export function getDefaultAppearanceTheme(): 'system' {
   return 'system';
 }

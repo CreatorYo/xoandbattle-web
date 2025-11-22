@@ -183,7 +183,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const saved = localStorage.getItem('tic-tac-toe-settings');
       const parsed = saved ? JSON.parse(saved) : {};
       const settings = { ...defaultSettings, ...parsed };
-      // Ensure boardStyling exists for backward compatibility
       if (!settings.boardStyling) {
         settings.boardStyling = defaultSettings.boardStyling;
       }
@@ -201,7 +200,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     try {
       const saved = localStorage.getItem('tic-tac-toe-persistent-stats');
       const parsed = saved ? JSON.parse(saved) : { xWins: 0, oWins: 0, draws: 0, gamesPlayed: 0 };
-      // Ensure difficulty wins exist for backward compatibility and preserve all date fields
       return {
         xWins: parsed.xWins || 0,
         oWins: parsed.oWins || 0,
@@ -211,7 +209,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
         mediumWins: parsed.mediumWins || 0,
         hardWins: parsed.hardWins || 0,
         unbeatableWins: parsed.unbeatableWins || 0,
-        // Preserve all date fields
         xWinsFirstAchieved: parsed.xWinsFirstAchieved,
         xWinsLastUpdated: parsed.xWinsLastUpdated,
         oWinsFirstAchieved: parsed.oWinsFirstAchieved,
@@ -338,7 +335,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setWinner(gameWinner);
       setWinningLine(line);
       
-      // Track difficulty wins for player X in AI mode
       let difficultyWinUpdate = {};
       let persistentDifficultyUpdate = {};
       if (gameWinner === 'X' && gameSettings.gameMode === 'ai') {
@@ -375,7 +371,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
         ...persistentDifficultyUpdate
       };
       
-      // Track dates for difficulty wins
       if (gameWinner === 'X' && gameSettings.gameMode === 'ai') {
         const difficultyKey = `${gameSettings.difficulty}Wins` as 'easyWins' | 'mediumWins' | 'hardWins' | 'unbeatableWins';
         const firstAchievedKey = `${difficultyKey}FirstAchieved` as keyof typeof persistentStats;

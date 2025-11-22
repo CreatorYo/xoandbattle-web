@@ -67,7 +67,6 @@ export function GameLayout() {
         setSettingsOpen(true);
       } else if (event.key.toLowerCase() === 't' && event.altKey && event.shiftKey) {
         event.preventDefault();
-        // Cycle through themes: light -> dark -> system -> light
         if (theme === 'light') {
           setTheme('dark');
         } else if (theme === 'dark') {
@@ -116,7 +115,6 @@ export function GameLayout() {
           <TurnIndicator />
         </div>
 
-        {/* Win/Draw message positioned higher up */}
         {isUIVisible && !gameSettings.showGameStatus && (winner || board.every(cell => cell !== null)) && (
           <div className="text-center mb-6">
             {winner ? (
@@ -128,11 +126,8 @@ export function GameLayout() {
               </div>
             ) : board.every(cell => cell !== null) ? (
               <div className="text-center">
-                <div className="text-3xl font-bold text-gray-500 mb-2">
-                  It's a draw!
-                </div>
-                <div className="text-sm text-gray-400">
-                  Good luck next time
+                <div className="text-3xl font-bold text-gray-500">
+                  It's a Draw!
                 </div>
               </div>
             ) : null}

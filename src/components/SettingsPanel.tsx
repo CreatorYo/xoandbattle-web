@@ -115,7 +115,7 @@ export function SettingsPanel() {
         </CardContent>
       </Card>
 
-      { Win Animations */}
+      Win Animations
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -123,7 +123,7 @@ export function SettingsPanel() {
             Win Animations
           </CardTitle>
           <CardDescription>
-            Customize celebration effects when you win
+            Customise celebration effects when you win
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -150,7 +150,7 @@ export function SettingsPanel() {
       </Card>
 
 
-      { Game Statistics */}
+      Game Statistics
       <Card>
         <CardHeader>
           <CardTitle>Game Statistics</CardTitle>

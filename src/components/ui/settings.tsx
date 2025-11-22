@@ -2,7 +2,6 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { ChevronRight, ChevronDown } from "lucide-react"
 
-// Settings Section Component
 interface SettingsSectionProps extends React.HTMLAttributes<HTMLDivElement> {
   header?: string
   footer?: string
@@ -33,7 +32,6 @@ const SettingsSection = React.forwardRef<HTMLDivElement, SettingsSectionProps>(
 )
 SettingsSection.displayName = "SettingsSection"
 
-// Settings Row Component
 interface SettingsRowProps extends React.HTMLAttributes<HTMLDivElement> {
   icon?: React.ReactNode
   iconColor?: string

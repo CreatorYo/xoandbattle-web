@@ -110,7 +110,6 @@ const DialogDescription = React.forwardRef<
 ))
 DialogDescription.displayName = DialogPrimitive.Description.displayName
 
-// Dialog Content Wrapper
 interface DialogContainerProps {
   children: React.ReactNode
   className?: string

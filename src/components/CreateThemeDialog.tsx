@@ -18,6 +18,21 @@ interface ColorInputProps {
 
 function ColorInput({ value, onChange, label, appThemeColor = '#3b82f6' }: ColorInputProps) {
   const colorInputRef = React.useRef<HTMLInputElement>(null);
+  
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : { r: 59, g: 130, b: 246 };
+  };
+  
+  const appThemeRgb = hexToRgb(appThemeColor);
+  const appThemeColorRgb = `${appThemeRgb.r}, ${appThemeRgb.g}, ${appThemeRgb.b}`;
+  
+  const colorRgb = hexToRgb(value);
+  const colorRgbString = `${colorRgb.r}, ${colorRgb.g}, ${colorRgb.b}`;
 
   return (
     <div className="flex items-center gap-2">
@@ -45,9 +60,9 @@ function ColorInput({ value, onChange, label, appThemeColor = '#3b82f6' }: Color
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="#FF0000"
-        className="h-8 text-xs font-mono bg-background/50 border-border/50 focus-visible:ring-0 focus-visible:border-2"
+        className="h-8 text-xs font-mono bg-background/50 border-2 border-border/50 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
         onFocus={(e) => {
-          e.target.style.borderColor = appThemeColor;
+          e.target.style.borderColor = `rgba(${colorRgbString}, 0.3)`;
         }}
         onBlur={(e) => {
           e.target.style.borderColor = '';
@@ -71,6 +86,19 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = externalOnOpenChange || setInternalOpen;
   const [isDuplicating, setIsDuplicating] = useState(false);
+  const descriptionTextareaRef = React.useRef<HTMLTextAreaElement>(null);
+  
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : { r: 59, g: 130, b: 246 };
+  };
+  
+  const appThemeRgb = hexToRgb(appThemeColor);
+  const appThemeColorRgb = `${appThemeRgb.r}, ${appThemeRgb.g}, ${appThemeRgb.b}`;
   const [advancedOpen, setAdvancedOpen] = useState(() => {
     try {
       return localStorage.getItem('tic-tac-toe-advanced-section-open') === 'true';
@@ -90,7 +118,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
     enableBoxFill: false,
   });
 
-  // Save advanced section state to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('tic-tac-toe-advanced-section-open', advancedOpen.toString());
@@ -101,10 +128,10 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
 
   useEffect(() => {
     if (editTheme) {
-      const isDuplicating = !editTheme.name.includes('Copy') && !editTheme.id.startsWith('custom-');
+      const isDuplicating = /\(x\d+\)$/.test(editTheme.name);
       setIsDuplicating(isDuplicating);
       setNewTheme({
-        name: isDuplicating ? `${editTheme.name} Copy` : editTheme.name,
+        name: editTheme.name,
         description: editTheme.description,
         primary: editTheme.primary,
         secondary: editTheme.secondary,
@@ -129,7 +156,15 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
         enableBoxFill: false,
       });
     }
-  }, [editTheme]);
+    if (descriptionTextareaRef.current) {
+      setTimeout(() => {
+        if (descriptionTextareaRef.current) {
+          descriptionTextareaRef.current.style.height = 'auto';
+          descriptionTextareaRef.current.style.height = `${Math.min(descriptionTextareaRef.current.scrollHeight, 200)}px`;
+        }
+      }, 0);
+    }
+  }, [editTheme, open]);
 
   const handleCreateTheme = () => {
     if (!newTheme.name) return;
@@ -193,12 +228,11 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
       <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader className="space-y-2 pb-4">
           <DialogTitle className="text-lg font-semibold text-center">
-            {editTheme ? (isDuplicating ? 'Duplicate Theme' : 'Edit Theme') : 'Create Theme'}
+            {editTheme ? (isDuplicating ? 'Duplicate Preset' : 'Edit Preset') : 'Create Preset'}
           </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Theme Name */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="theme-name" className="text-sm font-medium text-foreground">Name</Label>
@@ -219,7 +253,7 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
                 }
               }}
               placeholder="Name"
-              className={`h-10 bg-background/50 border-border/50 focus-visible:ring-0 focus-visible:border-2 ${
+              className={`h-10 bg-background/50 border-2 border-border/50 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none ${
                 newTheme.name.length >= 35 ? 'border-red-500 focus-visible:border-red-500' : 
                 newTheme.name.length >= 28 ? 'border-yellow-500 focus-visible:border-yellow-500' : ''
               }`}
@@ -228,7 +262,7 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
               } as React.CSSProperties & { '--focus-color': string } : {}}
               onFocus={(e) => {
                 if (newTheme.name.length < 28) {
-                  e.target.style.borderColor = appThemeColor;
+                  e.target.style.borderColor = `rgba(${appThemeColorRgb}, 0.3)`;
                 }
               }}
               onBlur={(e) => {
@@ -239,7 +273,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
             />
           </div>
 
-          {/* Colours */}
           <div className="space-y-3">
             <Label className="text-sm font-medium text-foreground">Colours</Label>
             <div className="grid grid-cols-2 gap-3">
@@ -266,7 +299,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
 
 
 
-          {/* Advanced Section */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setAdvancedOpen(!advancedOpen)}>
               <div className={`w-4 h-4 transition-transform duration-300 ease-in-out ${advancedOpen ? 'rotate-90' : ''}`}>
@@ -281,7 +313,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
               }`}
             >
               <div className="space-y-4 pl-6 border-l border-border/30 pt-2">
-                {/* Description */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="theme-description" className="text-sm font-medium text-foreground">Description</Label>
@@ -294,22 +325,28 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
                     </span>
                   </div>
                   <textarea
+                    ref={descriptionTextareaRef}
                     id="theme-description"
                     value={newTheme.description}
                     onChange={(e) => {
                       if (e.target.value.length <= 200) {
                         setNewTheme(prev => ({ ...prev, description: e.target.value }))
+                        if (descriptionTextareaRef.current) {
+                          descriptionTextareaRef.current.style.height = 'auto';
+                          descriptionTextareaRef.current.style.height = `${Math.min(descriptionTextareaRef.current.scrollHeight, 200)}px`;
+                        }
                       }
                     }}
                     placeholder="Describe your theme..."
                     rows={3}
-                    className={`w-full p-3 text-sm bg-background/50 border border-border/50 rounded-lg focus:outline-none focus:ring-0 focus:border-2 resize-none ${
+                    className={`w-full p-3 text-sm bg-background/50 border-2 border-border/50 rounded-lg focus:outline-none focus:ring-0 resize-none overflow-hidden ${
                       newTheme.description.length >= 200 ? 'border-red-500 focus:border-red-500' : 
                       newTheme.description.length >= 160 ? 'border-yellow-500 focus:border-yellow-500' : ''
                     }`}
+                    style={{ minHeight: '72px', maxHeight: '200px' }}
                     onFocus={(e) => {
                       if (newTheme.description.length < 160) {
-                        e.target.style.borderColor = appThemeColor;
+                        e.target.style.borderColor = `rgba(${appThemeColorRgb}, 0.3)`;
                       }
                     }}
                     onBlur={(e) => {
@@ -320,7 +357,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
                   />
                 </div>
 
-                {/* Box Fill Effect */}
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 rounded-lg flex items-center justify-center">
@@ -340,22 +376,18 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
             </div>
           </div>
 
-          {/* Create Button */}
           <div className="pt-2">
             <Button 
               onClick={handleCreateTheme}
               disabled={!newTheme.name}
               className="w-full h-10 text-sm font-medium"
               style={(() => {
-                // Calculate luminance to determine if we need black or white text
                 const rgb = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(appThemeColor);
                 if (rgb) {
                   const r = parseInt(rgb[1], 16);
                   const g = parseInt(rgb[2], 16);
                   const b = parseInt(rgb[3], 16);
-                  // Calculate relative luminance
                   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                  // Use black text if background is light (luminance > 0.5), white if dark
                   const textColor = luminance > 0.5 ? '#000000' : '#ffffff';
                   return {
                     backgroundColor: appThemeColor,

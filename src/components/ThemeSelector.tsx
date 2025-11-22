@@ -43,7 +43,6 @@ export function ThemeSelector() {
     
     loadThemes();
     
-    // Listen for storage events to reload themes when they're reset
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'tic-tac-toe-custom-themes') {
         loadThemes();
@@ -52,7 +51,6 @@ export function ThemeSelector() {
     
     window.addEventListener('storage', handleStorageChange);
     
-    // Also listen for custom event in case storage event doesn't fire (same window)
     const handleCustomStorageChange = () => {
       loadThemes();
     };
@@ -106,11 +104,9 @@ export function ThemeSelector() {
 
   const handleCreateTheme = (themeData: Omit<GameTheme, 'id'>) => {
     if (editingTheme) {
-      // Check if this is an existing custom theme (editing) or a duplicate
       const isExistingCustomTheme = customThemes.some(theme => theme.id === editingTheme.id);
       
       if (isExistingCustomTheme) {
-        // Editing existing custom theme
         const updatedThemes = customThemes.map(theme =>
           theme.id === editingTheme.id ? { ...themeData, id: editingTheme.id } : theme
         );
@@ -120,7 +116,6 @@ export function ThemeSelector() {
           updateSettings({ theme: { ...themeData, id: editingTheme.id } });
         }
       } else {
-        // Duplicating a theme - create new theme with "Copy" in name
         const theme: GameTheme = {
           id: `custom-${Date.now()}`,
           ...themeData,
@@ -129,7 +124,6 @@ export function ThemeSelector() {
         setCustomThemes(prev => [...prev, theme]);
       }
     } else {
-      // Creating brand new theme
       const theme: GameTheme = {
         id: `custom-${Date.now()}`,
         ...themeData,
@@ -139,7 +133,6 @@ export function ThemeSelector() {
   };
 
   const handleDuplicateTheme = (theme: GameTheme) => {
-    // Just set the original theme for duplication, don't create the duplicated theme yet
     setEditingTheme(theme);
     setDialogOpen(true);
   };

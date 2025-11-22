@@ -51,7 +51,6 @@ export function ThemeProvider({
 
     applyTheme();
 
-    // Listen for system theme changes when using system theme
     if (theme === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handleChange = () => {

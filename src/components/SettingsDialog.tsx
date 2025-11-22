@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGame, defaultThemes, GameTheme } from '@/contexts/GameContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { toast as showToast } from '@/components/ui/toast-helper';
@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { Slider } from '@/components/ui/slider';
 import { SettingsSection, SettingsRow } from '@/components/ui/settings';
+import { Ripple } from '@/components/ui/ripple';
 import { 
   Settings, 
   Palette, 
@@ -126,14 +127,13 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
   const [editingTheme, setEditingTheme] = useState<GameTheme | null>(null);
   const [showResetThemesDialog, setShowResetThemesDialog] = useState(false);
 
-  // Helper function to convert hex to RGB
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
       r: parseInt(result[1], 16),
       g: parseInt(result[2], 16),
       b: parseInt(result[3], 16)
-    } : { r: 59, g: 130, b: 246 }; // Default blue-500
+    } : { r: 59, g: 130, b: 246 };
   };
 
   const appThemeRgb = hexToRgb(appThemeColor);
@@ -195,10 +195,32 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
   };
 
   const handleDuplicateTheme = (theme: GameTheme) => {
+    const baseName = theme.name.replace(/\s*\(x\d+\)$/, '');
+    
+    const allThemes = [...defaultThemes, ...customThemes];
+    const duplicatePattern = /\(x(\d+)\)$/;
+    let maxNumber = 0;
+    
+    allThemes.forEach(t => {
+      const tBaseName = t.name.replace(/\s*\(x\d+\)$/, '');
+      if (tBaseName === baseName) {
+        const match = t.name.match(duplicatePattern);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > maxNumber) {
+            maxNumber = num;
+          }
+        }
+      }
+    });
+    
+    const nextNumber = maxNumber + 1;
+    const newName = `${baseName} (x${nextNumber})`;
+    
     setEditingTheme({
       ...theme,
       id: `custom-${Date.now()}`,
-      name: `${theme.name} Copy`,
+      name: newName,
     });
     setOpenMenuId(null);
   };
@@ -285,20 +307,22 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-9 h-10 rounded-lg bg-gray-200 dark:bg-muted/30 border-border/50 focus-visible:ring-2 focus-visible:ring-primary/20"
+            className="pl-9 h-10 rounded-lg bg-gray-200 dark:bg-muted/30 border-border/50 focus-visible:ring-2"
+            style={{
+              '--tw-ring-color': `rgba(${appThemeColorRgb}, 0.3)`,
+            } as React.CSSProperties & { '--tw-ring-color': string }}
+            onFocus={(e) => {
+              e.currentTarget.style.setProperty('--tw-ring-color', `rgba(${appThemeColorRgb}, 0.3)`);
+            }}
           />
         </div>
       </div>
 
       {defaultThemesFiltered.length === 0 && customThemesFiltered.length === 0 && searchQuery ? (
-        <div className="pt-6">
-          <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
-            <div className="px-4 py-12 text-center">
-              <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <p className="text-[15px] font-medium text-foreground mb-2">Nope, not here</p>
-              <p className="text-sm text-muted-foreground">Oops, nothing to be found! Try a different search or have another go.</p>
-            </div>
-          </div>
+        <div className="pt-12 px-4 py-12 text-center">
+          <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+          <p className="text-[15px] font-medium text-foreground mb-2">Nope, not here</p>
+          <p className="text-sm text-muted-foreground">Oops, nothing to be found! Try a different search or have another go.</p>
         </div>
       ) : (
       <div className="space-y-6">
@@ -405,14 +429,7 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
                                       e.stopPropagation();
                                       handleDeleteTheme(theme.id);
                                     }}
-                                    className="text-red-500 focus:text-red-500"
-                                    style={{ ['--hover-bg' as any]: `rgba(${appThemeColorRgb}, 0.2)` }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.2)`;
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.backgroundColor = '';
-                                    }}
+                                    className="text-red-500 focus:text-red-500 hover:bg-red-500/10 dark:hover:bg-red-500/20"
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
                                     Delete
@@ -470,13 +487,7 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
                         </ContextMenuItem>
                         <ContextMenuItem 
                           onClick={() => handleDeleteTheme(theme.id)}
-                          className="text-red-500 focus:text-red-500"
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.2)`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '';
-                          }}
+                          className="text-red-500 focus:text-red-500 hover:bg-red-500/10 dark:hover:bg-red-500/20"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
@@ -493,7 +504,7 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
 
         <div>
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
-            Custom Presets
+            Custom Presets{customThemes.length > 0 ? ` (${customThemes.length})` : ''}
           </h3>
           <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
             {customThemesFiltered.length === 0 ? (
@@ -504,8 +515,8 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
                   <p className="text-sm text-muted-foreground">Oops, nothing to be found! Try a different search or have another go.</p>
                 </div>
               ) : (
-                <div className="px-4 py-6">
-                  <p className="text-sm text-muted-foreground mb-4 text-left">No custom presets yet.</p>
+                <div className="px-4 py-3">
+                  <p className="text-sm text-muted-foreground mb-3 text-left">No custom presets yet.</p>
                   <div className="text-left">
                     <Button
                       onClick={() => setShowCreateDialog(true)}
@@ -619,7 +630,7 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
                                       e.stopPropagation();
                                       handleDeleteTheme(theme.id);
                                     }}
-                                    className="text-red-500 focus:text-red-500"
+                                    className="text-red-500 focus:text-red-500 hover:bg-red-500/10 dark:hover:bg-red-500/20"
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
                                     Delete
@@ -673,13 +684,7 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
                         </ContextMenuItem>
                         <ContextMenuItem 
                           onClick={() => handleDeleteTheme(theme.id)}
-                          className="text-red-500 focus:text-red-500"
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.2)`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '';
-                          }}
+                          className="text-red-500 focus:text-red-500 hover:bg-red-500/10 dark:hover:bg-red-500/20"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
@@ -718,15 +723,15 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
 
       {showInfoDialog && (
         <Dialog open={!!showInfoDialog} onOpenChange={(open) => !open && setShowInfoDialog(null)}>
-          <DialogContent className="sm:max-w-[380px] p-0 gap-0 bg-transparent border-0 shadow-none">
+          <DialogContent className="sm:max-w-[420px] p-0 gap-0 bg-transparent border-0 shadow-none">
             <DialogContainer>
-              <div className="p-4">
+              <div className="p-5">
                 <DialogHeader className="mb-4">
-                  <DialogTitle className="text-lg font-semibold text-left mb-1.5">
+                  <DialogTitle className="text-xl font-semibold text-left mb-2">
                     {showInfoDialog.name}
                   </DialogTitle>
                   {customThemes.some(ct => ct.id === showInfoDialog.id) && showInfoDialog.description && (
-                    <p className="text-xs text-muted-foreground leading-relaxed mt-1.5">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       {showInfoDialog.description}
                     </p>
                   )}
@@ -734,11 +739,11 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
                 
                 <div className="space-y-3">
                   <div>
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                      Player Colors
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">
+                      Player Colours
                     </h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer group border border-border/30"
+                    <div className="space-y-2.5">
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer group border border-border/30"
                         onClick={async () => {
                           try {
                             await navigator.clipboard.writeText(showInfoDialog.xColor);
@@ -748,15 +753,18 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
                         }}
                       >
                         <div 
-                          className="w-8 h-8 rounded-full border border-border/50 shadow-sm transition-[background-color] flex-shrink-0" 
+                          className="w-10 h-10 rounded-full border-2 border-border/50 shadow-sm transition-all duration-200 flex-shrink-0 group-hover:scale-105" 
                           style={{ backgroundColor: showInfoDialog.xColor }}
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-foreground">Player X</div>
-                          <div className="text-[11px] text-muted-foreground font-mono">{showInfoDialog.xColor}</div>
+                          <div className="text-sm font-semibold text-foreground mb-0.5">Player X</div>
+                          <div className="text-xs text-muted-foreground font-mono">{showInfoDialog.xColor}</div>
+                        </div>
+                        <div className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                          Click to copy
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer group border border-border/30"
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer group border border-border/30"
                         onClick={async () => {
                           try {
                             await navigator.clipboard.writeText(showInfoDialog.oColor);
@@ -766,12 +774,15 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
                         }}
                       >
                         <div 
-                          className="w-8 h-8 rounded-full border border-border/50 shadow-sm transition-[background-color] flex-shrink-0" 
+                          className="w-10 h-10 rounded-full border-2 border-border/50 shadow-sm transition-all duration-200 flex-shrink-0 group-hover:scale-105" 
                           style={{ backgroundColor: showInfoDialog.oColor }}
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-foreground">Player O</div>
-                          <div className="text-[11px] text-muted-foreground font-mono">{showInfoDialog.oColor}</div>
+                          <div className="text-sm font-semibold text-foreground mb-0.5">Player O</div>
+                          <div className="text-xs text-muted-foreground font-mono">{showInfoDialog.oColor}</div>
+                        </div>
+                        <div className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                          Click to copy
                         </div>
                       </div>
                     </div>
@@ -891,19 +902,25 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
     }
   });
 
+  const appThemeColorInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
-    // Initialize app theme color CSS variable
     document.documentElement.style.setProperty('--app-theme-color', appThemeColor);
+    const defaultColor = '#3b82f6';
+    if (appThemeColor !== defaultColor) {
+      document.documentElement.setAttribute('data-theme-customized', 'true');
+    } else {
+      document.documentElement.removeAttribute('data-theme-customized');
+    }
   }, [appThemeColor]);
 
-  // Helper function to convert hex to RGB
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
       r: parseInt(result[1], 16),
       g: parseInt(result[2], 16),
       b: parseInt(result[3], 16)
-    } : { r: 59, g: 130, b: 246 }; // Default blue-500
+    } : { r: 59, g: 130, b: 246 };
   };
 
   const appThemeRgb = hexToRgb(appThemeColor);
@@ -1005,21 +1022,18 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
   };
 
   const resetSettings = () => {
-    // Reset game settings
     updateSettings(getDefaultGameSettings());
     
-    // Reset accessibility settings
     setReduceMotion(false);
     resetAccessibilitySettings();
     
-    // Reset appearance theme to system
     setTheme(getDefaultAppearanceTheme());
     
-    // Reset app theme color to default
     const defaultColor = '#3b82f6';
     setAppThemeColor(defaultColor);
     localStorage.setItem('tic-tac-toe-app-theme-color', defaultColor);
     document.documentElement.style.setProperty('--app-theme-color', defaultColor);
+    document.documentElement.removeAttribute('data-theme-customized');
     
     setShowResetSettingsDialog(false);
     showToast.success(
@@ -1119,9 +1133,6 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                     <Monitor className="h-4 w-4 text-white" />
                         </div>
                   <div className="text-[13px] font-normal text-foreground">System</div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5">
-                    {window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark' : 'Light'}
-                      </div>
                       </div>
                       </div>
             </SettingsSection>
@@ -1129,61 +1140,49 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
             <SettingsSection header="APP THEME COLOUR">
               <div className="px-4 py-4">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-foreground">
-                    Accent Colour
-                  </label>
                   <div className="flex items-center gap-2">
-                    <div className="relative">
-                      <div
-                        className="w-10 h-10 rounded-lg cursor-pointer transition-all duration-200 border border-border/30 hover:border-border/50"
-                        style={{ backgroundColor: appThemeColor }}
-                       onClick={() => {
-                         const colorInput = document.createElement('input');
-                         colorInput.type = 'color';
-                         colorInput.value = appThemeColor;
-                         colorInput.style.position = 'absolute';
-                         colorInput.style.opacity = '0';
-                         colorInput.style.width = '0';
-                         colorInput.style.height = '0';
-                         colorInput.oninput = (e) => {
-                           const target = e.target as HTMLInputElement;
-                           const newColor = target.value;
-                           setAppThemeColor(newColor);
-                           localStorage.setItem('tic-tac-toe-app-theme-color', newColor);
-                           document.documentElement.style.setProperty('--app-theme-color', newColor);
-                         };
-                         colorInput.onchange = (e) => {
-                           const target = e.target as HTMLInputElement;
-                           const newColor = target.value;
-                           setAppThemeColor(newColor);
-                           localStorage.setItem('tic-tac-toe-app-theme-color', newColor);
-                           document.documentElement.style.setProperty('--app-theme-color', newColor);
-                           if (document.body.contains(colorInput)) {
-                             document.body.removeChild(colorInput);
-                           }
-                         };
-                         colorInput.onblur = () => {
-                           if (document.body.contains(colorInput)) {
-                             document.body.removeChild(colorInput);
-                           }
-                         };
-                         document.body.appendChild(colorInput);
-                         colorInput.click();
-                       }}
-                      />
-                    </div>
+                    <label className="text-sm font-medium text-foreground">
+                      Accent Colour
+                    </label>
                     <button
                       onClick={() => {
                         const defaultColor = '#3b82f6';
                         setAppThemeColor(defaultColor);
                         localStorage.setItem('tic-tac-toe-app-theme-color', defaultColor);
                         document.documentElement.style.setProperty('--app-theme-color', defaultColor);
+                        document.documentElement.removeAttribute('data-theme-customized');
                       }}
-                      className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
-                      title="Reset to default color"
+                      className="p-1 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
+                      title="Reset to default colour"
                     >
-                      <RotateCcw className="h-4 w-4" />
+                      <RotateCcw className="h-3.5 w-3.5" />
                     </button>
+                  </div>
+                  <div className="relative">
+                    <div
+                      className="w-10 h-10 rounded-lg cursor-pointer transition-all duration-200 border border-border/30 hover:border-border/50"
+                      style={{ backgroundColor: appThemeColor }}
+                      onClick={() => appThemeColorInputRef.current?.click()}
+                    />
+                    <input
+                      ref={appThemeColorInputRef}
+                      type="color"
+                      value={appThemeColor}
+                        onChange={(e) => {
+                          const newColor = e.target.value;
+                          setAppThemeColor(newColor);
+                          localStorage.setItem('tic-tac-toe-app-theme-color', newColor);
+                          document.documentElement.style.setProperty('--app-theme-color', newColor);
+                          const defaultColor = '#3b82f6';
+                          if (newColor !== defaultColor) {
+                            document.documentElement.setAttribute('data-theme-customized', 'true');
+                          } else {
+                            document.documentElement.removeAttribute('data-theme-customized');
+                          }
+                        }}
+                      className="absolute top-0 left-0 w-10 h-10 opacity-0 cursor-pointer"
+                      style={{ pointerEvents: 'auto' }}
+                    />
                   </div>
                 </div>
               </div>
@@ -1751,7 +1750,6 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
             mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           )} style={{ boxShadow: 'none', outline: 'none' }}>
             <div className="p-6 border-b border-border/20">
-              <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center">
                   <Settings className="h-4 w-4" style={{ color: appThemeColor }} />
@@ -1759,13 +1757,6 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                 <div>
                   <h3 className="font-semibold text-foreground text-lg">Settings</h3>
                 </div>
-                </div>
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="md:hidden p-2 hover:bg-muted/50 rounded-lg transition-colors"
-                >
-                  <X className="h-5 w-5 text-foreground" />
-                </button>
               </div>
             </div>
             
@@ -1774,46 +1765,51 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                 const Icon = item.icon;
                 const isActive = activeSection === item.id;
                 return (
-                  <button
+                  <Ripple 
                     key={item.id}
-                    onClick={() => {
-                      setActiveSection(item.id);
-                      setShowThemesView(false);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`w-full group flex items-center gap-4 p-3 rounded-lg text-left transition-all duration-200 mb-2 ${
-                      isActive
-                        ? ''
-                        : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
-                    }`}
-                    style={isActive ? {
-                      backgroundColor: `rgba(${appThemeColorRgb}, 0.2)`,
-                      color: appThemeColor
-                    } : {}}
+                    color={`rgba(${appThemeColorRgb}, 0.2)`}
+                    className="mb-2"
                   >
-                    <div 
-                      className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
+                    <button
+                      onClick={() => {
+                        setActiveSection(item.id);
+                        setShowThemesView(false);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full group flex items-center gap-4 p-3 rounded-lg text-left transition-all duration-200 ${
+                        isActive
+                          ? ''
+                          : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
+                      }`}
                       style={isActive ? {
-                        backgroundColor: `rgba(${appThemeColorRgb}, 0.3)`,
-                        color: appThemeColor
-                      } : {
                         backgroundColor: `rgba(${appThemeColorRgb}, 0.2)`,
                         color: appThemeColor
-                      }}
+                      } : {}}
                     >
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
                       <div 
-                        className="font-medium text-sm"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
                         style={isActive ? {
+                          backgroundColor: `rgba(${appThemeColorRgb}, 0.3)`,
                           color: appThemeColor
-                        } : {}}
+                        } : {
+                          backgroundColor: `rgba(${appThemeColorRgb}, 0.2)`,
+                          color: appThemeColor
+                        }}
                       >
-                        {item.label}
+                        <Icon className="h-4 w-4" />
                       </div>
-                    </div>
-                  </button>
+                      <div className="flex-1 min-w-0">
+                        <div 
+                          className="font-medium text-sm"
+                          style={isActive ? {
+                            color: appThemeColor
+                          } : {}}
+                        >
+                          {item.label}
+                        </div>
+                      </div>
+                    </button>
+                  </Ripple>
                 );
               })}
             </nav>
@@ -1957,7 +1953,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                 <SettingsRow
                   icon={<Layout className="h-4 w-4 text-muted-foreground" />}
                   iconColor=""
-                  title="Border Color"
+                  title="Border Colour"
                   subtitle={gameSettings.boardStyling.borderColor || '#000000'}
                   rightElement={
                     <ColorInput
@@ -1970,7 +1966,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                           }
                         });
                       }}
-                      label="Border Color"
+                      label="Border Colour"
                     />
                   }
                 />
@@ -1997,7 +1993,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                   <SettingsRow
                     icon={<Layout className="h-4 w-4 text-muted-foreground" />}
                     iconColor=""
-                    title="Background Color"
+                    title="Background Colour"
                     rightElement={
                       <ColorInput
                         value={gameSettings.boardStyling.backgroundColor || 'transparent'}
@@ -2009,7 +2005,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                             }
                           });
                         }}
-                        label="Background Color"
+                        label="Background Colour"
                       />
                     }
                   />
@@ -2018,7 +2014,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                     <SettingsRow
                       icon={<Layout className="h-4 w-4 text-muted-foreground" />}
                       iconColor=""
-                      title="Gradient Color 1"
+                      title="Gradient Colour 1"
                       subtitle={gameSettings.boardStyling.gradientColors?.[0] || '#3B82F6'}
                       rightElement={
                         <ColorInput
@@ -2033,14 +2029,14 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                               }
                             });
                           }}
-                          label="Gradient Color 1"
+                          label="Gradient Colour 1"
                         />
                       }
                     />
                     <SettingsRow
                       icon={<Layout className="h-4 w-4 text-muted-foreground" />}
                       iconColor=""
-                      title="Gradient Color 2"
+                      title="Gradient Colour 2"
                       subtitle={gameSettings.boardStyling.gradientColors?.[1] || '#8B5CF6'}
                       rightElement={
                         <ColorInput
@@ -2055,7 +2051,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                               }
                             });
                           }}
-                          label="Gradient Color 2"
+                          label="Gradient Colour 2"
                         />
                       }
                     />
@@ -2205,7 +2201,6 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
             updatedStats[selectedAchievement.type] = 0;
             delete updatedStats[`${selectedAchievement.type}FirstAchieved`];
             delete updatedStats[`${selectedAchievement.type}LastUpdated`];
-            // Update the stats in context without reloading
             updatePersistentStats(updatedStats);
           }
         }}

@@ -13,6 +13,28 @@
     color: hsl(var(--selection-text));
   }
   
+  :root[data-theme-customized="true"] ::selection {
+    background-color: color-mix(in srgb, var(--app-theme-color) 30%, transparent);
+    color: color-mix(in srgb, var(--app-theme-color) 80%, white);
+  }
+  
+  :root[data-theme-customized="true"] ::-moz-selection {
+    background-color: color-mix(in srgb, var(--app-theme-color) 30%, transparent);
+    color: color-mix(in srgb, var(--app-theme-color) 80%, white);
+  }
+  
+  :root[data-theme-customized="true"].light ::selection,
+  :root[data-theme-customized="true"]:not(.dark) ::selection {
+    background-color: color-mix(in srgb, var(--app-theme-color) 30%, transparent);
+    color: color-mix(in srgb, var(--app-theme-color) 70%, black);
+  }
+  
+  :root[data-theme-customized="true"].light ::-moz-selection,
+  :root[data-theme-customized="true"]:not(.dark) ::-moz-selection {
+    background-color: color-mix(in srgb, var(--app-theme-color) 30%, transparent);
+    color: color-mix(in srgb, var(--app-theme-color) 70%, black);
+  }
+  
   :root {
     --app-theme-color: #3b82f6;
     --background: 210 20% 98%;
