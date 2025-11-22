@@ -19,14 +19,26 @@ export interface GameTheme {
   enableBoxFill: boolean;
 }
 
+export interface BoardStyling {
+  style: 'standard' | 'rounded' | 'custom';
+  borderRadius?: number;
+  borderWidth?: number;
+  borderColor?: string;
+  backgroundColor?: string;
+  useGradient?: boolean;
+  gradientColors?: string[];
+}
+
 export interface GameSettings {
   theme: GameTheme;
   gameMode: GameMode;
   difficulty: Difficulty;
   winAnimation: WinAnimation;
   showGameStatus: boolean;
+  gameStatusPosition: 'left' | 'right';
   enableAnimations: boolean;
   gridFontSize: 'very-small' | 'small' | 'medium' | 'large' | 'very-large';
+  boardStyling: BoardStyling;
 }
 
 interface GameContextType {
@@ -39,11 +51,36 @@ interface GameContextType {
     xWins: number;
     oWins: number;
     draws: number;
+    easyWins?: number;
+    mediumWins?: number;
+    hardWins?: number;
+    unbeatableWins?: number;
   };
   persistentStats: {
     xWins: number;
     oWins: number;
     draws: number;
+    gamesPlayed: number;
+    easyWins?: number;
+    mediumWins?: number;
+    hardWins?: number;
+    unbeatableWins?: number;
+    xWinsFirstAchieved?: string;
+    xWinsLastUpdated?: string;
+    oWinsFirstAchieved?: string;
+    oWinsLastUpdated?: string;
+    drawsFirstAchieved?: string;
+    drawsLastUpdated?: string;
+    gamesPlayedFirstAchieved?: string;
+    gamesPlayedLastUpdated?: string;
+    easyWinsFirstAchieved?: string;
+    easyWinsLastUpdated?: string;
+    mediumWinsFirstAchieved?: string;
+    mediumWinsLastUpdated?: string;
+    hardWinsFirstAchieved?: string;
+    hardWinsLastUpdated?: string;
+    unbeatableWinsFirstAchieved?: string;
+    unbeatableWinsLastUpdated?: string;
   };
   isAiThinking: boolean;
   makeMove: (index: number) => void;
@@ -52,6 +89,7 @@ interface GameContextType {
   triggerWinAnimation: () => void;
   resetStats: () => void;
   resetPersistentStats: () => void;
+  updatePersistentStats: (stats: Partial<GameContextType['persistentStats']>) => void;
 }
 
 const defaultThemes: GameTheme[] = [
@@ -123,8 +161,18 @@ const defaultSettings: GameSettings = {
   difficulty: 'medium',
   winAnimation: 'confetti',
   showGameStatus: false,
+  gameStatusPosition: 'left',
   enableAnimations: true,
   gridFontSize: 'medium',
+  boardStyling: {
+    style: 'standard',
+    borderRadius: 12,
+    borderWidth: 0,
+    borderColor: '#000000',
+    backgroundColor: 'transparent',
+    useGradient: false,
+    gradientColors: ['#3B82F6', '#8B5CF6'],
+  },
 };
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -133,22 +181,56 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const loadSavedSettings = (): GameSettings => {
     try {
       const saved = localStorage.getItem('tic-tac-toe-settings');
-      return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
+      const parsed = saved ? JSON.parse(saved) : {};
+      const settings = { ...defaultSettings, ...parsed };
+      // Ensure boardStyling exists for backward compatibility
+      if (!settings.boardStyling) {
+        settings.boardStyling = defaultSettings.boardStyling;
+      }
+      return settings;
     } catch {
       return defaultSettings;
     }
   };
 
   const loadSavedStats = () => {
-    return { xWins: 0, oWins: 0, draws: 0 };
+    return { xWins: 0, oWins: 0, draws: 0, easyWins: 0, mediumWins: 0, hardWins: 0, unbeatableWins: 0 };
   };
 
   const loadPersistentStats = () => {
     try {
       const saved = localStorage.getItem('tic-tac-toe-persistent-stats');
-      return saved ? JSON.parse(saved) : { xWins: 0, oWins: 0, draws: 0 };
+      const parsed = saved ? JSON.parse(saved) : { xWins: 0, oWins: 0, draws: 0, gamesPlayed: 0 };
+      // Ensure difficulty wins exist for backward compatibility and preserve all date fields
+      return {
+        xWins: parsed.xWins || 0,
+        oWins: parsed.oWins || 0,
+        gamesPlayed: parsed.gamesPlayed || 0,
+        draws: parsed.draws || 0,
+        easyWins: parsed.easyWins || 0,
+        mediumWins: parsed.mediumWins || 0,
+        hardWins: parsed.hardWins || 0,
+        unbeatableWins: parsed.unbeatableWins || 0,
+        // Preserve all date fields
+        xWinsFirstAchieved: parsed.xWinsFirstAchieved,
+        xWinsLastUpdated: parsed.xWinsLastUpdated,
+        oWinsFirstAchieved: parsed.oWinsFirstAchieved,
+        oWinsLastUpdated: parsed.oWinsLastUpdated,
+        drawsFirstAchieved: parsed.drawsFirstAchieved,
+        drawsLastUpdated: parsed.drawsLastUpdated,
+        gamesPlayedFirstAchieved: parsed.gamesPlayedFirstAchieved,
+        gamesPlayedLastUpdated: parsed.gamesPlayedLastUpdated,
+        easyWinsFirstAchieved: parsed.easyWinsFirstAchieved,
+        easyWinsLastUpdated: parsed.easyWinsLastUpdated,
+        mediumWinsFirstAchieved: parsed.mediumWinsFirstAchieved,
+        mediumWinsLastUpdated: parsed.mediumWinsLastUpdated,
+        hardWinsFirstAchieved: parsed.hardWinsFirstAchieved,
+        hardWinsLastUpdated: parsed.hardWinsLastUpdated,
+        unbeatableWinsFirstAchieved: parsed.unbeatableWinsFirstAchieved,
+        unbeatableWinsLastUpdated: parsed.unbeatableWinsLastUpdated,
+      };
     } catch {
-      return { xWins: 0, oWins: 0, draws: 0 };
+      return { xWins: 0, oWins: 0, draws: 0, gamesPlayed: 0, easyWins: 0, mediumWins: 0, hardWins: 0, unbeatableWins: 0 };
     }
   };
 
@@ -255,16 +337,55 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (gameWinner) {
       setWinner(gameWinner);
       setWinningLine(line);
+      
+      // Track difficulty wins for player X in AI mode
+      let difficultyWinUpdate = {};
+      let persistentDifficultyUpdate = {};
+      if (gameWinner === 'X' && gameSettings.gameMode === 'ai') {
+        const difficultyKey = `${gameSettings.difficulty}Wins` as 'easyWins' | 'mediumWins' | 'hardWins' | 'unbeatableWins';
+        difficultyWinUpdate = {
+          [difficultyKey]: (gameStats[difficultyKey] || 0) + 1
+        };
+        persistentDifficultyUpdate = {
+          [difficultyKey]: (persistentStats[difficultyKey] || 0) + 1
+        };
+      }
+      
       const newStats = {
         ...gameStats,
-        ...(gameWinner === 'X' ? { xWins: gameStats.xWins + 1 } : { oWins: gameStats.oWins + 1 })
+        ...(gameWinner === 'X' ? { xWins: gameStats.xWins + 1 } : { oWins: gameStats.oWins + 1 }),
+        ...difficultyWinUpdate
       };
       setGameStats(newStats);
       
-      const newPersistentStats = {
+      const now = new Date().toISOString();
+      const totalGames = (persistentStats.gamesPlayed || 0) + 1;
+      const isFirstGame = (persistentStats.gamesPlayed || 0) === 0;
+      const newPersistentStats: any = {
         ...persistentStats,
-        ...(gameWinner === 'X' ? { xWins: persistentStats.xWins + 1 } : { oWins: persistentStats.oWins + 1 })
+        gamesPlayed: totalGames,
+        ...(isFirstGame ? { gamesPlayedFirstAchieved: now } : { gamesPlayedLastUpdated: now }),
+        ...(gameWinner === 'X' ? { 
+          xWins: persistentStats.xWins + 1,
+          ...(!persistentStats.xWinsFirstAchieved ? { xWinsFirstAchieved: now } : { xWinsLastUpdated: now })
+        } : gameSettings.gameMode === 'human' ? { 
+          oWins: persistentStats.oWins + 1,
+          ...(!persistentStats.oWinsFirstAchieved ? { oWinsFirstAchieved: now } : { oWinsLastUpdated: now })
+        } : {}),
+        ...persistentDifficultyUpdate
       };
+      
+      // Track dates for difficulty wins
+      if (gameWinner === 'X' && gameSettings.gameMode === 'ai') {
+        const difficultyKey = `${gameSettings.difficulty}Wins` as 'easyWins' | 'mediumWins' | 'hardWins' | 'unbeatableWins';
+        const firstAchievedKey = `${difficultyKey}FirstAchieved` as keyof typeof persistentStats;
+        if (!persistentStats[firstAchievedKey]) {
+          newPersistentStats[firstAchievedKey] = now;
+        } else {
+          newPersistentStats[`${difficultyKey}LastUpdated`] = now;
+        }
+      }
+      
       setPersistentStats(newPersistentStats);
       localStorage.setItem('tic-tac-toe-persistent-stats', JSON.stringify(newPersistentStats));
       
@@ -276,7 +397,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const newStats = { ...gameStats, draws: gameStats.draws + 1 };
       setGameStats(newStats);
       
-      const newPersistentStats = { ...persistentStats, draws: persistentStats.draws + 1 };
+      const now = new Date().toISOString();
+      const totalGames = (persistentStats.gamesPlayed || 0) + 1;
+      const isFirstGame = (persistentStats.gamesPlayed || 0) === 0;
+      const newPersistentStats: any = {
+        ...persistentStats,
+        gamesPlayed: totalGames,
+        ...(isFirstGame ? { gamesPlayedFirstAchieved: now } : { gamesPlayedLastUpdated: now }),
+        draws: persistentStats.draws + 1,
+        ...(!persistentStats.drawsFirstAchieved ? { drawsFirstAchieved: now } : { drawsLastUpdated: now })
+      };
       setPersistentStats(newPersistentStats);
       localStorage.setItem('tic-tac-toe-persistent-stats', JSON.stringify(newPersistentStats));
       
@@ -298,10 +428,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
         if (aiWinner) {
           setWinner(aiWinner);
           setWinningLine(aiLine);
-          const newStats = { ...gameStats, oWins: gameStats.oWins + 1 };
+          const newStats = { ...gameStats };
           setGameStats(newStats);
           
-          const newPersistentStats = { ...persistentStats, oWins: persistentStats.oWins + 1 };
+          const now = new Date().toISOString();
+          const totalGames = (persistentStats.gamesPlayed || 0) + 1;
+          const isFirstGame = (persistentStats.gamesPlayed || 0) === 0;
+          const newPersistentStats: any = {
+            ...persistentStats,
+            gamesPlayed: totalGames,
+            ...(isFirstGame ? { gamesPlayedFirstAchieved: now } : { gamesPlayedLastUpdated: now })
+          };
           setPersistentStats(newPersistentStats);
           localStorage.setItem('tic-tac-toe-persistent-stats', JSON.stringify(newPersistentStats));
           
@@ -314,7 +451,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
           const newStats = { ...gameStats, draws: gameStats.draws + 1 };
           setGameStats(newStats);
           
-          const newPersistentStats = { ...persistentStats, draws: persistentStats.draws + 1 };
+          const now = new Date().toISOString();
+          const totalGames = (persistentStats.gamesPlayed || 0) + 1;
+          const isFirstGame = (persistentStats.gamesPlayed || 0) === 0;
+          const newPersistentStats: any = {
+            ...persistentStats,
+            gamesPlayed: totalGames,
+            ...(isFirstGame ? { gamesPlayedFirstAchieved: now } : { gamesPlayedLastUpdated: now }),
+            draws: persistentStats.draws + 1,
+            ...(!persistentStats.drawsFirstAchieved ? { drawsFirstAchieved: now } : { drawsLastUpdated: now })
+          };
           setPersistentStats(newPersistentStats);
           localStorage.setItem('tic-tac-toe-persistent-stats', JSON.stringify(newPersistentStats));
           
@@ -361,12 +507,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
   };
 
   const resetStats = () => {
-    const newStats = { xWins: 0, oWins: 0, draws: 0 };
+    const newStats = { xWins: 0, oWins: 0, draws: 0, gamesPlayed: 0, easyWins: 0, mediumWins: 0, hardWins: 0, unbeatableWins: 0 };
     setGameStats(newStats);
   };
 
   const resetPersistentStats = () => {
-    const newPersistentStats = { xWins: 0, oWins: 0, draws: 0 };
+    const newPersistentStats = { xWins: 0, oWins: 0, draws: 0, gamesPlayed: 0, easyWins: 0, mediumWins: 0, hardWins: 0, unbeatableWins: 0 };
+    setPersistentStats(newPersistentStats);
+    localStorage.setItem('tic-tac-toe-persistent-stats', JSON.stringify(newPersistentStats));
+  };
+
+  const updatePersistentStats = (stats: Partial<GameContextType['persistentStats']>) => {
+    const newPersistentStats = { ...persistentStats, ...stats };
     setPersistentStats(newPersistentStats);
     localStorage.setItem('tic-tac-toe-persistent-stats', JSON.stringify(newPersistentStats));
   };
@@ -388,6 +540,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         triggerWinAnimation,
         resetStats,
         resetPersistentStats,
+        updatePersistentStats,
       }}
     >
       {children}

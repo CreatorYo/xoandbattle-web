@@ -44,7 +44,7 @@ const DialogContent = React.forwardRef<
     >
       {children}
       <DialogPrimitive.Close 
-        className="absolute right-4 top-4 rounded-full p-1.5 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-accent hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+        className="absolute right-4 top-4 rounded-full p-1.5 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-gray-200 dark:hover:bg-muted/40 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-gray-200 dark:data-[state=open]:bg-muted/40 data-[state=open]:text-muted-foreground"
         style={{ outline: 'none', boxShadow: 'none' }}
       >
         <X className="h-4 w-4" />
@@ -109,6 +109,21 @@ const DialogDescription = React.forwardRef<
   />
 ))
 DialogDescription.displayName = DialogPrimitive.Description.displayName
+
+// Dialog Content Wrapper
+interface DialogContainerProps {
+  children: React.ReactNode
+  className?: string
+}
+
+const DialogContainer = ({ children, className }: DialogContainerProps) => (
+  <div className={cn(
+    "bg-card/95 dark:bg-black/95 backdrop-blur-xl rounded-2xl overflow-hidden border border-border/50 shadow-2xl",
+    className
+  )}>
+    {children}
+  </div>
+)
 
 interface ConfirmationDialogProps {
   open: boolean
@@ -250,6 +265,7 @@ export {
   DialogFooter,
   DialogTitle,
   DialogDescription,
+  DialogContainer,
   ConfirmationDialog,
   SimpleConfirmDialog,
 }

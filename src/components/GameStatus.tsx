@@ -1,15 +1,15 @@
 import { useGame } from '@/contexts/GameContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trophy, Users, Bot, BarChart3 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Users, Bot } from 'lucide-react';
 
 export function GameStatus() {
-  const { winner, currentPlayer, resetGame, gameSettings, gameStats, board } = useGame();
+  const { winner, currentPlayer, gameSettings, gameStats, board } = useGame();
 
   const getStatusMessage = () => {
     if (winner) {
       const isAiWin = gameSettings.gameMode === 'ai' && winner === 'O';
       return (
-        <span className={`text-lg font-bold ${winner === 'X' ? 'text-game-x' : 'text-game-o'}`}>
+        <span className={`text-base font-semibold ${winner === 'X' ? 'text-game-x' : 'text-game-o'}`}>
           {isAiWin ? 'AI Wins!' : `Player ${winner} Wins!`}
         </span>
       );
@@ -19,45 +19,54 @@ export function GameStatus() {
 
     if (isDraw) {
       return (
-        <span className="text-lg font-bold text-foreground">It's a Draw!</span>
+        <span className="text-base font-semibold text-muted-foreground">It's a Draw!</span>
       );
     }
 
     return (
-      <p className="text-sm font-medium text-muted-foreground">
-        {gameSettings.gameMode === 'ai' ? <Bot className="h-4 w-4 inline mr-2 text-muted-foreground" /> : <Users className="h-4 w-4 inline mr-2 text-muted-foreground" />}
-        Player {currentPlayer}'s Turn
-      </p>
+      <div className="flex items-center justify-center gap-2">
+        {gameSettings.gameMode === 'ai' ? (
+          <Bot className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          <Users className="h-4 w-4 text-muted-foreground" />
+        )}
+        <span className="text-sm text-muted-foreground">Player {currentPlayer}'s Turn</span>
+      </div>
     );
   };
 
   return (
-    <Card className="w-full bg-background/80 backdrop-blur-sm border-border/50 shadow-xl">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <BarChart3 className="h-5 w-5 text-primary" />
-          Game Status
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="text-center">
-          {getStatusMessage()}
-        </div>
-
-        <div className="bg-muted/30 rounded-xl p-4">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-3 text-center">Game Statistics</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-game-x mb-1">{gameStats.xWins}</div>
-              <div className="text-xs text-muted-foreground font-medium">X Wins</div>
+    <Card className="w-full bg-card border-border/50">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between gap-6">
+          <div className="flex items-center gap-2.5 min-w-0">
+            {gameSettings.gameMode === 'ai' ? (
+              <Bot className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            ) : (
+              <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            )}
+            <span className="text-sm text-foreground whitespace-nowrap">
+              {winner 
+                ? (gameSettings.gameMode === 'ai' && winner === 'O' ? 'AI Wins!' : `Player ${winner} Wins!`)
+                : (!winner && board.every(cell => cell !== null) 
+                  ? "It's a Draw!" 
+                  : `Player ${currentPlayer}'s Turn`)
+              }
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-5 flex-shrink-0">
+            <div className="text-center min-w-[32px]">
+              <div className="text-lg font-bold text-game-x leading-tight">{gameStats.xWins}</div>
+              <div className="text-xs text-muted-foreground mt-1">X</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-muted-foreground mb-1">{gameStats.draws}</div>
-              <div className="text-xs text-muted-foreground font-medium">Draws</div>
+            <div className="text-center min-w-[32px]">
+              <div className="text-lg font-bold text-muted-foreground leading-tight">{gameStats.draws}</div>
+              <div className="text-xs text-muted-foreground mt-1">-</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-game-o mb-1">{gameStats.oWins}</div>
-              <div className="text-xs text-muted-foreground font-medium">O Wins</div>
+            <div className="text-center min-w-[32px]">
+              <div className="text-lg font-bold text-game-o leading-tight">{gameStats.oWins}</div>
+              <div className="text-xs text-muted-foreground mt-1">O</div>
             </div>
           </div>
         </div>

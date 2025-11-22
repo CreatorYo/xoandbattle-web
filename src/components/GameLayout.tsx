@@ -103,7 +103,7 @@ export function GameLayout() {
         </div>
       )}
 
-              <div className={`container mx-auto px-6 py-8 max-w-6xl relative z-10 ${!gameSettings.showGameStatus ? 'pt-32' : ''}`}>
+      <div className="container mx-auto px-6 py-8 max-w-6xl relative z-10 pt-32">
         <div className="text-center mb-8">
           <div className="mb-4">
             <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
@@ -185,10 +185,13 @@ export function GameLayout() {
           )}
           
           {isUIVisible && gameSettings.showGameStatus && (
-            <div className="w-full max-w-md">
-              <div className="space-y-6">
+            <div className={`fixed bottom-6 ${gameSettings.gameStatusPosition === 'left' ? 'left-6' : 'right-6'} z-40 max-w-sm`}>
                 <GameStatus />
+            </div>
+          )}
                 
+          {isUIVisible && gameSettings.showGameStatus && (
+            <div className="text-center space-y-6 mt-8">
                 <div className="space-y-3">
                   <div className="flex gap-3 justify-center">
                     <Button 
@@ -218,7 +221,6 @@ export function GameLayout() {
                     >
                       <Settings className="!h-5 !w-5 text-green-500" />
                     </Button>
-                  </div>
                 </div>
               </div>
             </div>

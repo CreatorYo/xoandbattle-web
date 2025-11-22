@@ -27,14 +27,42 @@ export function ThemeSelector() {
   const allThemes = [...defaultThemes, ...customThemes];
 
   useEffect(() => {
+    const loadThemes = () => {
     try {
       const saved = localStorage.getItem('tic-tac-toe-custom-themes');
       if (saved) {
         setCustomThemes(JSON.parse(saved));
+        } else {
+          setCustomThemes([]);
       }
     } catch (error) {
       console.error('Failed to load custom themes:', error);
-    }
+        setCustomThemes([]);
+      }
+    };
+    
+    loadThemes();
+    
+    // Listen for storage events to reload themes when they're reset
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'tic-tac-toe-custom-themes') {
+        loadThemes();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom event in case storage event doesn't fire (same window)
+    const handleCustomStorageChange = () => {
+      loadThemes();
+    };
+    
+    window.addEventListener('custom-storage-change', handleCustomStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('custom-storage-change', handleCustomStorageChange);
+    };
   }, []);
 
   useEffect(() => {

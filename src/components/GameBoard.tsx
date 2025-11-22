@@ -57,40 +57,100 @@ export function GameBoard() {
     );
   };
 
+  const boardStyling = gameSettings.boardStyling;
+  const cellBorderRadius = boardStyling.style === 'rounded' 
+    ? (boardStyling.borderRadius || 24)
+    : boardStyling.style === 'custom'
+    ? (boardStyling.borderRadius || 12)
+    : 12;
+
+  const getCellBackground = (index: number) => {
+    if (boardStyling.style === 'custom') {
+      if (boardStyling.useGradient && boardStyling.gradientColors && boardStyling.gradientColors.length >= 2) {
+        return `linear-gradient(135deg, ${boardStyling.gradientColors[0]}, ${boardStyling.gradientColors[1]})`;
+      }
+      if (boardStyling.backgroundColor && boardStyling.backgroundColor !== 'transparent') {
+        if (gameSettings.theme.enableBoxFill && board[index]) {
+          const boxFillColor = board[index] === 'X' 
+            ? `${gameSettings.theme.xColor}20` 
+            : `${gameSettings.theme.oColor}20`;
+          return boxFillColor;
+        }
+        return boardStyling.backgroundColor;
+      }
+    }
+    if (gameSettings.theme.enableBoxFill && board[index]) {
+      return board[index] === 'X' 
+        ? `${gameSettings.theme.xColor}20` 
+        : `${gameSettings.theme.oColor}20`;
+    }
+    return undefined;
+  };
+
+  const getCellBackgroundImage = (index: number) => {
+    if (boardStyling.style === 'custom' && boardStyling.useGradient && boardStyling.gradientColors && boardStyling.gradientColors.length >= 2) {
+      if (gameSettings.theme.enableBoxFill && board[index]) {
+        return undefined;
+      }
+      return `linear-gradient(135deg, ${boardStyling.gradientColors[0]}, ${boardStyling.gradientColors[1]})`;
+    }
+    return undefined;
+  };
+
   return (
     <div 
       className={cn(
-        "grid grid-cols-3 gap-3 p-6 rounded-xl transition-all duration-300",
-        theme === 'light' ? '' : 'shadow-lg',
+        "grid grid-cols-3 gap-3 p-6 transition-all duration-300",
         isAiThinking && "opacity-60 pointer-events-none"
       )}
-      style={{ backgroundColor: 'transparent' }}
+      style={{ 
+        borderRadius: boardStyling.style === 'custom' 
+          ? `${boardStyling.borderRadius || 12}px` 
+          : boardStyling.style === 'rounded'
+          ? `${boardStyling.borderRadius || 24}px`
+          : undefined,
+      }}
     >
-      {board.map((_, index) => (
-        <button
-          key={index}
-          onClick={() => makeMove(index)}
-          disabled={!!winner || !!board[index] || isAiThinking}
-          className={cn(
-            "game-cell w-24 h-24 sm:w-28 sm:h-28",
-            "flex items-center justify-center rounded-lg",
-            "disabled:cursor-not-allowed transition-all duration-200",
-            !board[index] && !winner && !isAiThinking && "cursor-pointer hover:shadow-md",
-            winningLine?.includes(index) && "ring-2 ring-game-winner winning-cell-hover"
-          )}
-          style={{
-            backgroundColor: gameSettings.theme.enableBoxFill && board[index] 
-              ? (board[index] === 'X' ? `${gameSettings.theme.xColor}20` : `${gameSettings.theme.oColor}20`)
-              : undefined,
-            boxShadow: winningLine?.includes(index) && winner 
-              ? `0 0 30px ${winner === 'X' ? gameSettings.theme.xColor : gameSettings.theme.oColor}60`
-              : undefined,
-            transition: 'all 0.3s ease-in-out'
-          }}
-        >
-          {getCellContent(index)}
-        </button>
-      ))}
+      {board.map((_, index) => {
+        const isWinningCell = winningLine?.includes(index);
+        const shouldDim = winner && winningLine && !isWinningCell;
+        
+        return (
+          <button
+            key={index}
+            onClick={() => makeMove(index)}
+            disabled={!!winner || !!board[index] || isAiThinking}
+            className={cn(
+              "game-cell w-24 h-24 sm:w-28 sm:h-28",
+              "flex items-center justify-center",
+              "disabled:cursor-not-allowed transition-all duration-200",
+              !board[index] && !winner && !isAiThinking && "cursor-pointer hover:shadow-md",
+              isWinningCell && "ring-2 ring-game-winner winning-cell-hover"
+            )}
+            style={{
+              borderRadius: `${cellBorderRadius}px`,
+              backgroundColor: getCellBackground(index),
+              backgroundImage: getCellBackgroundImage(index),
+              borderWidth: boardStyling.style === 'custom' && boardStyling.borderWidth !== undefined 
+                ? `${boardStyling.borderWidth}px` 
+                : undefined,
+              borderColor: boardStyling.style === 'custom' && boardStyling.borderColor 
+                ? boardStyling.borderColor 
+                : undefined,
+              borderStyle: boardStyling.style === 'custom' && boardStyling.borderWidth !== undefined && boardStyling.borderWidth > 0 
+                ? 'solid' 
+                : undefined,
+              boxShadow: isWinningCell && winner 
+                ? `0 0 30px ${winner === 'X' ? gameSettings.theme.xColor : gameSettings.theme.oColor}60`
+                : undefined,
+              opacity: shouldDim ? 0.65 : 1,
+              transition: 'all 0.3s ease-in-out'
+            }}
+          >
+            {getCellContent(index)}
+          </button>
+        );
+      })}
       
 
     </div>
