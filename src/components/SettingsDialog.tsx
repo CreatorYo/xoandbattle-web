@@ -46,7 +46,6 @@ import {
   Circle,
   Settings as SettingsIcon,
   Gamepad2,
-  ArrowLeft,
   Search,
   Plus,
   MoreVertical,
@@ -54,7 +53,8 @@ import {
   Copy as CopyIcon,
   Edit,
   Menu,
-  X
+  X,
+  GripVertical
 } from 'lucide-react';
 import { ThemeSelector } from './ThemeSelector';
 import { CreateThemeDialog } from './CreateThemeDialog';
@@ -126,6 +126,15 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingTheme, setEditingTheme] = useState<GameTheme | null>(null);
   const [showResetThemesDialog, setShowResetThemesDialog] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [isReorderMode, setIsReorderMode] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('tic-tac-toe-reorder-mode') === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -164,6 +173,73 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
     
     return () => {
       window.removeEventListener('custom-storage-change', handleCustomStorageChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('tic-tac-toe-reorder-mode', isReorderMode.toString());
+    } catch (error) {
+      console.error('Failed to save reorder mode:', error);
+    }
+  }, [isReorderMode]);
+
+  useEffect(() => {
+    const handleReorderModeReset = () => {
+      setIsReorderMode(false);
+    };
+    
+    window.addEventListener('reorder-mode-reset', handleReorderModeReset);
+    
+    return () => {
+      window.removeEventListener('reorder-mode-reset', handleReorderModeReset);
+    };
+  }, []);
+
+  useEffect(() => {
+    const pressedKeys = new Set<string>();
+    let rKeyHeld = false;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      
+      pressedKeys.add(key);
+      
+      if (key === 'r') {
+        if (pressedKeys.size > 1) return;
+        
+        if (rKeyHeld) return;
+        
+        const activeElement = document.activeElement;
+        const isInputFocused = activeElement && (
+          activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          activeElement.tagName === 'SELECT' ||
+          activeElement.getAttribute('contenteditable') === 'true'
+        );
+        
+        if (!isInputFocused) {
+          rKeyHeld = true;
+          setIsReorderMode(prev => !prev);
+        }
+      }
+    };
+    
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      pressedKeys.delete(key);
+      
+      if (key === 'r') {
+        rKeyHeld = false;
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
 
@@ -245,17 +321,71 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
     setOpenMenuId(null);
   };
 
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => {
+      if (e.currentTarget instanceof HTMLElement) {
+        e.currentTarget.style.opacity = '0.5';
+      }
+    }, 0);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setDragOverIndex(null);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const newThemes = [...customThemes];
+    const draggedTheme = newThemes[draggedIndex];
+    newThemes.splice(draggedIndex, 1);
+    newThemes.splice(dropIndex, 0, draggedTheme);
+    
+    setCustomThemes(newThemes);
+    try {
+      localStorage.setItem('tic-tac-toe-custom-themes', JSON.stringify(newThemes));
+      window.dispatchEvent(new Event('custom-storage-change'));
+    } catch (error) {
+      console.error('Failed to save custom themes:', error);
+    }
+    
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '';
+    }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
 
   return (
     <div className="space-y-0">
       <div className="flex items-center justify-between mb-6 px-1">
         <div className="flex items-center gap-3">
-          <button
-            onClick={onBack}
-            className="p-1.5 -ml-1.5 hover:bg-muted/30 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5 text-foreground" />
-          </button>
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold text-foreground">Theme</h2>
             <DropdownMenu>
@@ -265,6 +395,14 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-40">
+                <DropdownMenuItem 
+                  onClick={() => setIsReorderMode(!isReorderMode)}
+                  style={{ ['--hover-bg' as any]: `rgba(${appThemeColorRgb}, 0.2)` }} 
+                  className="dark:hover:bg-[var(--hover-bg)]"
+                >
+                  <GripVertical className="h-4 w-4 mr-2" />
+                  {isReorderMode ? 'Disable Reorder' : 'Reorder Presets'}
+                </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => setShowResetThemesDialog(true)}
                   className="text-red-500 focus:text-red-500"
@@ -406,7 +544,7 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
                                 setOpenMenuId(null);
                               }} style={{ ['--hover-bg' as any]: `rgba(${appThemeColorRgb}, 0.2)` }} className="dark:hover:bg-[var(--hover-bg)]">
                                 <Info className="h-4 w-4 mr-2" />
-                                View Info
+                                See Details
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={(e) => {
                                 e.stopPropagation();
@@ -457,7 +595,7 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
                       }}
                     >
                       <Info className="h-4 w-4 mr-2" />
-                      View Info
+                      See Details
                     </ContextMenuItem>
                     <ContextMenuItem 
                       onClick={() => handleDuplicateTheme(theme)}
@@ -503,9 +641,33 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
         </div>
 
         <div>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
-            Custom Presets{customThemes.length > 0 ? ` (${customThemes.length})` : ''}
-          </h3>
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Custom Presets{customThemes.length > 0 ? ` (${customThemes.length})` : ''}
+            </h3>
+            {customThemes.length >= 10 && (
+              <Button
+                onClick={() => setShowCreateDialog(true)}
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 rounded-md flex-shrink-0 opacity-100"
+                 title="Create Preset"
+                style={{ color: appThemeColor }}
+                onMouseEnter={(e) => {
+                  const target = e.currentTarget;
+                  target.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.15)`;
+                  target.style.color = appThemeColor;
+                }}
+                onMouseLeave={(e) => {
+                  const target = e.currentTarget;
+                  target.style.backgroundColor = '';
+                  target.style.color = appThemeColor;
+                }}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
             {customThemesFiltered.length === 0 ? (
               searchQuery ? (
@@ -542,15 +704,48 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
               )
             ) : (
               <>
-                {customThemesFiltered.map((theme, index) => {
+                {customThemesFiltered.map((theme, filteredIndex) => {
+                  const originalIndex = customThemes.findIndex(t => t.id === theme.id);
                   const isSelected = gameSettings.theme.id === theme.id;
                   const isHovered = hoveredThemeId === theme.id;
                   const isMenuOpen = openMenuId === theme.id;
+                  const isDragging = draggedIndex === originalIndex;
+                  const isDragOver = dragOverIndex === originalIndex;
                   return (
                     <ContextMenu key={theme.id}>
                       <ContextMenuTrigger asChild>
                         <div
-                          onClick={() => updateSettings({ theme })}
+                          draggable={isReorderMode && !searchQuery}
+                          onDragStart={(e) => {
+                            if (isReorderMode && !searchQuery) {
+                              handleDragStart(e, originalIndex);
+                            }
+                          }}
+                          onDragOver={(e) => {
+                            if (isReorderMode && !searchQuery) {
+                              handleDragOver(e, originalIndex);
+                            }
+                          }}
+                          onDragLeave={(e) => {
+                            if (isReorderMode && !searchQuery) {
+                              handleDragLeave(e);
+                            }
+                          }}
+                          onDrop={(e) => {
+                            if (isReorderMode && !searchQuery) {
+                              handleDrop(e, originalIndex);
+                            }
+                          }}
+                          onDragEnd={(e) => {
+                            if (isReorderMode && !searchQuery) {
+                              handleDragEnd(e);
+                            }
+                          }}
+                          onClick={(e) => {
+                            if (draggedIndex === null) {
+                              updateSettings({ theme });
+                            }
+                          }}
                           onMouseEnter={() => {
                             if (!openMenuId) {
                               setHoveredThemeId(theme.id);
@@ -563,11 +758,36 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
                           }}
                           className={cn(
                             "flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-muted/30 relative",
-                            index !== customThemesFiltered.length - 1 && "border-b border-border/30"
+                            filteredIndex !== customThemesFiltered.length - 1 && "border-b border-border/30",
+                            isDragging && "opacity-50 scale-95",
+                            isDragOver && "bg-muted/50 border-t-2 translate-y-0"
                           )}
-                          style={{ transition: 'background-color 0.15s ease', transform: 'none' }}
+                          style={{ 
+                            transition: isDragging 
+                              ? 'opacity 0.2s ease, transform 0.2s ease' 
+                              : 'background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease',
+                            transform: isDragging ? 'scale(0.95)' : 'scale(1)',
+                            cursor: isReorderMode && !searchQuery ? 'grab' : 'pointer',
+                            ...(isDragOver && { 
+                              borderTopColor: appThemeColor,
+                              borderTopWidth: '2px',
+                              transform: 'translateY(-2px)'
+                            }),
+                            ...(isDragging && {
+                              zIndex: 1000
+                            })
+                          }}
                         >
                           <div className="flex items-center gap-3 flex-1 min-w-0">
+                            {isReorderMode && !searchQuery && (
+                              <div 
+                                className="flex items-center gap-1.5 flex-shrink-0 cursor-grab active:cursor-grabbing transition-opacity"
+                                onMouseDown={(e) => e.stopPropagation()}
+                                style={{ opacity: isDragging ? 0.3 : 1 }}
+                              >
+                                <GripVertical className="h-4 w-4 text-muted-foreground/50 hover:text-muted-foreground transition-colors" />
+                              </div>
+                            )}
                             <div className="flex items-center gap-1.5 flex-shrink-0">
                               <div 
                                 className="w-3 h-3 rounded-full" 
@@ -609,7 +829,7 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
                                     setOpenMenuId(null);
                                   }} style={{ ['--hover-bg' as any]: `rgba(${appThemeColorRgb}, 0.2)` }} className="dark:hover:bg-[var(--hover-bg)]">
                                     <Info className="h-4 w-4 mr-2" />
-                                    View Info
+                                    See Details
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={(e) => {
                                     e.stopPropagation();
@@ -656,7 +876,7 @@ function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeCol
                           }}
                         >
                           <Info className="h-4 w-4 mr-2" />
-                          View Info
+                          See Details
                         </ContextMenuItem>
                         <ContextMenuItem 
                           onClick={() => handleDuplicateTheme(theme)}
@@ -1034,6 +1254,13 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
     localStorage.setItem('tic-tac-toe-app-theme-color', defaultColor);
     document.documentElement.style.setProperty('--app-theme-color', defaultColor);
     document.documentElement.removeAttribute('data-theme-customized');
+    
+    try {
+      localStorage.removeItem('tic-tac-toe-reorder-mode');
+      window.dispatchEvent(new Event('reorder-mode-reset'));
+    } catch (error) {
+      console.error('Failed to reset reorder mode:', error);
+    }
     
     setShowResetSettingsDialog(false);
     showToast.success(

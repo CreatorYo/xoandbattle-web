@@ -34,7 +34,7 @@ export function ThemeContextMenu({ theme, isCustom, onDuplicate, onEdit, onDelet
         <ContextMenuContent className="bg-background/95 backdrop-blur border-border/50 shadow-2xl">
           <ContextMenuItem onClick={() => setShowInfo(true)} className="flex items-center gap-2 hover:bg-blue-100 dark:hover:bg-blue-950/30 transition-colors">
             <Info className="w-4 h-4" />
-            View Info
+            See Details
           </ContextMenuItem>
           <ContextMenuItem onClick={() => onDuplicate(theme)} className="flex items-center gap-2 hover:bg-blue-100 dark:hover:bg-blue-950/30 transition-colors">
             <Copy className="w-4 h-4" />
