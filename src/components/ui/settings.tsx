@@ -73,20 +73,32 @@ const SettingsRow = React.forwardRef<HTMLDivElement, SettingsRowProps>(
         {...props}
       >
         {icon && (
-          iconColor ? (
-            <div className={cn(
-              "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0",
-              iconColor
-            )}>
-              <div className="text-white text-sm flex items-center justify-center [&>svg]:text-white [&>svg]:w-4 [&>svg]:h-4">
-                {typeof icon === 'string' ? <span>{icon}</span> : icon}
-              </div>
-            </div>
-          ) : (
-            <div className="flex-shrink-0">
-              {typeof icon === 'string' ? <span>{icon}</span> : icon}
-            </div>
-          )
+          <div className="flex-shrink-0">
+            {typeof icon === 'string' ? (
+              <span className={cn(iconColor && iconColor.replace('bg-', 'text-'))}>{icon}</span>
+            ) : (
+              React.cloneElement(icon as React.ReactElement, {
+                className: cn(
+                  (icon as React.ReactElement).props?.className,
+                  iconColor && iconColor.replace('bg-', 'text-')
+                ),
+                style: iconColor ? {
+                  color: iconColor === 'bg-purple-500' ? '#a855f7' :
+                         iconColor === 'bg-blue-500' ? '#3b82f6' :
+                         iconColor === 'bg-green-500' ? '#22c55e' :
+                         iconColor === 'bg-pink-500' ? '#ec4899' :
+                         iconColor === 'bg-orange-500' ? '#f97316' :
+                         iconColor === 'bg-indigo-500' ? '#6366f1' :
+                         iconColor === 'bg-teal-500' ? '#14b8a6' :
+                         iconColor === 'bg-gray-500' ? '#6b7280' :
+                         iconColor === 'bg-yellow-500' ? '#eab308' :
+                         iconColor === 'bg-red-500' ? '#ef4444' :
+                         undefined,
+                  ...(icon as React.ReactElement).props?.style
+                } : (icon as React.ReactElement).props?.style
+              })
+            )}
+          </div>
         )}
         <div className="flex-1 min-w-0 py-2.5">
           <div className="text-[15px] font-normal text-foreground leading-tight">

@@ -108,9 +108,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
   const [newTheme, setNewTheme] = useState<Partial<GameTheme>>({
     name: '',
     description: '',
-    primary: '#3B82F6',
-    secondary: '#EF4444',
-    accent: '#F59E0B',
     xColor: '#1A73E8',
     oColor: '#EA4335',
     boardBg: '#FFFFFF',
@@ -132,9 +129,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
       setNewTheme({
         name: editTheme.name,
         description: editTheme.description,
-        primary: editTheme.primary,
-        secondary: editTheme.secondary,
-        accent: editTheme.accent,
         xColor: editTheme.xColor,
         oColor: editTheme.oColor,
         boardBg: editTheme.boardBg,
@@ -146,9 +140,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
       setNewTheme({
         name: '',
         description: '',
-        primary: '#3B82F6',
-        secondary: '#EF4444',
-        accent: '#F59E0B',
         xColor: '#1A73E8',
         oColor: '#EA4335',
         boardBg: '#FFFFFF',
@@ -171,9 +162,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
     const theme: Omit<GameTheme, 'id'> = {
       name: newTheme.name,
       description: newTheme.description || '',
-      primary: newTheme.primary!,
-      secondary: newTheme.secondary!,
-      accent: newTheme.accent!,
       xColor: newTheme.xColor!,
       oColor: newTheme.oColor!,
       boardBg: newTheme.boardBg!,
@@ -185,9 +173,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
     setNewTheme({
       name: '',
       description: '',
-      primary: '#3B82F6',
-      secondary: '#EF4444',
-      accent: '#F59E0B',
       xColor: '#1A73E8',
       oColor: '#EA4335',
       boardBg: '#FFFFFF',
@@ -211,9 +196,6 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
       setNewTheme({
         name: '',
         description: '',
-        primary: '#3B82F6',
-        secondary: '#EF4444',
-        accent: '#F59E0B',
         xColor: '#1A73E8',
         oColor: '#EA4335',
         boardBg: '#FFFFFF',

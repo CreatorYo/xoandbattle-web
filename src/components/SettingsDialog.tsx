@@ -42,8 +42,10 @@ import {
   MoreHorizontal,
   HelpCircle,
   Smartphone,
-  Keyboard
+  Keyboard,
+  Info
 } from 'lucide-react';
+import { GameTheme } from '@/contexts/GameContext';
 import { CustomBoardStylingDialog } from './CustomBoardStylingDialog';
 import { ThemesNavigationView } from './ThemesNavigationView';
 import { cn } from '@/lib/utils';
@@ -342,6 +344,147 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
     );
   };
 
+  const exportThemes = () => {
+    try {
+      const saved = localStorage.getItem('tic-tac-toe-custom-themes');
+      if (!saved) {
+        showToast.error(
+          "Export Failed",
+          "No custom presets to export."
+        );
+        return;
+      }
+
+      const themes: GameTheme[] = JSON.parse(saved);
+      if (themes.length === 0) {
+        showToast.error(
+          "Export Failed",
+          "No custom presets to export."
+        );
+        return;
+      }
+
+      const themesToExport = themes.map(({ boardBg, ...rest }) => rest);
+
+      const dataStr = JSON.stringify(themesToExport, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `XOBattle-Themes.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast.success(
+        "Themes Exported",
+        `${themes.length} custom preset${themes.length === 1 ? '' : 's'} exported successfully.`
+      );
+    } catch (error) {
+      console.error('Failed to export themes:', error);
+      showToast.error(
+        "Export Failed",
+        "Failed to export custom presets. Please try again."
+      );
+    }
+  };
+
+  const importThemes = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const importedThemes: GameTheme[] = JSON.parse(content);
+
+        if (!Array.isArray(importedThemes)) {
+          throw new Error('Invalid file format');
+        }
+
+        if (importedThemes.length === 0) {
+          showToast.error(
+            "Import Failed",
+            "The file contains no themes."
+          );
+          return;
+        }
+
+        const validThemes = importedThemes.filter(theme => 
+          theme.id && 
+          theme.name && 
+          theme.xColor && 
+          theme.oColor
+        );
+
+        if (validThemes.length === 0) {
+          showToast.error(
+            "Import Failed",
+            "No valid themes found in the file."
+          );
+          return;
+        }
+
+        const existingThemes: GameTheme[] = (() => {
+          try {
+            const saved = localStorage.getItem('tic-tac-toe-custom-themes');
+            return saved ? JSON.parse(saved) : [];
+          } catch {
+            return [];
+          }
+        })();
+
+        const existingIds = new Set(existingThemes.map(t => t.id));
+        const newThemes: GameTheme[] = [];
+        const skipped: string[] = [];
+
+        validThemes.forEach(theme => {
+          if (existingIds.has(theme.id)) {
+            skipped.push(theme.name);
+          } else {
+            const { boardBg, ...rest } = theme;
+            newThemes.push(rest as GameTheme);
+            existingIds.add(theme.id);
+          }
+        });
+
+        const updatedThemes = [...existingThemes, ...newThemes];
+        localStorage.setItem('tic-tac-toe-custom-themes', JSON.stringify(updatedThemes));
+        window.dispatchEvent(new Event('custom-storage-change'));
+
+        let message = `${newThemes.length} preset${newThemes.length === 1 ? '' : 's'} imported successfully.`;
+        if (skipped.length > 0) {
+          message += ` ${skipped.length} preset${skipped.length === 1 ? '' : 's'} skipped (already exists).`;
+        }
+
+        showToast.success(
+          "Themes Imported",
+          message
+        );
+      } catch (error) {
+        console.error('Failed to import themes:', error);
+        showToast.error(
+          "Import Failed",
+          "Failed to import themes. Please check the file format."
+        );
+      }
+    };
+
+    reader.onerror = () => {
+      showToast.error(
+        "Import Failed",
+        "Failed to read the file. Please try again."
+      );
+    };
+
+    reader.readAsText(file);
+    event.target.value = '';
+  };
+
+  const importThemesInputRef = useRef<HTMLInputElement>(null);
+
   const sidebarItems = [
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'gameplay', label: 'Gameplay', icon: Layout },
@@ -581,28 +724,25 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                     gameSettings.boardStyling.style === 'standard' ? '' : "hover:bg-muted/30"
                   )}
                   style={gameSettings.boardStyling.style === 'standard' ? {
-                    backgroundColor: `rgba(${appThemeColorRgb}, 0.2)`,
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
                   } : {}}
                   onMouseEnter={(e) => {
                     if (gameSettings.boardStyling.style === 'standard') {
-                      e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.3)`;
+                      e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.3)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (gameSettings.boardStyling.style === 'standard') {
-                      e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.2)`;
+                      e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
                     }
                   }}
                 >
-                  <div className={cn(
-                    "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0",
-                    gameSettings.boardStyling.style === 'standard' ? "bg-blue-500" : "bg-muted"
-                  )}>
+                  <div className="flex-shrink-0">
                     <Square className={cn(
                       "h-4 w-4",
-                      gameSettings.boardStyling.style === 'standard' ? "text-white" : "text-muted-foreground"
+                      gameSettings.boardStyling.style === 'standard' ? "text-blue-500" : "text-muted-foreground"
                     )} />
-                          </div>
+                  </div>
                   <div className="flex-1 min-w-0 py-2.5">
                     <div className="text-[15px] font-normal text-foreground leading-tight">Standard</div>
                         </div>
@@ -622,28 +762,25 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                     gameSettings.boardStyling.style === 'rounded' ? '' : "hover:bg-muted/30"
                   )}
                   style={gameSettings.boardStyling.style === 'rounded' ? {
-                    backgroundColor: `rgba(${appThemeColorRgb}, 0.2)`,
+                    backgroundColor: 'rgba(34, 197, 94, 0.2)',
                   } : {}}
                   onMouseEnter={(e) => {
                     if (gameSettings.boardStyling.style === 'rounded') {
-                      e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.3)`;
+                      e.currentTarget.style.backgroundColor = 'rgba(34, 197, 94, 0.3)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (gameSettings.boardStyling.style === 'rounded') {
-                      e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.2)`;
+                      e.currentTarget.style.backgroundColor = 'rgba(34, 197, 94, 0.2)';
                     }
                   }}
                 >
-                  <div className={cn(
-                    "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0",
-                    gameSettings.boardStyling.style === 'rounded' ? "bg-green-500" : "bg-muted"
-                  )}>
+                  <div className="flex-shrink-0">
                     <Circle className={cn(
                       "h-4 w-4",
-                      gameSettings.boardStyling.style === 'rounded' ? "text-white" : "text-muted-foreground"
+                      gameSettings.boardStyling.style === 'rounded' ? "text-green-500" : "text-muted-foreground"
                     )} />
-                        </div>
+                  </div>
                   <div className="flex-1 min-w-0 py-2.5">
                     <div className="text-[15px] font-normal text-foreground leading-tight">Rounded</div>
                           </div>
@@ -667,26 +804,23 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                     gameSettings.boardStyling.style === 'custom' ? '' : "hover:bg-muted/30"
                   )}
                   style={gameSettings.boardStyling.style === 'custom' ? {
-                    backgroundColor: `rgba(${appThemeColorRgb}, 0.2)`,
+                    backgroundColor: 'rgba(168, 85, 247, 0.2)',
                   } : {}}
                   onMouseEnter={(e) => {
                     if (gameSettings.boardStyling.style === 'custom') {
-                      e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.3)`;
+                      e.currentTarget.style.backgroundColor = 'rgba(168, 85, 247, 0.3)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (gameSettings.boardStyling.style === 'custom') {
-                      e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.2)`;
+                      e.currentTarget.style.backgroundColor = 'rgba(168, 85, 247, 0.2)';
                     }
                   }}
                 >
-                  <div className={cn(
-                    "w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0",
-                    gameSettings.boardStyling.style === 'custom' ? "bg-purple-500" : "bg-muted"
-                  )}>
+                  <div className="flex-shrink-0">
                     <SettingsIcon className={cn(
                       "h-4 w-4",
-                      gameSettings.boardStyling.style === 'custom' ? "text-white" : "text-muted-foreground"
+                      gameSettings.boardStyling.style === 'custom' ? "text-purple-500" : "text-muted-foreground"
                     )} />
                   </div>
                   <div className="flex-1 min-w-0 py-2.5">
@@ -997,17 +1131,37 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
               />
               <SettingsRow
                 icon={<HelpCircle className="h-4 w-4" />}
-                iconColor="bg-green-500"
+                iconColor="bg-yellow-500"
                 title="How to Play"
                 subtitle="Learn the basics and tips"
                 onClick={() => setShowHowToPlayDialog(true)}
                 showChevron
               />
               <SettingsRow
-                icon={<span className="text-xs font-bold">i</span>}
+                icon={<Info className="h-4 w-4" />}
                 iconColor="bg-gray-500"
                 title="Version"
-                subtitle="1.0.0"
+                subtitle="X&O Battle Web 2.0.0"
+              />
+            </SettingsSection>
+
+            <SettingsSection header="Theme Export / Import">
+              <SettingsRow
+                icon={<Download className="h-4 w-4" />}
+                iconColor="bg-teal-500"
+                title="Export Themes"
+                subtitle="Download your custom theme presets"
+                onClick={exportThemes}
+                showChevron
+                isFirst
+              />
+              <SettingsRow
+                icon={<Upload className="h-4 w-4" />}
+                iconColor="bg-green-500"
+                title="Import Themes"
+                subtitle="Import custom theme presets from a file"
+                onClick={() => importThemesInputRef.current?.click()}
+                showChevron
               />
             </SettingsSection>
 
@@ -1165,11 +1319,11 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
             
             <div className="p-4 border-t border-border/30">
               {sidebarCollapsed ? (
-                <button
-                  onClick={() => {
-                    window.open('https://apps.apple.com/us/app/x-o-battle/id6745736399', '_blank');
-                    setMobileMenuOpen(false);
-                  }}
+                <a
+                  href="https://apps.apple.com/us/app/x-o-battle/id6745736399"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMobileMenuOpen(false)}
                   className="w-full group flex items-center justify-center p-3 text-muted-foreground rounded-lg transition-all duration-200"
                   title="Get App"
                 >
@@ -1179,16 +1333,16 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                       "group-hover:text-foreground"
                     )} />
                   </div>
-                </button>
+                </a>
               ) : (
                 <Ripple 
                   color={`rgba(${appThemeColorRgb}, 0.2)`}
                 >
-                  <button
-                    onClick={() => {
-                      window.open('https://apps.apple.com/us/app/x-o-battle/id6745736399', '_blank');
-                      setMobileMenuOpen(false);
-                    }}
+                  <a
+                    href="https://apps.apple.com/us/app/x-o-battle/id6745736399"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileMenuOpen(false)}
                     className="w-full group flex items-center gap-4 p-3 rounded-lg text-left transition-all duration-200 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
                     title="Get App"
                   >
@@ -1202,7 +1356,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                         Get App
                       </div>
                     </div>
-                  </button>
+                  </a>
                 </Ripple>
               )}
             </div>
@@ -1256,7 +1410,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
         open={showResetDialog}
         onOpenChange={setShowResetDialog}
         title="Reset Awards"
-        description="Are you sure you want to reset all awards? This action cannot be undone."
+        description={<>Are you sure you want to reset all awards? This action <strong>cannot</strong> be undone.</>}
         confirmText="Reset All Awards"
         onConfirm={resetStatistics}
         variant="destructive"
@@ -1266,7 +1420,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
         open={showResetSettingsDialog}
         onOpenChange={setShowResetSettingsDialog}
         title="Reset All Settings"
-        description="Are you sure you want to reset all game settings? This action cannot be undone."
+        description={<>Are you sure you want to reset all game settings? This action <strong>cannot</strong> be undone.</>}
         confirmText="Reset All Settings"
         onConfirm={resetSettings}
         variant="destructive"
@@ -1276,10 +1430,18 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
         open={showResetThemesDialog}
         onOpenChange={setShowResetThemesDialog}
         title="Delete Presets"
-        description="Are you sure you want to delete all custom theme presets? This action cannot be undone."
+        description={<>Are you sure you want to delete all custom theme presets? This action <strong>cannot</strong> be undone.</>}
         confirmText="Delete Presets"
         onConfirm={resetThemes}
         variant="destructive"
+      />
+
+      <input
+        ref={importThemesInputRef}
+        type="file"
+        accept=".json"
+        onChange={importThemes}
+        style={{ display: 'none' }}
       />
 
       <CustomBoardStylingDialog
@@ -1398,7 +1560,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
         open={showResetConfirm}
         onOpenChange={(open) => !open && setShowResetConfirm(false)}
         title={`Reset ${selectedAchievement?.label}?`}
-        description="Are you sure you want to reset this achievement? This action cannot be undone."
+        description={<>Are you sure you want to reset this achievement? This action <strong>cannot</strong> be undone.</>}
         confirmText={`Reset ${selectedAchievement?.label}`}
         onConfirm={() => {
           if (selectedAchievement) {

@@ -20,7 +20,8 @@ import {
   Edit,
   Check,
   Trash2,
-  GripVertical
+  GripVertical,
+  X
 } from 'lucide-react';
 
 interface ThemesNavigationViewProps {
@@ -353,7 +354,7 @@ export function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appT
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-9 h-10 rounded-lg bg-gray-200 dark:bg-muted/30 border-border/50 focus-visible:ring-2"
+            className={cn("h-10 rounded-lg bg-gray-200 dark:bg-muted/30 border-border/50 focus-visible:ring-2", searchQuery ? "pl-9 pr-9" : "pl-9")}
             style={{
               '--tw-ring-color': `rgba(${appThemeColorRgb}, 0.3)`,
             } as React.CSSProperties & { '--tw-ring-color': string }}
@@ -361,6 +362,15 @@ export function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appT
               e.currentTarget.style.setProperty('--tw-ring-color', `rgba(${appThemeColorRgb}, 0.3)`);
             }}
           />
+          {searchQuery && (
+            <button
+              onClick={() => onSearchChange('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-muted/70 dark:bg-muted/50 hover:bg-muted dark:hover:bg-muted flex items-center justify-center transition-colors"
+              aria-label="Clear search"
+            >
+              <X className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -587,27 +597,25 @@ export function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appT
               ) : (
                 <div className="px-4 py-3">
                   <p className="text-sm text-muted-foreground mb-3 text-left">No custom presets yet.</p>
-                  <div className="text-left">
-                    <Button
-                      onClick={() => setShowCreateDialog(true)}
-                      variant="ghost"
-                      className="-ml-2 pl-2"
-                      style={{ color: appThemeColor }}
-                      onMouseEnter={(e) => {
-                        const target = e.currentTarget;
-                        target.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.1)`;
-                        target.style.color = appThemeColor;
-                      }}
-                      onMouseLeave={(e) => {
-                        const target = e.currentTarget;
-                        target.style.backgroundColor = '';
-                        target.style.color = appThemeColor;
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Add Preset
-                    </Button>
-                  </div>
+                  <Button
+                    onClick={() => setShowCreateDialog(true)}
+                    variant="ghost"
+                    className="w-full justify-start -ml-2 pl-2"
+                    style={{ color: appThemeColor }}
+                    onMouseEnter={(e) => {
+                      const target = e.currentTarget;
+                      target.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.1)`;
+                      target.style.color = appThemeColor;
+                    }}
+                    onMouseLeave={(e) => {
+                      const target = e.currentTarget;
+                      target.style.backgroundColor = '';
+                      target.style.color = appThemeColor;
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Add Preset
+                  </Button>
                 </div>
               )
             ) : (
@@ -915,7 +923,7 @@ export function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appT
         open={showResetThemesDialog}
         onOpenChange={setShowResetThemesDialog}
         title="Delete Presets"
-        description="Are you sure you want to delete all custom theme presets? This action cannot be undone."
+        description={<>Are you sure you want to delete all custom theme presets? This action <strong>cannot</strong> be undone.</>}
         confirmText="Delete Presets"
         onConfirm={() => {
           try {

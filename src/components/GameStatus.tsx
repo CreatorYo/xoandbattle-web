@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Users, Bot } from 'lucide-react';
 
 export function GameStatus() {
-  const { winner, currentPlayer, gameSettings, gameStats, board } = useGame();
+  const { winner, currentPlayer, gameSettings, gameStats, board, isAiThinking } = useGame();
 
   const getStatusMessage = () => {
     if (winner) {
@@ -50,14 +50,16 @@ export function GameStatus() {
                 ? (gameSettings.gameMode === 'ai' && winner === 'O' ? 'AI Wins!' : `Player ${winner} Wins!`)
                 : (!winner && board.every(cell => cell !== null) 
                   ? "It's a Draw!" 
-                  : `Player ${currentPlayer}'s Turn`)
+                  : gameSettings.gameMode === 'ai'
+                    ? (isAiThinking ? "AI's turn" : currentPlayer === 'X' ? 'Your turn' : "AI's turn")
+                    : `Player ${currentPlayer}'s Turn`)
               }
             </span>
           </div>
           
           <div className="flex items-center gap-5 flex-shrink-0">
             <div className="text-center min-w-[32px]">
-              <div className="text-lg font-bold text-game-x leading-tight">{gameStats.xWins}</div>
+              <div className="text-lg font-bold leading-tight" style={{ color: gameSettings.theme.xColor }}>{gameStats.xWins}</div>
               <div className="text-xs text-muted-foreground mt-1">X</div>
             </div>
             <div className="text-center min-w-[32px]">
@@ -65,8 +67,8 @@ export function GameStatus() {
               <div className="text-xs text-muted-foreground mt-1">-</div>
             </div>
             <div className="text-center min-w-[32px]">
-              <div className="text-lg font-bold text-game-o leading-tight">{gameStats.oWins}</div>
-              <div className="text-xs text-muted-foreground mt-1">O</div>
+              <div className="text-lg font-bold leading-tight" style={{ color: gameSettings.theme.oColor }}>{gameStats.oWins}</div>
+              <div className="text-xs text-muted-foreground mt-1">{gameSettings.gameMode === 'ai' ? 'AI' : 'O'}</div>
             </div>
           </div>
         </div>

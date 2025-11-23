@@ -41,13 +41,9 @@ export function ConfirmDialog({
               </DialogTitle>
             </DialogHeader>
             
-            {typeof description === 'string' ? (
-              <p className="text-center text-sm text-muted-foreground mb-5">
-                {description}
-              </p>
-            ) : (
-              <div className="mb-5">{description}</div>
-            )}
+            <p className="text-center text-[14px] text-muted-foreground mb-5">
+              {description}
+            </p>
             
             <div className="pb-0">
               <Button

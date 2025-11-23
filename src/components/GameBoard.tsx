@@ -31,8 +31,7 @@ export function GameBoard() {
             baseClasses,
             "text-game-x",
             gameSettings.enableAnimations && "animate-piece-appear",
-            isWinningCell && gameSettings.enableAnimations && gameSettings.winAnimation === 'glow' && "animate-winner-glow",
-            isWinningCell && gameSettings.enableAnimations && gameSettings.winAnimation === 'sparkle' && "animate-sparkle"
+            isWinningCell && gameSettings.enableAnimations && gameSettings.winAnimation === 'glow' && "animate-winner-glow"
           )}
           style={{ color: gameSettings.theme.xColor }}
         >
@@ -47,8 +46,7 @@ export function GameBoard() {
           baseClasses,
           "text-game-o",
           gameSettings.enableAnimations && "animate-piece-appear",
-          isWinningCell && gameSettings.enableAnimations && gameSettings.winAnimation === 'glow' && "animate-winner-glow",
-          isWinningCell && gameSettings.enableAnimations && gameSettings.winAnimation === 'sparkle' && "animate-sparkle"
+          isWinningCell && gameSettings.enableAnimations && gameSettings.winAnimation === 'glow' && "animate-winner-glow"
         )}
         style={{ color: gameSettings.theme.oColor }}
       >

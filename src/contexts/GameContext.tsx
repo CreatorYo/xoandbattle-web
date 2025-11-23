@@ -10,9 +10,6 @@ export interface GameTheme {
   id: string;
   name: string;
   description: string;
-  primary: string;
-  secondary: string;
-  accent: string;
   xColor: string;
   oColor: string;
   boardBg: string;
@@ -86,7 +83,7 @@ interface GameContextType {
   makeMove: (index: number) => void;
   resetGame: () => void;
   updateSettings: (settings: Partial<GameSettings>) => void;
-  triggerWinAnimation: () => void;
+  triggerWinAnimation: (winner?: Player) => void;
   resetStats: () => void;
   resetPersistentStats: () => void;
   updatePersistentStats: (stats: Partial<GameContextType['persistentStats']>) => void;
@@ -97,9 +94,6 @@ const defaultThemes: GameTheme[] = [
     id: 'classic',
     name: 'Classic',
     description: '',
-    primary: '#3B82F6',
-    secondary: '#EF4444',
-    accent: '#F59E0B',
     xColor: '#1A73E8',
     oColor: '#EA4335',
     boardBg: '#FFFFFF',
@@ -109,9 +103,6 @@ const defaultThemes: GameTheme[] = [
     id: 'modern',
     name: 'Modern',
     description: '',
-    primary: '#3B82F6',
-    secondary: '#DB34F2',
-    accent: '#FF375F',
     xColor: '#DB34F2',
     oColor: '#FF375F',
     boardBg: '#FFFFFF',
@@ -121,9 +112,6 @@ const defaultThemes: GameTheme[] = [
     id: 'neon',
     name: 'Neon',
     description: '',
-    primary: '#3B82F6',
-    secondary: '#30D158',
-    accent: '#FFD600',
     xColor: '#30D158',
     oColor: '#FFD600',
     boardBg: '#FFFFFF',
@@ -133,9 +121,6 @@ const defaultThemes: GameTheme[] = [
     id: 'minimal',
     name: 'Minimal',
     description: '',
-    primary: '#3B82F6',
-    secondary: '#6B7280',
-    accent: '#374151',
     xColor: '#6B7280',
     oColor: '#374151',
     boardBg: '#FFFFFF',
@@ -145,9 +130,6 @@ const defaultThemes: GameTheme[] = [
     id: 'retro',
     name: 'Retro',
     description: '',
-    primary: '#3B82F6',
-    secondary: '#FF9230',
-    accent: '#DB34F2',
     xColor: '#FF9230',
     oColor: '#DB34F2',
     boardBg: '#FFFFFF',
@@ -323,6 +305,22 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return bestMove;
   };
 
+  const updatePersistentStatsIfNotPaused = (updates: Partial<typeof persistentStats>) => {
+    if (localStorage.getItem('tic-tac-toe-pause-achievements') !== 'true') {
+      const now = new Date().toISOString();
+      const totalGames = (persistentStats.gamesPlayed || 0) + 1;
+      const isFirstGame = (persistentStats.gamesPlayed || 0) === 0;
+      const newPersistentStats: any = {
+        ...persistentStats,
+        gamesPlayed: totalGames,
+        ...(isFirstGame ? { gamesPlayedFirstAchieved: now } : { gamesPlayedLastUpdated: now }),
+        ...updates
+      };
+      setPersistentStats(newPersistentStats);
+      localStorage.setItem('tic-tac-toe-persistent-stats', JSON.stringify(newPersistentStats));
+    }
+  };
+
   const makeMove = (index: number) => {
     if (board[index] || winner) return;
 
@@ -355,12 +353,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setGameStats(newStats);
       
       const now = new Date().toISOString();
-      const totalGames = (persistentStats.gamesPlayed || 0) + 1;
-      const isFirstGame = (persistentStats.gamesPlayed || 0) === 0;
-      const newPersistentStats: any = {
-        ...persistentStats,
-        gamesPlayed: totalGames,
-        ...(isFirstGame ? { gamesPlayedFirstAchieved: now } : { gamesPlayedLastUpdated: now }),
+      const updates: any = {
         ...(gameWinner === 'X' ? { 
           xWins: persistentStats.xWins + 1,
           ...(!persistentStats.xWinsFirstAchieved ? { xWinsFirstAchieved: now } : { xWinsLastUpdated: now })
@@ -375,16 +368,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
         const difficultyKey = `${gameSettings.difficulty}Wins` as 'easyWins' | 'mediumWins' | 'hardWins' | 'unbeatableWins';
         const firstAchievedKey = `${difficultyKey}FirstAchieved` as keyof typeof persistentStats;
         if (!persistentStats[firstAchievedKey]) {
-          newPersistentStats[firstAchievedKey] = now;
+          updates[firstAchievedKey] = now;
         } else {
-          newPersistentStats[`${difficultyKey}LastUpdated`] = now;
+          updates[`${difficultyKey}LastUpdated`] = now;
         }
       }
       
-      setPersistentStats(newPersistentStats);
-      localStorage.setItem('tic-tac-toe-persistent-stats', JSON.stringify(newPersistentStats));
+      updatePersistentStatsIfNotPaused(updates);
       
-      triggerWinAnimation();
+      triggerWinAnimation(gameWinner);
       return;
     }
 
@@ -393,17 +385,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setGameStats(newStats);
       
       const now = new Date().toISOString();
-      const totalGames = (persistentStats.gamesPlayed || 0) + 1;
-      const isFirstGame = (persistentStats.gamesPlayed || 0) === 0;
-      const newPersistentStats: any = {
-        ...persistentStats,
-        gamesPlayed: totalGames,
-        ...(isFirstGame ? { gamesPlayedFirstAchieved: now } : { gamesPlayedLastUpdated: now }),
+      updatePersistentStatsIfNotPaused({
         draws: persistentStats.draws + 1,
         ...(!persistentStats.drawsFirstAchieved ? { drawsFirstAchieved: now } : { drawsLastUpdated: now })
-      };
-      setPersistentStats(newPersistentStats);
-      localStorage.setItem('tic-tac-toe-persistent-stats', JSON.stringify(newPersistentStats));
+      });
       
       return;
     }
@@ -423,21 +408,23 @@ export function GameProvider({ children }: { children: ReactNode }) {
         if (aiWinner) {
           setWinner(aiWinner);
           setWinningLine(aiLine);
-          const newStats = { ...gameStats };
+          const newStats = {
+            ...gameStats,
+            ...(aiWinner === 'O' ? { oWins: gameStats.oWins + 1 } : {})
+          };
           setGameStats(newStats);
           
-          const now = new Date().toISOString();
-          const totalGames = (persistentStats.gamesPlayed || 0) + 1;
-          const isFirstGame = (persistentStats.gamesPlayed || 0) === 0;
-          const newPersistentStats: any = {
-            ...persistentStats,
-            gamesPlayed: totalGames,
-            ...(isFirstGame ? { gamesPlayedFirstAchieved: now } : { gamesPlayedLastUpdated: now })
-          };
-          setPersistentStats(newPersistentStats);
-          localStorage.setItem('tic-tac-toe-persistent-stats', JSON.stringify(newPersistentStats));
+          if (aiWinner === 'O') {
+            const now = new Date().toISOString();
+            updatePersistentStatsIfNotPaused({
+              oWins: persistentStats.oWins + 1,
+              ...(!persistentStats.oWinsFirstAchieved ? { oWinsFirstAchieved: now } : { oWinsLastUpdated: now })
+            });
+          } else {
+            updatePersistentStatsIfNotPaused({});
+          }
           
-          triggerWinAnimation();
+          triggerWinAnimation(aiWinner);
           setIsAiThinking(false);
           return;
         }
@@ -447,17 +434,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
           setGameStats(newStats);
           
           const now = new Date().toISOString();
-          const totalGames = (persistentStats.gamesPlayed || 0) + 1;
-          const isFirstGame = (persistentStats.gamesPlayed || 0) === 0;
-          const newPersistentStats: any = {
-            ...persistentStats,
-            gamesPlayed: totalGames,
-            ...(isFirstGame ? { gamesPlayedFirstAchieved: now } : { gamesPlayedLastUpdated: now }),
+          updatePersistentStatsIfNotPaused({
             draws: persistentStats.draws + 1,
             ...(!persistentStats.drawsFirstAchieved ? { drawsFirstAchieved: now } : { drawsLastUpdated: now })
-          };
-          setPersistentStats(newPersistentStats);
-          localStorage.setItem('tic-tac-toe-persistent-stats', JSON.stringify(newPersistentStats));
+          });
           
           setIsAiThinking(false);
           return;
@@ -483,16 +463,89 @@ export function GameProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('tic-tac-toe-settings', JSON.stringify(newSettings));
   };
 
-  const triggerWinAnimation = () => {
+  const triggerWinAnimation = (winningPlayer?: Player) => {
+    if (gameSettings.gameMode === 'ai' && winningPlayer === 'O') {
+      return;
+    }
+    
     switch (gameSettings.winAnimation) {
       case 'confetti':
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
+        const confettiCount = 5;
+        const positions = [
+          { x: 0, y: 0.3 },
+          { x: 0.25, y: 0.2 },
+          { x: 0.5, y: 0.3 },
+          { x: 0.75, y: 0.2 },
+          { x: 1, y: 0.3 },
+        ];
+        
+        positions.forEach((pos, index) => {
+          setTimeout(() => {
+            confetti({
+              particleCount: 50,
+              angle: 90,
+              spread: 70,
+              origin: pos,
+            });
+            confetti({
+              particleCount: 50,
+              angle: 45 + index * 30,
+              spread: 55,
+              origin: pos,
+            });
+            confetti({
+              particleCount: 50,
+              angle: 135 - index * 30,
+              spread: 55,
+              origin: pos,
+            });
+          }, index * 50);
         });
         break;
       case 'sparkle':
+        const sparkleColors = ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFE66D', '#FF6B9D', '#C44569'];
+        const sparkleCount = 150;
+        
+        for (let i = 0; i < sparkleCount; i++) {
+          setTimeout(() => {
+            confetti({
+              particleCount: 1,
+              angle: Math.random() * 360,
+              spread: Math.random() * 50 + 30,
+              origin: { 
+                x: Math.random(),
+                y: Math.random() * 0.5 + 0.2
+              },
+              colors: [sparkleColors[Math.floor(Math.random() * sparkleColors.length)]],
+              shapes: ['star'],
+              gravity: 0.6 + Math.random() * 0.4,
+              drift: (Math.random() - 0.5) * 2,
+              ticks: 150 + Math.random() * 80,
+              decay: 0.93 + Math.random() * 0.03,
+              startVelocity: 18 + Math.random() * 22,
+              scalar: 0.8 + Math.random() * 0.4,
+            });
+          }, i * 7);
+        }
+        
+        setTimeout(() => {
+          confetti({
+            particleCount: 50,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0, y: 0.6 },
+            colors: sparkleColors,
+            shapes: ['star'],
+          });
+          confetti({
+            particleCount: 50,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1, y: 0.6 },
+            colors: sparkleColors,
+            shapes: ['star'],
+          });
+        }, 120);
         break;
       case 'glow':
         break;

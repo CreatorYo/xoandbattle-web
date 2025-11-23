@@ -6,7 +6,7 @@ import { useGame } from '@/contexts/GameContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIVisibility } from '@/hooks/use-ui-visibility';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Sparkles, RotateCcw, Gamepad2, Settings } from 'lucide-react';
+import { Eye, RotateCcw, Gamepad2, Settings } from 'lucide-react';
 import { GameModeDialog } from './GameModeDialog';
 
 function TurnIndicator() {
@@ -148,7 +148,7 @@ export function GameLayout() {
                     onClick={resetGame} 
                     variant="outline"
                     size="sm"
-                    className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-red-500/30 hover:border-red-500/50 hover:bg-red-500/20 transition-all duration-200 shadow-lg hover:shadow-red-500/25 hover:scale-105"
+                    className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-0 hover:bg-red-500/20 transition-all duration-200 shadow-lg hover:shadow-red-500/25"
                     title="Reset Game"
                   >
                     <RotateCcw className="!h-5 !w-5 text-red-500" />
@@ -158,7 +158,7 @@ export function GameLayout() {
                     <Button 
                       variant="outline"
                       size="sm"
-                      className="w-12 h-12 p-0 rounded-full bg-blue-500/10 border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/20 transition-all duration-200 shadow-lg hover:shadow-blue-500/25 hover:scale-105"
+                      className="w-12 h-12 p-0 rounded-full bg-blue-500/10 border-0 hover:bg-blue-500/20 transition-all duration-200 shadow-lg hover:shadow-blue-500/25"
                       title="Change Game Mode"
                     >
                       <Gamepad2 className="!h-5 !w-5 text-blue-500" />
@@ -168,7 +168,7 @@ export function GameLayout() {
                   <Button 
                     variant="outline"
                     size="sm"
-                    className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-green-500/30 hover:border-green-500/50 hover:bg-green-500/20 transition-all duration-200 shadow-lg hover:shadow-green-500/25 hover:scale-105"
+                    className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-0 hover:bg-green-500/20 transition-all duration-200 shadow-lg hover:shadow-green-500/25"
                     onClick={() => setSettingsOpen(true)}
                     title="Settings"
                   >
@@ -193,7 +193,7 @@ export function GameLayout() {
                       onClick={resetGame} 
                       variant="outline"
                       size="sm"
-                      className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-red-500/30 hover:border-red-500/50 hover:bg-red-500/20 transition-all duration-200 shadow-lg hover:shadow-red-500/25 hover:scale-105"
+                      className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-0 hover:bg-red-500/20 transition-all duration-200 shadow-lg hover:shadow-red-500/25"
                     >
                       <RotateCcw className="!h-5 !w-5 text-red-500" />
                     </Button>
@@ -202,7 +202,7 @@ export function GameLayout() {
                       <Button 
                         variant="outline"
                         size="sm"
-                        className="w-12 h-12 p-0 rounded-full bg-blue-500/10 border-blue-500/30 hover:border-blue-500/50 hover:bg-blue-500/20 transition-all duration-200 shadow-lg hover:shadow-blue-500/25 hover:scale-105"
+                        className="w-12 h-12 p-0 rounded-full bg-blue-500/10 border-0 hover:bg-blue-500/20 transition-all duration-200 shadow-lg hover:shadow-blue-500/25"
                       >
                         <Gamepad2 className="!h-5 !w-5 text-blue-500" />
                       </Button>
@@ -211,7 +211,7 @@ export function GameLayout() {
                     <Button 
                       variant="outline"
                       size="sm"
-                      className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-green-500/30 hover:border-green-500/50 hover:bg-green-500/20 transition-all duration-200 shadow-lg hover:shadow-green-500/25 hover:scale-105"
+                      className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-0 hover:bg-green-500/20 transition-all duration-200 shadow-lg hover:shadow-green-500/25"
                       onClick={() => setSettingsOpen(true)}
                     >
                       <Settings className="!h-5 !w-5 text-green-500" />
