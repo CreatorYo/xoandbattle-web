@@ -1121,7 +1121,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                       <Icon 
                         className={cn(
                           "h-5 w-5 transition-colors duration-200",
-                          sidebarCollapsed && "group-hover:text-white"
+                          sidebarCollapsed && "group-hover:text-foreground"
                         )}
                         style={isActive && sidebarCollapsed ? {
                           color: appThemeColor
