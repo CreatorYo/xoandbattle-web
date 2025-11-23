@@ -15,7 +15,7 @@ const tourSteps: TourStep[] = [
   {
     id: 'welcome',
     title: 'Welcome to X&O Battle Web!',
-    description: 'Let\'s take a quick tour to get you familiar with the game. Please **note** that this is different from the official app experience.',
+    description: 'Let\'s take a quick tour to get you familiar with the game.\n\n**Note:** This web version may not be as stable as the official app.',
     icon: Play,
     position: 'center'
   },
@@ -141,11 +141,41 @@ export function OnboardingTour() {
     }
   };
 
+  const getStepColors = (stepId: string) => {
+    switch (stepId) {
+      case 'game-modes':
+        return {
+          gradient: 'from-green-500 to-green-600',
+          hoverGradient: 'hover:from-green-600 hover:to-green-700',
+          textColor: 'text-green-100'
+        };
+      case 'themes':
+        return {
+          gradient: 'from-purple-500 to-purple-600',
+          hoverGradient: 'hover:from-purple-600 hover:to-purple-700',
+          textColor: 'text-purple-100'
+        };
+      case 'settings':
+        return {
+          gradient: 'from-orange-500 to-orange-600',
+          hoverGradient: 'hover:from-orange-600 hover:to-orange-700',
+          textColor: 'text-orange-100'
+        };
+      default:
+        return {
+          gradient: 'from-blue-500 to-blue-600',
+          hoverGradient: 'hover:from-blue-600 hover:to-blue-700',
+          textColor: 'text-blue-100'
+        };
+    }
+  };
+
   if (!isVisible && !showWelcome) return null;
 
   const currentTourStep = tourSteps[currentStep];
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === tourSteps.length - 1;
+  const stepColors = getStepColors(currentTourStep.id);
 
   return (
     <>
@@ -170,7 +200,7 @@ export function OnboardingTour() {
           
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
             <div className="relative bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+              <div className={`bg-gradient-to-r ${stepColors.gradient} p-6 text-white`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
@@ -178,7 +208,7 @@ export function OnboardingTour() {
                     </div>
                     <div>
                       <h2 className="text-lg font-semibold">{currentTourStep.title}</h2>
-                      <p className="text-blue-100 text-sm">{currentStep + 1} of {tourSteps.length}</p>
+                      <p className={`${stepColors.textColor} text-sm`}>{currentStep + 1} of {tourSteps.length}</p>
                     </div>
                   </div>
                   {!isLastStep && (
@@ -194,18 +224,22 @@ export function OnboardingTour() {
 
               <div className="p-6">
                 <div className="text-gray-600 dark:text-gray-300 text-center leading-relaxed mb-6">
-                  {currentTourStep.description.split('**').map((part, index) => 
-                    index % 2 === 0 ? (
-                      <span key={index}>{part}</span>
-                    ) : (
-                      <strong key={index} className="font-bold">{part}</strong>
-                    )
-                  )}
+                  {currentTourStep.description.split('\n').map((paragraph, pIndex) => (
+                    <p key={pIndex} className={pIndex > 0 ? 'mt-3' : ''}>
+                      {paragraph.split('**').map((part, index) => 
+                        index % 2 === 0 ? (
+                          <span key={index}>{part}</span>
+                        ) : (
+                          <strong key={index} className="font-bold">{part}</strong>
+                        )
+                      )}
+                    </p>
+                  ))}
                 </div>
 
                 <div className="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-2 mb-6">
                   <div 
-                    className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
+                    className={`bg-gradient-to-r ${stepColors.gradient} h-2 rounded-full transition-all duration-300`}
                     style={{ width: `${((currentStep + 1) / tourSteps.length) * 100}%` }}
                   />
                 </div>
@@ -215,7 +249,7 @@ export function OnboardingTour() {
                     variant="outline"
                     onClick={previousStep}
                     disabled={isFirstStep}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 hover:border-input hover:text-foreground focus-visible:ring-0"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     Previous
@@ -223,24 +257,13 @@ export function OnboardingTour() {
 
                   <Button
                     onClick={nextStep}
-                    className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white flex items-center gap-2"
+                    className={`bg-gradient-to-r ${stepColors.gradient} ${stepColors.hoverGradient} text-white flex items-center gap-2`}
                   >
                     {isLastStep ? 'Get Started' : 'Next'}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-
-              {!isLastStep && (
-                <div className="px-6 pb-4 text-center">
-                  <button
-                    onClick={skipTour}
-                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm transition-colors"
-                  >
-                    Skip tour
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </>

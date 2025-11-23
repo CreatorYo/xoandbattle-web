@@ -375,8 +375,8 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                       e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.2)`;
                     }}
                   >
-                  <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center mb-1.5">
-                    <Sun className="h-4 w-4 text-white" />
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center mb-1.5">
+                    <Sun className="h-5 w-5 text-yellow-500" />
                         </div>
                   <div className="text-[13px] font-normal text-foreground">Light</div>
                       </div>
@@ -397,8 +397,8 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                       e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.2)`;
                     }}
                   >
-                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center mb-1.5">
-                    <Moon className="h-4 w-4 text-white" />
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center mb-1.5">
+                    <Moon className="h-5 w-5 text-blue-500" />
                         </div>
                   <div className="text-[13px] font-normal text-foreground">Dark</div>
                       </div>
@@ -419,8 +419,8 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                       e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.2)`;
                     }}
                   >
-                  <div className="w-8 h-8 rounded-full bg-slate-500 flex items-center justify-center mb-1.5">
-                    <Monitor className="h-4 w-4 text-white" />
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center mb-1.5">
+                    <Monitor className="h-5 w-5 text-slate-500" />
                         </div>
                   <div className="text-[13px] font-normal text-foreground">System</div>
                       </div>
@@ -1050,10 +1050,11 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
             />
           )}
           <div className={cn(
-            "bg-[#F2F3F3] dark:bg-[#0E0E0E] border-r border-border/30 flex flex-col fixed md:relative z-50 md:z-auto h-full transition-all duration-300 ease-in-out",
+            "bg-[#F2F3F3] dark:bg-[#0E0E0E] border-r border-border/30 flex flex-col h-full transition-all duration-300 ease-in-out",
+            isMobile ? "fixed z-50 w-64" : "fixed md:relative z-50 md:z-auto",
             mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
-            sidebarCollapsed ? "w-16" : "w-64"
-          )} style={{ boxShadow: 'none', outline: 'none', position: 'relative' }}>
+            !isMobile && (sidebarCollapsed ? "w-16" : "w-64")
+          )} style={{ boxShadow: 'none', outline: 'none' }}>
             {!isMobile && (
               <div
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -1062,7 +1063,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
             )}
             <div className={cn(
               "border-b border-border/20 transition-all duration-300",
-              sidebarCollapsed ? "p-3" : "p-6"
+              isMobile ? "p-4" : sidebarCollapsed ? "p-3" : "p-6"
             )}>
               {!sidebarCollapsed ? (
                 <div className="flex items-center gap-3">
@@ -1082,14 +1083,17 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                     className="w-full flex items-center justify-center p-3 rounded-lg transition-colors group relative"
                     title="Expand sidebar"
                   >
-                    <Settings className="h-[18px] w-[18px] transition-all duration-200 group-hover:opacity-0 absolute group-hover:text-white" style={{ color: appThemeColor }} />
-                    <ChevronRight className="h-[18px] w-[18px] text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-200" />
+                    <Settings className="h-[18px] w-[18px] transition-all duration-200 group-hover:opacity-0 absolute" style={{ color: appThemeColor }} />
+                    <ChevronRight className="h-[18px] w-[18px] text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-foreground transition-all duration-200" />
                   </button>
                 )
               )}
             </div>
             
-            <nav className="flex-1 p-4 overflow-y-auto">
+            <nav className={cn(
+              "flex-1 overflow-y-auto",
+              isMobile ? "p-4" : "p-4"
+            )}>
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeSection === item.id;
@@ -1172,7 +1176,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200">
                     <Smartphone className={cn(
                       "h-5 w-5 transition-colors duration-200",
-                      "group-hover:text-white"
+                      "group-hover:text-foreground"
                     )} />
                   </div>
                 </button>

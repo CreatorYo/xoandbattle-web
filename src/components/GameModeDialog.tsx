@@ -42,20 +42,21 @@ export function GameModeDialog({ children, open: externalOpen, onOpenChange: ext
       </DialogTrigger>
       <DialogContent className="sm:max-w-[420px] p-0 gap-0 bg-transparent border-0 shadow-none">
         <div className="bg-card/95 dark:bg-black/95 backdrop-blur-xl rounded-2xl overflow-hidden border border-border/50 shadow-2xl">
-          <div className="p-5 pb-0">
-            <DialogHeader className="mb-5">
-              <DialogTitle className="text-center text-lg font-semibold">
-                Switch Game Mode
+          <div className="p-6">
+            <DialogHeader className="mb-6">
+              <DialogTitle className="text-center text-2xl font-semibold text-foreground mb-2">
+                Select Game Mode
               </DialogTitle>
+              <p className="text-center text-sm text-muted-foreground">
+                Choose how you want to play
+              </p>
             </DialogHeader>
             
             <div className="space-y-3">
               <Ripple color="rgba(255, 255, 255, 0.1)">
                 <button
                   onClick={() => handleModeSelect('human')}
-                  className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl transition-colors text-left bg-blue-500/5 hover:bg-blue-500/10 active:bg-blue-500/15 ${
-                    selectedMode === 'human' ? 'bg-blue-500/10' : ''
-                  }`}
+                  className="w-full flex items-center gap-3 px-5 py-3 rounded-xl transition-colors text-left bg-blue-500/5 hover:bg-blue-500/10"
                 >
                   <Users className="h-5 w-5 text-blue-500" />
                   <div className="flex-1">
@@ -71,9 +72,7 @@ export function GameModeDialog({ children, open: externalOpen, onOpenChange: ext
               <Ripple color="rgba(255, 255, 255, 0.1)">
                 <button
                   onClick={() => handleModeSelect('ai')}
-                  className={`w-full flex items-center gap-3 px-5 py-4 rounded-xl transition-colors text-left bg-green-500/5 hover:bg-green-500/10 active:bg-green-500/15 ${
-                    selectedMode === 'ai' ? 'bg-green-500/10' : ''
-                  }`}
+                  className="w-full flex items-center gap-3 px-5 py-3 rounded-xl transition-colors text-left bg-green-500/5 hover:bg-green-500/10"
                 >
                   <Bot className="h-5 w-5 text-green-500" />
                   <div className="flex-1">
@@ -88,11 +87,11 @@ export function GameModeDialog({ children, open: externalOpen, onOpenChange: ext
             </div>
           </div>
           
-          <div className="mt-3 p-5 pt-0">
+          <div className="px-6 pb-6 pt-4">
             <Ripple color="rgba(255, 255, 255, 0.1)">
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-full py-2.5 rounded-xl bg-card/95 dark:bg-black/95 backdrop-blur-xl border border-border/50 font-medium text-[14px] text-red-500 hover:bg-red-500/10 active:bg-red-500/20 transition-colors"
+                className="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 active:bg-red-800 font-medium text-[14px] text-white transition-colors"
               >
                 Cancel
               </button>

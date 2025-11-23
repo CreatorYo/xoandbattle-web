@@ -30,7 +30,6 @@ export function resetAccessibilitySettings(): void {
   localStorage.removeItem('tic-tac-toe-disable-tabindex');
   document.body.classList.remove('reduce-motion');
   
-  // Remove the disable tabindex style if it exists
   const styleElement = document.getElementById('disable-tabindex-style');
   if (styleElement && styleElement.parentNode) {
     styleElement.parentNode.removeChild(styleElement);
