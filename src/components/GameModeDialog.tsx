@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Users, Bot, Gamepad2, Check } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Users, Bot, Check } from 'lucide-react';
 import { useGame } from '@/contexts/GameContext';
 import type { GameMode } from '@/contexts/GameContext';
 import { Ripple } from '@/components/ui/ripple';

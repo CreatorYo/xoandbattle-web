@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { GameTheme } from '@/contexts/GameContext';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Copy, Edit, Trash2, Info, Check } from 'lucide-react';
+import { Copy, Edit, Trash2, Info } from 'lucide-react';
 
 interface ThemeContextMenuProps {
   theme: GameTheme;

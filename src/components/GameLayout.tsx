@@ -94,7 +94,7 @@ export function GameLayout() {
             variant="outline"
             size="sm"
             className="bg-background/90 backdrop-blur-md border-border/50 shadow-xl hover:bg-background transition-all duration-300 hover:scale-105"
-            title="Show UI (Ctrl+/ or Cmd+/)"
+            title="Show UI"
           >
             <Eye className="h-4 w-4 mr-2" />
             Show UI

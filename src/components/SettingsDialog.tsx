@@ -1,17 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { useGame, defaultThemes, GameTheme } from '@/contexts/GameContext';
+import { useGame } from '@/contexts/GameContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { toast as showToast } from '@/components/ui/toast-helper';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogContainer } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
-import { Slider } from '@/components/ui/slider';
 import { SettingsSection, SettingsRow } from '@/components/ui/settings';
 import { Ripple } from '@/components/ui/ripple';
 import { 
@@ -20,7 +15,6 @@ import {
   Layout, 
   BarChart3, 
   Zap, 
-  HelpCircle,
   Bot,
   Users,
   Volume2,
@@ -34,1061 +28,28 @@ import {
   Database,
   Download,
   Upload,
-  ChevronDown,
   ChevronRight,
-  Trash2,
-  Play,
-  Check,
+  ChevronLeft,
   Minus,
-  PartyPopper,
   Trophy,
   Square,
   Circle,
   Settings as SettingsIcon,
   Gamepad2,
-  Search,
-  Plus,
-  MoreVertical,
-  Info,
-  Copy as CopyIcon,
-  Edit,
+  Play,
   Menu,
   X,
-  GripVertical
+  MoreHorizontal,
+  HelpCircle,
+  Smartphone,
+  Keyboard
 } from 'lucide-react';
-import { ThemeSelector } from './ThemeSelector';
-import { CreateThemeDialog } from './CreateThemeDialog';
+import { CustomBoardStylingDialog } from './CustomBoardStylingDialog';
+import { ThemesNavigationView } from './ThemesNavigationView';
 import { cn } from '@/lib/utils';
-import { getDefaultGameSettings, resetAccessibilitySettings, getDefaultAppearanceTheme } from '@/lib/settings-reset';
+import { getDefaultGameSettings, resetAccessibilitySettings, getDefaultAppearanceTheme, resetAllLocalStorageSettings } from '@/lib/settings-reset';
+import { useIsMobile } from '@/hooks/use-mobile';
 import React from 'react';
-
-interface ColorInputProps {
-  value: string;
-  onChange: (color: string) => void;
-  label: string;
-}
-
-function ColorInput({ value, onChange, label }: ColorInputProps) {
-  const colorInputRef = React.useRef<HTMLInputElement>(null);
-  const { theme } = useTheme();
-  const isTransparent = value === 'transparent' || !value || value === '';
-
-  const getActualBackgroundColor = () => {
-    if (!isTransparent) return value;
-    return theme === 'dark' ? '#000000' : '#ffffff';
-  };
-
-  return (
-    <div className="flex items-center gap-2">
-      <div className="relative">
-        <div
-          className="w-8 h-8 rounded-lg border border-border/50 cursor-pointer hover:border-primary/50 transition-[background-color,border-color] duration-200 relative overflow-hidden"
-          style={{ backgroundColor: getActualBackgroundColor() }}
-          onClick={() => colorInputRef.current?.click()}
-        >
-          {isTransparent && (
-            <div className="absolute inset-0 bg-[linear-gradient(45deg,#ccc_25%,transparent_25%,transparent_75%,#ccc_75%,#ccc),linear-gradient(45deg,#ccc_25%,transparent_25%,transparent_75%,#ccc_75%,#ccc)] bg-[length:8px_8px] [background-position:0_0,4px_4px] opacity-30" />
-          )}
-        </div>
-        <input
-          ref={colorInputRef}
-          type="color"
-          value={isTransparent ? getActualBackgroundColor() : value}
-          onChange={(e) => onChange(e.target.value)}
-          className="absolute top-0 left-0 w-8 h-8 opacity-0 cursor-pointer"
-        />
-      </div>
-      {!isTransparent && (
-        <Input
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="#FF0000"
-          className="h-8 text-xs font-mono bg-background/50 border-border/50 focus-visible:ring-0 focus-visible:border-2 focus-visible:border-primary/50"
-        />
-      )}
-    </div>
-  );
-}
-
-interface ThemesNavigationViewProps {
-  onBack: () => void;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  appThemeColor: string;
-}
-
-function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appThemeColor }: ThemesNavigationViewProps) {
-  const { gameSettings, updateSettings } = useGame();
-  const [customThemes, setCustomThemes] = useState<GameTheme[]>([]);
-  const [hoveredThemeId, setHoveredThemeId] = useState<string | null>(null);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [showInfoDialog, setShowInfoDialog] = useState<GameTheme | null>(null);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [editingTheme, setEditingTheme] = useState<GameTheme | null>(null);
-  const [showResetThemesDialog, setShowResetThemesDialog] = useState(false);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [isReorderMode, setIsReorderMode] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('tic-tac-toe-reorder-mode') === 'true';
-    } catch {
-      return false;
-    }
-  });
-
-  const hexToRgb = (hex: string) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : { r: 59, g: 130, b: 246 };
-  };
-
-  const appThemeRgb = hexToRgb(appThemeColor);
-  const appThemeColorRgb = `${appThemeRgb.r}, ${appThemeRgb.g}, ${appThemeRgb.b}`;
-
-  useEffect(() => {
-    const loadThemes = () => {
-      try {
-        const saved = localStorage.getItem('tic-tac-toe-custom-themes');
-        if (saved) {
-          setCustomThemes(JSON.parse(saved));
-        } else {
-          setCustomThemes([]);
-        }
-      } catch (error) {
-        console.error('Failed to load custom themes:', error);
-        setCustomThemes([]);
-      }
-    };
-    
-    loadThemes();
-    
-    const handleCustomStorageChange = () => {
-      loadThemes();
-    };
-    
-    window.addEventListener('custom-storage-change', handleCustomStorageChange);
-    
-    return () => {
-      window.removeEventListener('custom-storage-change', handleCustomStorageChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('tic-tac-toe-reorder-mode', isReorderMode.toString());
-    } catch (error) {
-      console.error('Failed to save reorder mode:', error);
-    }
-  }, [isReorderMode]);
-
-  useEffect(() => {
-    const handleReorderModeReset = () => {
-      setIsReorderMode(false);
-    };
-    
-    window.addEventListener('reorder-mode-reset', handleReorderModeReset);
-    
-    return () => {
-      window.removeEventListener('reorder-mode-reset', handleReorderModeReset);
-    };
-  }, []);
-
-  useEffect(() => {
-    const pressedKeys = new Set<string>();
-    let rKeyHeld = false;
-    
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase();
-      
-      pressedKeys.add(key);
-      
-      if (key === 'r') {
-        if (pressedKeys.size > 1) return;
-        
-        if (rKeyHeld) return;
-        
-        const activeElement = document.activeElement;
-        const isInputFocused = activeElement && (
-          activeElement.tagName === 'INPUT' ||
-          activeElement.tagName === 'TEXTAREA' ||
-          activeElement.tagName === 'SELECT' ||
-          activeElement.getAttribute('contenteditable') === 'true'
-        );
-        
-        if (!isInputFocused) {
-          rKeyHeld = true;
-          setIsReorderMode(prev => !prev);
-        }
-      }
-    };
-    
-    const handleKeyUp = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase();
-      pressedKeys.delete(key);
-      
-      if (key === 'r') {
-        rKeyHeld = false;
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, []);
-
-  const allThemes = [...defaultThemes, ...customThemes];
-  const filteredThemes = allThemes.filter(theme => 
-    theme.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  const defaultThemesFiltered = defaultThemes.filter(theme => 
-    theme.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  const customThemesFiltered = customThemes.filter(theme => 
-    theme.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleCreateTheme = (themeData: Omit<GameTheme, 'id'>) => {
-    const theme: GameTheme = {
-      id: `custom-${Date.now()}`,
-      ...themeData,
-    };
-    const updatedThemes = [...customThemes, theme];
-    setCustomThemes(updatedThemes);
-    try {
-      localStorage.setItem('tic-tac-toe-custom-themes', JSON.stringify(updatedThemes));
-      window.dispatchEvent(new Event('custom-storage-change'));
-    } catch (error) {
-      console.error('Failed to save custom themes:', error);
-    }
-    setShowCreateDialog(false);
-  };
-
-  const handleDuplicateTheme = (theme: GameTheme) => {
-    const baseName = theme.name.replace(/\s*\(x\d+\)$/, '');
-    
-    const allThemes = [...defaultThemes, ...customThemes];
-    const duplicatePattern = /\(x(\d+)\)$/;
-    let maxNumber = 0;
-    
-    allThemes.forEach(t => {
-      const tBaseName = t.name.replace(/\s*\(x\d+\)$/, '');
-      if (tBaseName === baseName) {
-        const match = t.name.match(duplicatePattern);
-        if (match) {
-          const num = parseInt(match[1], 10);
-          if (num > maxNumber) {
-            maxNumber = num;
-          }
-        }
-      }
-    });
-    
-    const nextNumber = maxNumber + 1;
-    const newName = `${baseName} (x${nextNumber})`;
-    
-    setEditingTheme({
-      ...theme,
-      id: `custom-${Date.now()}`,
-      name: newName,
-    });
-    setOpenMenuId(null);
-  };
-
-  const handleDeleteTheme = (themeId: string) => {
-    const updatedThemes = customThemes.filter(theme => theme.id !== themeId);
-    setCustomThemes(updatedThemes);
-    try {
-      localStorage.setItem('tic-tac-toe-custom-themes', JSON.stringify(updatedThemes));
-      window.dispatchEvent(new Event('custom-storage-change'));
-    } catch (error) {
-      console.error('Failed to save custom themes:', error);
-    }
-    if (gameSettings.theme.id === themeId) {
-      updateSettings({ theme: defaultThemes[0] });
-    }
-    setOpenMenuId(null);
-  };
-
-  const handleEditTheme = (theme: GameTheme) => {
-    setEditingTheme(theme);
-    setOpenMenuId(null);
-  };
-
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    setDraggedIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-    setTimeout(() => {
-      if (e.currentTarget instanceof HTMLElement) {
-        e.currentTarget.style.opacity = '0.5';
-      }
-    }, 0);
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    if (draggedIndex !== null && draggedIndex !== index) {
-      setDragOverIndex(index);
-    }
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX;
-    const y = e.clientY;
-    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-      setDragOverIndex(null);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === dropIndex) {
-      setDraggedIndex(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    const newThemes = [...customThemes];
-    const draggedTheme = newThemes[draggedIndex];
-    newThemes.splice(draggedIndex, 1);
-    newThemes.splice(dropIndex, 0, draggedTheme);
-    
-    setCustomThemes(newThemes);
-    try {
-      localStorage.setItem('tic-tac-toe-custom-themes', JSON.stringify(newThemes));
-      window.dispatchEvent(new Event('custom-storage-change'));
-    } catch (error) {
-      console.error('Failed to save custom themes:', error);
-    }
-    
-    setDraggedIndex(null);
-    setDragOverIndex(null);
-  };
-
-  const handleDragEnd = (e: React.DragEvent) => {
-    if (e.currentTarget instanceof HTMLElement) {
-      e.currentTarget.style.opacity = '';
-    }
-    setDraggedIndex(null);
-    setDragOverIndex(null);
-  };
-
-
-  return (
-    <div className="space-y-0">
-      <div className="flex items-center justify-between mb-6 px-1">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-foreground">Theme</h2>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="p-0 hover:bg-muted/30 rounded transition-colors">
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-40">
-                <DropdownMenuItem 
-                  onClick={() => setIsReorderMode(!isReorderMode)}
-                  style={{ ['--hover-bg' as any]: `rgba(${appThemeColorRgb}, 0.2)` }} 
-                  className="dark:hover:bg-[var(--hover-bg)]"
-                >
-                  <GripVertical className="h-4 w-4 mr-2" />
-                  {isReorderMode ? 'Disable Reorder' : 'Reorder Presets'}
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setShowResetThemesDialog(true)}
-                  className="text-red-500 focus:text-red-500"
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Delete Presets
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-        <Button
-          variant="ghost"
-          onClick={onBack}
-          className="px-3 py-1.5 h-auto font-medium"
-          style={{
-            color: appThemeColor,
-            '--hover-color': appThemeColor,
-          } as React.CSSProperties & { '--hover-color': string }}
-          onMouseEnter={(e) => {
-            const target = e.currentTarget;
-            target.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.1)`;
-            target.style.color = appThemeColor;
-          }}
-          onMouseLeave={(e) => {
-            const target = e.currentTarget;
-            target.style.backgroundColor = '';
-            target.style.color = appThemeColor;
-          }}
-        >
-          Done
-        </Button>
-      </div>
-
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-9 h-10 rounded-lg bg-gray-200 dark:bg-muted/30 border-border/50 focus-visible:ring-2"
-            style={{
-              '--tw-ring-color': `rgba(${appThemeColorRgb}, 0.3)`,
-            } as React.CSSProperties & { '--tw-ring-color': string }}
-            onFocus={(e) => {
-              e.currentTarget.style.setProperty('--tw-ring-color', `rgba(${appThemeColorRgb}, 0.3)`);
-            }}
-          />
-        </div>
-      </div>
-
-      {defaultThemesFiltered.length === 0 && customThemesFiltered.length === 0 && searchQuery ? (
-        <div className="pt-12 px-4 py-12 text-center">
-          <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-          <p className="text-[15px] font-medium text-foreground mb-2">Nope, not here</p>
-          <p className="text-sm text-muted-foreground">Oops, nothing to be found! Try a different search or have another go.</p>
-        </div>
-      ) : (
-      <div className="space-y-6">
-        <div className="pt-6">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
-            Themes
-          </h3>
-          <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
-            {defaultThemesFiltered.length === 0 && searchQuery ? (
-              <div className="px-4 py-12 text-center">
-                <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                <p className="text-[15px] font-medium text-foreground mb-2">Nope, not here</p>
-                <p className="text-sm text-muted-foreground">Oops, nothing to be found! Try a different search or have another go.</p>
-              </div>
-            ) : (
-              defaultThemesFiltered.map((theme, index) => {
-              const isSelected = gameSettings.theme.id === theme.id;
-              const isHovered = hoveredThemeId === theme.id;
-              const isMenuOpen = openMenuId === theme.id;
-              const isCustom = customThemes.some(ct => ct.id === theme.id);
-              return (
-                <ContextMenu key={theme.id}>
-                  <ContextMenuTrigger asChild>
-                    <div
-                      onClick={() => updateSettings({ theme })}
-                      onMouseEnter={() => {
-                        if (!openMenuId) {
-                          setHoveredThemeId(theme.id);
-                        }
-                      }}
-                      onMouseLeave={() => {
-                        if (!openMenuId || openMenuId !== theme.id) {
-                          setHoveredThemeId(null);
-                        }
-                      }}
-                      className={cn(
-                        "flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-muted/30 relative",
-                        index !== defaultThemesFiltered.length - 1 && "border-b border-border/30"
-                      )}
-                      style={{ transition: 'background-color 0.15s ease', transform: 'none' }}
-                    >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-shrink-0">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: theme.xColor }}
-                          />
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: theme.oColor }}
-                          />
-                        </div>
-                        <span className="text-[15px] font-normal text-foreground">{theme.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0 w-6 justify-end">
-                        {(isHovered || isMenuOpen) ? (
-                          <DropdownMenu open={isMenuOpen} onOpenChange={(open) => {
-                            setOpenMenuId(open ? theme.id : null);
-                            if (!open) {
-                              setHoveredThemeId(null);
-                            }
-                          }}>
-                            <DropdownMenuTrigger asChild>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenMenuId(theme.id);
-                                  setHoveredThemeId(theme.id);
-                                }}
-                                onMouseEnter={() => setHoveredThemeId(theme.id)}
-                                className="p-1 hover:bg-muted/50 rounded w-6 h-6 flex items-center justify-center"
-                                style={{ transition: 'none', transform: 'none' }}
-                              >
-                                <MoreVertical className="h-4 w-4 text-muted-foreground" style={{ transform: 'none' }} />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40" style={{ transform: 'none' }}>
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                setShowInfoDialog(theme);
-                                setOpenMenuId(null);
-                              }} style={{ ['--hover-bg' as any]: `rgba(${appThemeColorRgb}, 0.2)` }} className="dark:hover:bg-[var(--hover-bg)]">
-                                <Info className="h-4 w-4 mr-2" />
-                                See Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                handleDuplicateTheme(theme);
-                              }} style={{ ['--hover-bg' as any]: `rgba(${appThemeColorRgb}, 0.2)` }} className="dark:hover:bg-[var(--hover-bg)]">
-                                <CopyIcon className="h-4 w-4 mr-2" />
-                                Duplicate
-                              </DropdownMenuItem>
-                              {isCustom && (
-                                <>
-                                  <DropdownMenuItem onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditTheme(theme);
-                                  }} style={{ ['--hover-bg' as any]: `rgba(${appThemeColorRgb}, 0.2)` }} className="dark:hover:bg-[var(--hover-bg)]">
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteTheme(theme.id);
-                                    }}
-                                    className="text-red-500 focus:text-red-500 hover:bg-red-500/10 dark:hover:bg-red-500/20"
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        ) : isSelected ? (
-                          <div className="w-6 h-6 flex items-center justify-center">
-                            <Check className="h-5 w-5 flex-shrink-0" style={{ transform: 'none', color: appThemeColor }} />
-                          </div>
-                        ) : <div className="w-6 h-6" />}
-                      </div>
-                    </div>
-                  </ContextMenuTrigger>
-                  <ContextMenuContent className="w-40">
-                    <ContextMenuItem 
-                      onClick={() => setShowInfoDialog(theme)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.2)`;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '';
-                      }}
-                    >
-                      <Info className="h-4 w-4 mr-2" />
-                      See Details
-                    </ContextMenuItem>
-                    <ContextMenuItem 
-                      onClick={() => handleDuplicateTheme(theme)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.2)`;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '';
-                      }}
-                    >
-                      <CopyIcon className="h-4 w-4 mr-2" />
-                      Duplicate
-                    </ContextMenuItem>
-                    {isCustom && (
-                      <>
-                        <ContextMenuItem 
-                          onClick={() => handleEditTheme(theme)}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.2)`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '';
-                          }}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </ContextMenuItem>
-                        <ContextMenuItem 
-                          onClick={() => handleDeleteTheme(theme.id)}
-                          className="text-red-500 focus:text-red-500 hover:bg-red-500/10 dark:hover:bg-red-500/20"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </ContextMenuItem>
-                      </>
-                    )}
-                  </ContextMenuContent>
-                </ContextMenu>
-              );
-            })
-            )}
-          </div>
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-3 px-1">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Custom Presets{customThemes.length > 0 ? ` (${customThemes.length})` : ''}
-            </h3>
-            {customThemes.length >= 10 && (
-              <Button
-                onClick={() => setShowCreateDialog(true)}
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 rounded-md flex-shrink-0 opacity-100"
-                 title="Create Preset"
-                style={{ color: appThemeColor }}
-                onMouseEnter={(e) => {
-                  const target = e.currentTarget;
-                  target.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.15)`;
-                  target.style.color = appThemeColor;
-                }}
-                onMouseLeave={(e) => {
-                  const target = e.currentTarget;
-                  target.style.backgroundColor = '';
-                  target.style.color = appThemeColor;
-                }}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-          <div className="bg-card rounded-xl border border-border/50 overflow-hidden">
-            {customThemesFiltered.length === 0 ? (
-              searchQuery ? (
-                <div className="px-4 py-12 text-center">
-                  <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                  <p className="text-[15px] font-medium text-foreground mb-2">Nope, not here</p>
-                  <p className="text-sm text-muted-foreground">Oops, nothing to be found! Try a different search or have another go.</p>
-                </div>
-              ) : (
-                <div className="px-4 py-3">
-                  <p className="text-sm text-muted-foreground mb-3 text-left">No custom presets yet.</p>
-                  <div className="text-left">
-                    <Button
-                      onClick={() => setShowCreateDialog(true)}
-                      variant="ghost"
-                      className="-ml-2 pl-2"
-                      style={{ color: appThemeColor }}
-                      onMouseEnter={(e) => {
-                        const target = e.currentTarget;
-                        target.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.1)`;
-                        target.style.color = appThemeColor;
-                      }}
-                      onMouseLeave={(e) => {
-                        const target = e.currentTarget;
-                        target.style.backgroundColor = '';
-                        target.style.color = appThemeColor;
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-1.5" />
-                      Add Preset
-                    </Button>
-                  </div>
-                </div>
-              )
-            ) : (
-              <>
-                {customThemesFiltered.map((theme, filteredIndex) => {
-                  const originalIndex = customThemes.findIndex(t => t.id === theme.id);
-                  const isSelected = gameSettings.theme.id === theme.id;
-                  const isHovered = hoveredThemeId === theme.id;
-                  const isMenuOpen = openMenuId === theme.id;
-                  const isDragging = draggedIndex === originalIndex;
-                  const isDragOver = dragOverIndex === originalIndex;
-                  return (
-                    <ContextMenu key={theme.id}>
-                      <ContextMenuTrigger asChild>
-                        <div
-                          draggable={isReorderMode && !searchQuery}
-                          onDragStart={(e) => {
-                            if (isReorderMode && !searchQuery) {
-                              handleDragStart(e, originalIndex);
-                            }
-                          }}
-                          onDragOver={(e) => {
-                            if (isReorderMode && !searchQuery) {
-                              handleDragOver(e, originalIndex);
-                            }
-                          }}
-                          onDragLeave={(e) => {
-                            if (isReorderMode && !searchQuery) {
-                              handleDragLeave(e);
-                            }
-                          }}
-                          onDrop={(e) => {
-                            if (isReorderMode && !searchQuery) {
-                              handleDrop(e, originalIndex);
-                            }
-                          }}
-                          onDragEnd={(e) => {
-                            if (isReorderMode && !searchQuery) {
-                              handleDragEnd(e);
-                            }
-                          }}
-                          onClick={(e) => {
-                            if (draggedIndex === null) {
-                              updateSettings({ theme });
-                            }
-                          }}
-                          onMouseEnter={() => {
-                            if (!openMenuId) {
-                              setHoveredThemeId(theme.id);
-                            }
-                          }}
-                          onMouseLeave={() => {
-                            if (!openMenuId || openMenuId !== theme.id) {
-                              setHoveredThemeId(null);
-                            }
-                          }}
-                          className={cn(
-                            "flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-muted/30 relative",
-                            filteredIndex !== customThemesFiltered.length - 1 && "border-b border-border/30",
-                            isDragging && "opacity-50 scale-95",
-                            isDragOver && "bg-muted/50 border-t-2 translate-y-0"
-                          )}
-                          style={{ 
-                            transition: isDragging 
-                              ? 'opacity 0.2s ease, transform 0.2s ease' 
-                              : 'background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease',
-                            transform: isDragging ? 'scale(0.95)' : 'scale(1)',
-                            cursor: isReorderMode && !searchQuery ? 'grab' : 'pointer',
-                            ...(isDragOver && { 
-                              borderTopColor: appThemeColor,
-                              borderTopWidth: '2px',
-                              transform: 'translateY(-2px)'
-                            }),
-                            ...(isDragging && {
-                              zIndex: 1000
-                            })
-                          }}
-                        >
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            {isReorderMode && !searchQuery && (
-                              <div 
-                                className="flex items-center gap-1.5 flex-shrink-0 cursor-grab active:cursor-grabbing transition-opacity"
-                                onMouseDown={(e) => e.stopPropagation()}
-                                style={{ opacity: isDragging ? 0.3 : 1 }}
-                              >
-                                <GripVertical className="h-4 w-4 text-muted-foreground/50 hover:text-muted-foreground transition-colors" />
-                              </div>
-                            )}
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <div 
-                                className="w-3 h-3 rounded-full" 
-                                style={{ backgroundColor: theme.xColor }}
-                              />
-                              <div 
-                                className="w-3 h-3 rounded-full" 
-                                style={{ backgroundColor: theme.oColor }}
-                              />
-                            </div>
-                            <span className="text-[15px] font-normal text-foreground">{theme.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0 w-6 justify-end">
-                            {(isHovered || isMenuOpen) ? (
-                              <DropdownMenu open={isMenuOpen} onOpenChange={(open) => {
-                                setOpenMenuId(open ? theme.id : null);
-                                if (!open) {
-                                  setHoveredThemeId(null);
-                                }
-                              }}>
-                                <DropdownMenuTrigger asChild>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setOpenMenuId(theme.id);
-                                      setHoveredThemeId(theme.id);
-                                    }}
-                                    onMouseEnter={() => setHoveredThemeId(theme.id)}
-                                    className="p-1 hover:bg-muted/50 rounded w-6 h-6 flex items-center justify-center"
-                                    style={{ transition: 'none', transform: 'none' }}
-                                  >
-                                    <MoreVertical className="h-4 w-4 text-muted-foreground" style={{ transform: 'none' }} />
-                                  </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-40" style={{ transform: 'none' }}>
-                                  <DropdownMenuItem onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowInfoDialog(theme);
-                                    setOpenMenuId(null);
-                                  }} style={{ ['--hover-bg' as any]: `rgba(${appThemeColorRgb}, 0.2)` }} className="dark:hover:bg-[var(--hover-bg)]">
-                                    <Info className="h-4 w-4 mr-2" />
-                                    See Details
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDuplicateTheme(theme);
-                                  }} style={{ ['--hover-bg' as any]: `rgba(${appThemeColorRgb}, 0.2)` }} className="dark:hover:bg-[var(--hover-bg)]">
-                                    <CopyIcon className="h-4 w-4 mr-2" />
-                                    Duplicate
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditTheme(theme);
-                                  }} style={{ ['--hover-bg' as any]: `rgba(${appThemeColorRgb}, 0.2)` }} className="dark:hover:bg-[var(--hover-bg)]">
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteTheme(theme.id);
-                                    }}
-                                    className="text-red-500 focus:text-red-500 hover:bg-red-500/10 dark:hover:bg-red-500/20"
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            ) : isSelected ? (
-                              <div className="w-6 h-6 flex items-center justify-center">
-                                <Check className="h-5 w-5 flex-shrink-0" style={{ transform: 'none', color: appThemeColor }} />
-                              </div>
-                            ) : <div className="w-6 h-6" />}
-                          </div>
-                        </div>
-                      </ContextMenuTrigger>
-                      <ContextMenuContent className="w-40">
-                        <ContextMenuItem 
-                          onClick={() => setShowInfoDialog(theme)}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.2)`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '';
-                          }}
-                        >
-                          <Info className="h-4 w-4 mr-2" />
-                          See Details
-                        </ContextMenuItem>
-                        <ContextMenuItem 
-                          onClick={() => handleDuplicateTheme(theme)}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.2)`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '';
-                          }}
-                        >
-                          <CopyIcon className="h-4 w-4 mr-2" />
-                          Duplicate
-                        </ContextMenuItem>
-                        <ContextMenuItem 
-                          onClick={() => handleEditTheme(theme)}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.2)`;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '';
-                          }}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </ContextMenuItem>
-                        <ContextMenuItem 
-                          onClick={() => handleDeleteTheme(theme.id)}
-                          className="text-red-500 focus:text-red-500 hover:bg-red-500/10 dark:hover:bg-red-500/20"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </ContextMenuItem>
-                      </ContextMenuContent>
-                    </ContextMenu>
-                  );
-                })}
-                <div className="border-t border-border/30 px-4 py-3">
-                  <Button
-                    onClick={() => setShowCreateDialog(true)}
-                    variant="ghost"
-                    className="w-full justify-start -ml-2 pl-2"
-                    style={{ color: appThemeColor }}
-                    onMouseEnter={(e) => {
-                      const target = e.currentTarget;
-                      target.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.1)`;
-                      target.style.color = appThemeColor;
-                    }}
-                    onMouseLeave={(e) => {
-                      const target = e.currentTarget;
-                      target.style.backgroundColor = '';
-                      target.style.color = appThemeColor;
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    Add Preset
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-      )}
-
-      {showInfoDialog && (
-        <Dialog open={!!showInfoDialog} onOpenChange={(open) => !open && setShowInfoDialog(null)}>
-          <DialogContent className="sm:max-w-[420px] p-0 gap-0 bg-transparent border-0 shadow-none">
-            <DialogContainer>
-              <div className="p-5">
-                <DialogHeader className="mb-4">
-                  <DialogTitle className="text-xl font-semibold text-left mb-2">
-                    {showInfoDialog.name}
-                  </DialogTitle>
-                  {customThemes.some(ct => ct.id === showInfoDialog.id) && showInfoDialog.description && (
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {showInfoDialog.description}
-                    </p>
-                  )}
-                </DialogHeader>
-                
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">
-                      Player Colours
-                    </h4>
-                    <div className="space-y-2.5">
-                      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer group border border-border/30"
-                        onClick={async () => {
-                          try {
-                            await navigator.clipboard.writeText(showInfoDialog.xColor);
-                          } catch (err) {
-                            console.error('Failed to copy:', err);
-                          }
-                        }}
-                      >
-                        <div 
-                          className="w-10 h-10 rounded-full border-2 border-border/50 shadow-sm transition-all duration-200 flex-shrink-0 group-hover:scale-105" 
-                          style={{ backgroundColor: showInfoDialog.xColor }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-foreground mb-0.5">Player X</div>
-                          <div className="text-xs text-muted-foreground font-mono">{showInfoDialog.xColor}</div>
-                        </div>
-                        <div className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                          Click to copy
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer group border border-border/30"
-                        onClick={async () => {
-                          try {
-                            await navigator.clipboard.writeText(showInfoDialog.oColor);
-                          } catch (err) {
-                            console.error('Failed to copy:', err);
-                          }
-                        }}
-                      >
-                        <div 
-                          className="w-10 h-10 rounded-full border-2 border-border/50 shadow-sm transition-all duration-200 flex-shrink-0 group-hover:scale-105" 
-                          style={{ backgroundColor: showInfoDialog.oColor }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-foreground mb-0.5">Player O</div>
-                          <div className="text-xs text-muted-foreground font-mono">{showInfoDialog.oColor}</div>
-                        </div>
-                        <div className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                          Click to copy
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </DialogContainer>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      <CreateThemeDialog
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        onCreateTheme={handleCreateTheme}
-        onEditComplete={() => setShowCreateDialog(false)}
-        appThemeColor={appThemeColor}
-      />
-
-      {editingTheme && (
-        <CreateThemeDialog
-          appThemeColor={appThemeColor}
-          onCreateTheme={(themeData) => {
-            const isNewTheme = !customThemes.some(theme => theme.id === editingTheme.id);
-            
-            if (isNewTheme) {
-              const newTheme: GameTheme = {
-                ...themeData,
-                id: editingTheme.id,
-              };
-              const updatedThemes = [...customThemes, newTheme];
-              setCustomThemes(updatedThemes);
-              try {
-                localStorage.setItem('tic-tac-toe-custom-themes', JSON.stringify(updatedThemes));
-                window.dispatchEvent(new Event('custom-storage-change'));
-              } catch (error) {
-                console.error('Failed to save custom themes:', error);
-              }
-            } else {
-              const updatedThemes = customThemes.map(theme =>
-                theme.id === editingTheme.id ? { ...themeData, id: editingTheme.id } : theme
-              );
-              setCustomThemes(updatedThemes);
-              try {
-                localStorage.setItem('tic-tac-toe-custom-themes', JSON.stringify(updatedThemes));
-                window.dispatchEvent(new Event('custom-storage-change'));
-              } catch (error) {
-                console.error('Failed to save custom themes:', error);
-              }
-              if (gameSettings.theme.id === editingTheme.id) {
-                updateSettings({ theme: { ...themeData, id: editingTheme.id } });
-              }
-            }
-            setEditingTheme(null);
-          }}
-          editTheme={editingTheme}
-          onEditComplete={() => setEditingTheme(null)}
-          open={!!editingTheme}
-          onOpenChange={(open) => !open && setEditingTheme(null)}
-        />
-      )}
-
-      <ConfirmDialog
-        open={showResetThemesDialog}
-        onOpenChange={setShowResetThemesDialog}
-        title="Delete Presets"
-        description="Are you sure you want to delete all custom theme presets? This action cannot be undone."
-        confirmText="Delete Presets"
-        onConfirm={() => {
-          try {
-            const currentThemeIsCustom = customThemes.some(ct => ct.id === gameSettings.theme.id);
-            localStorage.removeItem('tic-tac-toe-custom-themes');
-            setCustomThemes([]);
-            window.dispatchEvent(new Event('custom-storage-change'));
-            if (currentThemeIsCustom) {
-              updateSettings({ theme: defaultThemes[0] });
-            }
-          } catch (error) {
-            console.error('Failed to delete presets:', error);
-          }
-        }}
-        variant="destructive"
-      />
-    </div>
-  );
-}
 
 interface SettingsDialogProps {
   open?: boolean;
@@ -1098,6 +59,7 @@ interface SettingsDialogProps {
 export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpenChange }: SettingsDialogProps) {
   const { gameSettings, updateSettings, persistentStats, resetPersistentStats, updatePersistentStats } = useGame();
   const { theme, setTheme } = useTheme();
+  const isMobile = useIsMobile();
   const [reduceMotion, setReduceMotion] = useState(() => {
     try {
       return localStorage.getItem('tic-tac-toe-reduce-motion') === 'true';
@@ -1109,6 +71,14 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
   const [pauseAchievements, setPauseAchievements] = useState(() => {
     try {
       return localStorage.getItem('tic-tac-toe-pause-achievements') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const [disableTabIndex, setDisableTabIndex] = useState(() => {
+    try {
+      return localStorage.getItem('tic-tac-toe-disable-tabindex') === 'true';
     } catch {
       return false;
     }
@@ -1153,9 +123,6 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
   } | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  const handleThemeSelect = (theme: any) => {
-    updateSettings({ theme });
-  };
   const [activeSection, setActiveSection] = useState(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -1179,9 +146,46 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
   const [showHowToPlayDialog, setShowHowToPlayDialog] = useState(false);
   const [showThemesView, setShowThemesView] = useState(false);
   const [themeSearchQuery, setThemeSearchQuery] = useState('');
-  const [showCreateThemeDialog, setShowCreateThemeDialog] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('tic-tac-toe-sidebar-collapsed');
+        return saved === 'true';
+      }
+    } catch {
+    }
+    return false;
+  });
 
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('tic-tac-toe-sidebar-collapsed', sidebarCollapsed.toString());
+      }
+    } catch {
+    }
+  }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    if (isMobile && sidebarCollapsed) {
+      setSidebarCollapsed(false);
+    }
+  }, [isMobile, sidebarCollapsed]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        if (!isMobile) {
+          setSidebarCollapsed(prev => !prev);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobile]);
 
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = (value: boolean) => {
@@ -1214,6 +218,69 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
   useEffect(() => {
     localStorage.setItem('tic-tac-toe-pause-achievements', pauseAchievements.toString());
   }, [pauseAchievements]);
+
+  useEffect(() => {
+    localStorage.setItem('tic-tac-toe-disable-tabindex', disableTabIndex.toString());
+    
+    const styleId = 'disable-tabindex-style';
+    let observer: MutationObserver | null = null;
+    
+    if (disableTabIndex) {
+      let styleElement = document.getElementById(styleId);
+      
+      if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = styleId;
+        document.head.appendChild(styleElement);
+      }
+      
+      styleElement.textContent = `
+        *:not(input):not(textarea):not(select) {
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        *:not(input):not(textarea):not(select):focus {
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        *:not(input):not(textarea):not(select):focus-visible {
+          outline: none !important;
+          box-shadow: none !important;
+        }
+      `;
+
+      const removeTabIndex = () => {
+        const allElements = document.querySelectorAll('[tabindex]:not(input):not(textarea):not(select)');
+        allElements.forEach((el) => {
+          (el as HTMLElement).removeAttribute('tabindex');
+        });
+      };
+
+      removeTabIndex();
+      observer = new MutationObserver(removeTabIndex);
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['tabindex']
+      });
+    } else {
+      const styleElement = document.getElementById(styleId);
+      if (styleElement && styleElement.parentNode) {
+        styleElement.parentNode.removeChild(styleElement);
+      }
+    }
+
+    return () => {
+      if (observer) {
+        observer.disconnect();
+      }
+      const styleElement = document.getElementById(styleId);
+      if (styleElement && styleElement.parentNode) {
+        styleElement.parentNode.removeChild(styleElement);
+      }
+    };
+  }, [disableTabIndex]);
 
   useEffect(() => {
     (window as any).showSettings = () => setOpen(true);
@@ -1251,16 +318,12 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
     
     const defaultColor = '#3b82f6';
     setAppThemeColor(defaultColor);
-    localStorage.setItem('tic-tac-toe-app-theme-color', defaultColor);
     document.documentElement.style.setProperty('--app-theme-color', defaultColor);
     document.documentElement.removeAttribute('data-theme-customized');
     
-    try {
-      localStorage.removeItem('tic-tac-toe-reorder-mode');
-      window.dispatchEvent(new Event('reorder-mode-reset'));
-    } catch (error) {
-      console.error('Failed to reset reorder mode:', error);
-    }
+    resetAllLocalStorageSettings();
+    setSidebarCollapsed(false);
+    setDisableTabIndex(false);
     
     setShowResetSettingsDialog(false);
     showToast.success(
@@ -1285,7 +348,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
     { id: 'effects', label: 'Effects', icon: Sparkles },
     { id: 'awards', label: 'Awards', icon: Trophy },
     { id: 'accessibility', label: 'Accessibility', icon: Accessibility },
-    { id: 'other', label: 'Other', icon: HelpCircle },
+    { id: 'other', label: 'Other', icon: MoreHorizontal },
   ];
 
   const renderContent = () => {
@@ -1379,8 +442,9 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                         document.documentElement.style.setProperty('--app-theme-color', defaultColor);
                         document.documentElement.removeAttribute('data-theme-customized');
                       }}
-                      className="p-1 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors"
-                      title="Reset to default colour"
+                      disabled={appThemeColor === '#3b82f6'}
+                      className="p-1 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+                      title={appThemeColor === '#3b82f6' ? 'Already at default colour' : 'Reset to default colour'}
                     >
                       <RotateCcw className="h-3.5 w-3.5" />
                     </button>
@@ -1588,7 +652,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                   onClick={() => {
                     if (gameSettings.boardStyling.style !== 'custom') {
                       const newStyling = { ...gameSettings.boardStyling, style: 'custom' as const };
-                      if (!newStyling.borderRadius) newStyling.borderRadius = 12;
+                      newStyling.borderRadius = 12;
                       if (newStyling.borderWidth === undefined) newStyling.borderWidth = 0;
                       if (!newStyling.borderColor) newStyling.borderColor = '#000000';
                       if (!newStyling.backgroundColor || newStyling.backgroundColor === 'transparent') newStyling.backgroundColor = '#ffffff';
@@ -1788,6 +852,19 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
               </Select>
                 }
                 showDropdown
+              />
+              <SettingsRow
+                icon={<Keyboard className="h-4 w-4" />}
+                iconColor="bg-gray-500"
+                title="Disable Focus Outlines"
+                subtitle="Remove all focus outlines and tabindex attributes"
+                rightElement={
+                  <Switch
+                    checked={disableTabIndex}
+                    onCheckedChange={(checked) => setDisableTabIndex(checked)}
+                    appThemeColor={appThemeColor}
+                  />
+                }
                 isLast
               />
           </SettingsSection>
@@ -1973,58 +1050,85 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
             />
           )}
           <div className={cn(
-            "w-64 bg-[#F2F3F3] dark:bg-[#0E0E0E] border-r border-border/30 flex flex-col fixed md:relative z-50 md:z-auto h-full transition-transform duration-300 ease-in-out",
-            mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-          )} style={{ boxShadow: 'none', outline: 'none' }}>
-            <div className="p-6 border-b border-border/20">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center">
-                  <Settings className="h-4 w-4" style={{ color: appThemeColor }} />
+            "bg-[#F2F3F3] dark:bg-[#0E0E0E] border-r border-border/30 flex flex-col fixed md:relative z-50 md:z-auto h-full transition-all duration-300 ease-in-out",
+            mobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+            sidebarCollapsed ? "w-16" : "w-64"
+          )} style={{ boxShadow: 'none', outline: 'none', position: 'relative' }}>
+            {!isMobile && (
+              <div
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="absolute right-0 top-0 bottom-0 w-1 cursor-ew-resize hover:w-2 transition-all duration-200 z-10"
+              />
+            )}
+            <div className={cn(
+              "border-b border-border/20 transition-all duration-300",
+              sidebarCollapsed ? "p-3" : "p-6"
+            )}>
+              {!sidebarCollapsed ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="flex items-center justify-center">
+                      <Settings className="h-4 w-4" style={{ color: appThemeColor }} />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground text-lg">Settings</h3>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground text-lg">Settings</h3>
-                </div>
-              </div>
+              ) : (
+                !isMobile && (
+                  <button
+                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                    className="w-full flex items-center justify-center p-3 rounded-lg transition-colors group relative"
+                    title="Expand sidebar"
+                  >
+                    <Settings className="h-[18px] w-[18px] transition-all duration-200 group-hover:opacity-0 absolute group-hover:text-white" style={{ color: appThemeColor }} />
+                    <ChevronRight className="h-[18px] w-[18px] text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-white transition-all duration-200" />
+                  </button>
+                )
+              )}
             </div>
             
             <nav className="flex-1 p-4 overflow-y-auto">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeSection === item.id;
-                return (
-                  <Ripple 
-                    key={item.id}
-                    color={`rgba(${appThemeColorRgb}, 0.2)`}
-                    className="mb-2"
+                const button = (
+                  <button
+                    onClick={() => {
+                      setActiveSection(item.id);
+                      setShowThemesView(false);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={cn(
+                      "w-full group flex items-center rounded-lg text-left transition-all duration-200",
+                      sidebarCollapsed ? "justify-center p-3" : "gap-4 p-3",
+                      isActive && !sidebarCollapsed
+                        ? ''
+                        : !isActive && !sidebarCollapsed && 'hover:bg-muted/50 text-muted-foreground hover:text-foreground',
+                      sidebarCollapsed && 'text-muted-foreground'
+                    )}
+                    style={isActive && !sidebarCollapsed ? {
+                      backgroundColor: `rgba(${appThemeColorRgb}, 0.2)`,
+                      color: appThemeColor
+                    } : {}}
+                    title={sidebarCollapsed ? item.label : undefined}
                   >
-                    <button
-                      onClick={() => {
-                        setActiveSection(item.id);
-                        setShowThemesView(false);
-                        setMobileMenuOpen(false);
-                      }}
-                      className={`w-full group flex items-center gap-4 p-3 rounded-lg text-left transition-all duration-200 ${
-                        isActive
-                          ? ''
-                          : 'hover:bg-muted/50 text-muted-foreground hover:text-foreground'
-                      }`}
-                      style={isActive ? {
-                        backgroundColor: `rgba(${appThemeColorRgb}, 0.2)`,
-                        color: appThemeColor
-                      } : {}}
-                    >
-                      <div 
-                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
-                        style={isActive ? {
-                          backgroundColor: `rgba(${appThemeColorRgb}, 0.3)`,
+                    <div className={cn(
+                      "rounded-lg flex items-center justify-center transition-all duration-200",
+                      sidebarCollapsed ? "w-8 h-8" : "w-8 h-8"
+                    )}>
+                      <Icon 
+                        className={cn(
+                          "h-5 w-5 transition-colors duration-200",
+                          sidebarCollapsed && "group-hover:text-white"
+                        )}
+                        style={isActive && sidebarCollapsed ? {
                           color: appThemeColor
-                        } : {
-                          backgroundColor: `rgba(${appThemeColorRgb}, 0.2)`,
-                          color: appThemeColor
-                        }}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </div>
+                        } : {}}
+                      />
+                    </div>
+                    {!sidebarCollapsed && (
                       <div className="flex-1 min-w-0">
                         <div 
                           className="font-medium text-sm"
@@ -2035,11 +1139,69 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                           {item.label}
                         </div>
                       </div>
-                    </button>
+                    )}
+                  </button>
+                );
+
+                return sidebarCollapsed ? (
+                  <div key={item.id} className="mb-2">
+                    {button}
+                  </div>
+                ) : (
+                  <Ripple 
+                    key={item.id}
+                    color={`rgba(${appThemeColorRgb}, 0.2)`}
+                    className="mb-2"
+                  >
+                    {button}
                   </Ripple>
                 );
               })}
             </nav>
+            
+            <div className="p-4 border-t border-border/30">
+              {sidebarCollapsed ? (
+                <button
+                  onClick={() => {
+                    window.open('https://apps.apple.com/us/app/x-o-battle/id6745736399', '_blank');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full group flex items-center justify-center p-3 text-muted-foreground rounded-lg transition-all duration-200"
+                  title="Get App"
+                >
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200">
+                    <Smartphone className={cn(
+                      "h-5 w-5 transition-colors duration-200",
+                      "group-hover:text-white"
+                    )} />
+                  </div>
+                </button>
+              ) : (
+                <Ripple 
+                  color={`rgba(${appThemeColorRgb}, 0.2)`}
+                >
+                  <button
+                    onClick={() => {
+                      window.open('https://apps.apple.com/us/app/x-o-battle/id6745736399', '_blank');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full group flex items-center gap-4 p-3 rounded-lg text-left transition-all duration-200 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                    title="Get App"
+                  >
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200">
+                      <Smartphone className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div 
+                        className="font-medium text-sm"
+                      >
+                        Get App
+                      </div>
+                    </div>
+                  </button>
+                </Ripple>
+              )}
+            </div>
           </div>
 
           <div className="flex-1 flex flex-col min-h-0">
@@ -2058,7 +1220,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
             </div>
             <div className="flex-1 overflow-hidden bg-muted/20 relative">
               <div className="absolute inset-0 overflow-y-auto">
-                <div className="p-6 max-w-4xl mx-auto">
+                <div className="p-6 pt-4 md:pt-6 max-w-4xl mx-auto">
                   <div className="space-y-6 relative">
                     <div className={cn(
                       "transition-transform duration-300 ease-in-out",
@@ -2116,201 +1278,13 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
         variant="destructive"
       />
 
-      <Dialog open={showCustomBoardDialog} onOpenChange={setShowCustomBoardDialog}>
-        <DialogContent className="sm:max-w-[500px] p-0 gap-0 bg-transparent border-0 shadow-none">
-          <DialogContainer>
-            <div className="p-5 pb-0">
-              <DialogHeader className="mb-5">
-                <DialogTitle className="text-center text-lg font-semibold">
-                  Custom Board Styling
-                </DialogTitle>
-              </DialogHeader>
-              
-              <div className="space-y-0">
-                <div className="px-4 py-3 border-b border-border/30">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Layout className="h-4 w-4 text-[#a514c9] flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[15px] font-normal text-foreground leading-tight">Corner Radius</div>
-                      <div className="text-[13px] text-muted-foreground leading-tight mt-0.5">{gameSettings.boardStyling.borderRadius || 12}px</div>
-                    </div>
-                  </div>
-                  <Slider
-                    value={[gameSettings.boardStyling.borderRadius || 12]}
-                    onValueChange={(value) => {
-                      updateSettings({
-                        boardStyling: {
-                          ...gameSettings.boardStyling,
-                          borderRadius: value[0]
-                        }
-                      });
-                    }}
-                    min={0}
-                    max={50}
-                    step={1}
-                    color="purple"
-                    className="w-full"
-                  />
-                </div>
-                <div className="px-4 py-3 border-b border-border/30">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Layout className="h-4 w-4 text-orange-500 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[15px] font-normal text-foreground leading-tight">Border Width</div>
-                      <div className="text-[13px] text-muted-foreground leading-tight mt-0.5">{gameSettings.boardStyling.borderWidth || 0}px</div>
-                    </div>
-                  </div>
-                  <Slider
-                    value={[gameSettings.boardStyling.borderWidth || 0]}
-                    onValueChange={(value) => {
-                      updateSettings({
-                        boardStyling: {
-                          ...gameSettings.boardStyling,
-                          borderWidth: value[0]
-                        }
-                      });
-                    }}
-                    min={0}
-                    max={10}
-                    step={1}
-                    color="orange"
-                    className="w-full"
-                  />
-                </div>
-                <SettingsRow
-                  icon={<Layout className="h-4 w-4 text-muted-foreground" />}
-                  iconColor=""
-                  title="Border Colour"
-                  subtitle={gameSettings.boardStyling.borderColor || '#000000'}
-                  rightElement={
-                    <ColorInput
-                      value={gameSettings.boardStyling.borderColor || '#000000'}
-                      onChange={(color) => {
-                        updateSettings({
-                          boardStyling: {
-                            ...gameSettings.boardStyling,
-                            borderColor: color
-                          }
-                        });
-                      }}
-                      label="Border Colour"
-                    />
-                  }
-                />
-                <SettingsRow
-                  icon={<Layout className="h-4 w-4 text-muted-foreground" />}
-                  iconColor=""
-                  title="Use Gradient"
-                  rightElement={
-                    <Switch
-                      checked={gameSettings.boardStyling.useGradient || false}
-                      onCheckedChange={(checked) => {
-                        updateSettings({
-                          boardStyling: {
-                            ...gameSettings.boardStyling,
-                            useGradient: checked
-                          }
-                        });
-                      }}
-                      appThemeColor={appThemeColor}
-                    />
-                  }
-                />
-                {!gameSettings.boardStyling.useGradient ? (
-                  <SettingsRow
-                    icon={<Layout className="h-4 w-4 text-muted-foreground" />}
-                    iconColor=""
-                    title="Background Colour"
-                    rightElement={
-                      <ColorInput
-                        value={gameSettings.boardStyling.backgroundColor || 'transparent'}
-                        onChange={(color) => {
-                          updateSettings({
-                            boardStyling: {
-                              ...gameSettings.boardStyling,
-                              backgroundColor: color
-                            }
-                          });
-                        }}
-                        label="Background Colour"
-                      />
-                    }
-                  />
-                ) : (
-                  <>
-                    <SettingsRow
-                      icon={<Layout className="h-4 w-4 text-muted-foreground" />}
-                      iconColor=""
-                      title="Gradient Colour 1"
-                      subtitle={gameSettings.boardStyling.gradientColors?.[0] || '#3B82F6'}
-                      rightElement={
-                        <ColorInput
-                          value={gameSettings.boardStyling.gradientColors?.[0] || '#3B82F6'}
-                          onChange={(color) => {
-                            const colors = gameSettings.boardStyling.gradientColors || ['#3B82F6', '#8B5CF6'];
-                            colors[0] = color;
-                            updateSettings({
-                              boardStyling: {
-                                ...gameSettings.boardStyling,
-                                gradientColors: colors
-                              }
-                            });
-                          }}
-                          label="Gradient Colour 1"
-                        />
-                      }
-                    />
-                    <SettingsRow
-                      icon={<Layout className="h-4 w-4 text-muted-foreground" />}
-                      iconColor=""
-                      title="Gradient Colour 2"
-                      subtitle={gameSettings.boardStyling.gradientColors?.[1] || '#8B5CF6'}
-                      rightElement={
-                        <ColorInput
-                          value={gameSettings.boardStyling.gradientColors?.[1] || '#8B5CF6'}
-                          onChange={(color) => {
-                            const colors = gameSettings.boardStyling.gradientColors || ['#3B82F6', '#8B5CF6'];
-                            colors[1] = color;
-                            updateSettings({
-                              boardStyling: {
-                                ...gameSettings.boardStyling,
-                                gradientColors: colors
-                              }
-                            });
-                          }}
-                          label="Gradient Colour 2"
-                        />
-                      }
-                    />
-                  </>
-                )}
-              </div>
-            </div>
-            
-              <div className="p-5 pt-3">
-              <Button 
-                  variant="outline"
-                  onClick={() => {
-                    const defaultStyling = {
-                      style: 'custom' as const,
-                      borderRadius: 12,
-                      borderWidth: 0,
-                      borderColor: '#000000',
-                      backgroundColor: '#ffffff',
-                      useGradient: false,
-                      gradientColors: ['#3B82F6', '#8B5CF6'],
-                    };
-                    updateSettings({ boardStyling: defaultStyling });
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-transparent border-0 font-medium text-[14px] text-red-500 hover:bg-red-500/10 hover:text-red-500 hover:border-0 hover:shadow-none active:bg-red-500/20 active:text-red-500 focus-visible:outline-none focus-visible:ring-0 border-red-500/30 transition-[background-color]"
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Restore to Defaults
-              </Button>
-            </div>
-          </DialogContainer>
-        </DialogContent>
-      </Dialog>
+      <CustomBoardStylingDialog
+        open={showCustomBoardDialog}
+        onOpenChange={setShowCustomBoardDialog}
+        gameSettings={gameSettings}
+        updateSettings={updateSettings}
+        appThemeColor={appThemeColor}
+      />
 
       <Dialog open={!!selectedAchievement && !showResetConfirm} onOpenChange={(open) => {
         if (!open) {

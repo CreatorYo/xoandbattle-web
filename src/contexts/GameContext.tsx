@@ -237,7 +237,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [winningLine, setWinningLine] = useState<number[] | null>(null);
   const [gameSettings, setGameSettings] = useState<GameSettings>(loadSavedSettings());
   const [gameStats, setGameStats] = useState(loadSavedStats());
-  const [persistentStats, setPersistentStats] = useState(loadPersistentStats());
+  const [persistentStats, setPersistentStats] = useState<GameContextType['persistentStats']>(loadPersistentStats());
   const [isAiThinking, setIsAiThinking] = useState(false);
 
   const checkWinner = (squares: Player[]): { winner: Player; line: number[] | null } => {
@@ -513,7 +513,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   };
 
   const updatePersistentStats = (stats: Partial<GameContextType['persistentStats']>) => {
-    const newPersistentStats = { ...persistentStats, ...stats };
+    const newPersistentStats: GameContextType['persistentStats'] = { ...persistentStats, ...stats };
     setPersistentStats(newPersistentStats);
     localStorage.setItem('tic-tac-toe-persistent-stats', JSON.stringify(newPersistentStats));
   };

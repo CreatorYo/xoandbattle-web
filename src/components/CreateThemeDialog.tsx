@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent } from '@/components/ui/card';
-import { Palette, Plus, Sparkles, ChevronRight, Copy } from 'lucide-react';
+import { Plus, Sparkles, ChevronRight, Copy } from 'lucide-react';
 import React from 'react';
 
 interface ColorInputProps {

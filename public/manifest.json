@@ -1,0 +1,27 @@
+{
+  "name": "X&O Battle Web",
+  "short_name": "X&O Battle",
+  "description": "Play Tic-Tac-Toe with customizable themes, AI opponents, and beautiful animations. The web version of X&O Battle.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "https://assets.creatoryogames.com/xobattle-assets/XO_Battle_Logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://assets.creatoryogames.com/xobattle-assets/XO_Battle_Logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "screenshots": []
+}
