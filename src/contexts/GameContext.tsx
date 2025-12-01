@@ -415,7 +415,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           setGameStats(newStats);
           
           if (aiWinner === 'O') {
-            const now = new Date().toISOString();
+          const now = new Date().toISOString();
             updatePersistentStatsIfNotPaused({
               oWins: persistentStats.oWins + 1,
               ...(!persistentStats.oWinsFirstAchieved ? { oWinsFirstAchieved: now } : { oWinsLastUpdated: now })
@@ -481,10 +481,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
         
         positions.forEach((pos, index) => {
           setTimeout(() => {
-            confetti({
+        confetti({
               particleCount: 50,
               angle: 90,
-              spread: 70,
+          spread: 70,
               origin: pos,
             });
             confetti({

@@ -597,25 +597,25 @@ export function ThemesNavigationView({ onBack, searchQuery, onSearchChange, appT
               ) : (
                 <div className="px-4 py-3">
                   <p className="text-sm text-muted-foreground mb-3 text-left">No custom presets yet.</p>
-                  <Button
-                    onClick={() => setShowCreateDialog(true)}
-                    variant="ghost"
+                    <Button
+                      onClick={() => setShowCreateDialog(true)}
+                      variant="ghost"
                     className="w-full justify-start -ml-2 pl-2"
-                    style={{ color: appThemeColor }}
-                    onMouseEnter={(e) => {
-                      const target = e.currentTarget;
-                      target.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.1)`;
-                      target.style.color = appThemeColor;
-                    }}
-                    onMouseLeave={(e) => {
-                      const target = e.currentTarget;
-                      target.style.backgroundColor = '';
-                      target.style.color = appThemeColor;
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    Add Preset
-                  </Button>
+                      style={{ color: appThemeColor }}
+                      onMouseEnter={(e) => {
+                        const target = e.currentTarget;
+                        target.style.backgroundColor = `rgba(${appThemeColorRgb}, 0.1)`;
+                        target.style.color = appThemeColor;
+                      }}
+                      onMouseLeave={(e) => {
+                        const target = e.currentTarget;
+                        target.style.backgroundColor = '';
+                        target.style.color = appThemeColor;
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-1.5" />
+                      Add Preset
+                    </Button>
                 </div>
               )
             ) : (

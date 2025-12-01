@@ -146,6 +146,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
   const [showResetSettingsDialog, setShowResetSettingsDialog] = useState(false);
   const [showResetThemesDialog, setShowResetThemesDialog] = useState(false);
   const [showHowToPlayDialog, setShowHowToPlayDialog] = useState(false);
+  const [showExportThemesDialog, setShowExportThemesDialog] = useState(false);
   const [showThemesView, setShowThemesView] = useState(false);
   const [themeSearchQuery, setThemeSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -344,7 +345,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
     );
   };
 
-  const exportThemes = () => {
+  const performExport = () => {
     try {
       const saved = localStorage.getItem('tic-tac-toe-custom-themes');
       if (!saved) {
@@ -388,6 +389,10 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
         "Failed to export custom presets. Please try again."
       );
     }
+  };
+
+  const exportThemes = () => {
+    setShowExportThemesDialog(true);
   };
 
   const importThemes = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -742,7 +747,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                       "h-4 w-4",
                       gameSettings.boardStyling.style === 'standard' ? "text-blue-500" : "text-muted-foreground"
                     )} />
-                  </div>
+                          </div>
                   <div className="flex-1 min-w-0 py-2.5">
                     <div className="text-[15px] font-normal text-foreground leading-tight">Standard</div>
                         </div>
@@ -780,7 +785,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                       "h-4 w-4",
                       gameSettings.boardStyling.style === 'rounded' ? "text-green-500" : "text-muted-foreground"
                     )} />
-                  </div>
+                        </div>
                   <div className="flex-1 min-w-0 py-2.5">
                     <div className="text-[15px] font-normal text-foreground leading-tight">Rounded</div>
                           </div>
@@ -1088,7 +1093,6 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                 icon={<Trophy className="h-4 w-4" />}
                 iconColor="bg-yellow-500"
                 title="Pause Achievements"
-                subtitle="Temporarily stop tracking achievements"
                 rightElement={
                   <Switch
                     checked={pauseAchievements}
@@ -1102,7 +1106,6 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                 icon={<RotateCcw className="h-4 w-4" />}
                 iconColor="bg-orange-500"
                 title="Reset All Awards"
-                subtitle="Clear all statistics and start fresh"
                 onClick={() => setShowResetDialog(true)}
                 showChevron
                 isLast
@@ -1119,7 +1122,6 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                 icon={<Play className="h-4 w-4" />}
                 iconColor="bg-blue-500"
                 title="Onboarding Tour"
-                subtitle="Replay the introduction tour"
                   onClick={() => {
                     if ((window as any).showOnboardingAgain) {
                       (window as any).showOnboardingAgain();
@@ -1133,7 +1135,6 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                 icon={<HelpCircle className="h-4 w-4" />}
                 iconColor="bg-yellow-500"
                 title="How to Play"
-                subtitle="Learn the basics and tips"
                 onClick={() => setShowHowToPlayDialog(true)}
                 showChevron
               />
@@ -1141,25 +1142,23 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                 icon={<Info className="h-4 w-4" />}
                 iconColor="bg-gray-500"
                 title="Version"
-                subtitle="X&O Battle Web 2.0.0"
+                subtitle="X&O Battle Web 2.1.0"
               />
             </SettingsSection>
 
             <SettingsSection header="Theme Export / Import">
               <SettingsRow
                 icon={<Download className="h-4 w-4" />}
-                iconColor="bg-teal-500"
+                iconColor="bg-green-500"
                 title="Export Themes"
-                subtitle="Download your custom theme presets"
                 onClick={exportThemes}
                 showChevron
                 isFirst
               />
               <SettingsRow
                 icon={<Upload className="h-4 w-4" />}
-                iconColor="bg-green-500"
+                iconColor="bg-teal-500"
                 title="Import Themes"
-                subtitle="Import custom theme presets from a file"
                 onClick={() => importThemesInputRef.current?.click()}
                 showChevron
               />
@@ -1170,7 +1169,6 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                 icon={<RotateCcw className="h-4 w-4" />}
                 iconColor="bg-red-500"
                 title="Reset All Settings"
-                subtitle="Reset all game settings to default values"
                 onClick={() => setShowResetSettingsDialog(true)}
                 showChevron
                 isFirst
@@ -1179,7 +1177,6 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                 icon={<Palette className="h-4 w-4" />}
                 iconColor="bg-purple-500"
                 title="Delete Presets"
-                subtitle="Remove all custom theme presets"
                 onClick={() => setShowResetThemesDialog(true)}
                 showChevron
               />
@@ -1220,15 +1217,15 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
               isMobile ? "p-4" : sidebarCollapsed ? "p-3" : "p-6"
             )}>
               {!sidebarCollapsed ? (
-                <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
                   <div className="flex items-center gap-3 flex-1">
-                    <div className="flex items-center justify-center">
-                      <Settings className="h-4 w-4" style={{ color: appThemeColor }} />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground text-lg">Settings</h3>
-                    </div>
-                  </div>
+                <div className="flex items-center justify-center">
+                  <Settings className="h-4 w-4" style={{ color: appThemeColor }} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground text-lg">Settings</h3>
+                </div>
+              </div>
                 </div>
               ) : (
                 !isMobile && (
@@ -1252,26 +1249,26 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                 const Icon = item.icon;
                 const isActive = activeSection === item.id;
                 const button = (
-                  <button
-                    onClick={() => {
-                      setActiveSection(item.id);
-                      setShowThemesView(false);
-                      setMobileMenuOpen(false);
-                    }}
+                    <button
+                      onClick={() => {
+                        setActiveSection(item.id);
+                        setShowThemesView(false);
+                        setMobileMenuOpen(false);
+                      }}
                     className={cn(
                       "w-full group flex items-center rounded-lg text-left transition-all duration-200",
                       sidebarCollapsed ? "justify-center p-3" : "gap-4 p-3",
                       isActive && !sidebarCollapsed
-                        ? ''
+                          ? ''
                         : !isActive && !sidebarCollapsed && 'hover:bg-muted/50 text-muted-foreground hover:text-foreground',
                       sidebarCollapsed && 'text-muted-foreground'
                     )}
                     style={isActive && !sidebarCollapsed ? {
-                      backgroundColor: `rgba(${appThemeColorRgb}, 0.2)`,
-                      color: appThemeColor
-                    } : {}}
+                        backgroundColor: `rgba(${appThemeColorRgb}, 0.2)`,
+                        color: appThemeColor
+                      } : {}}
                     title={sidebarCollapsed ? item.label : undefined}
-                  >
+                    >
                     <div className={cn(
                       "rounded-lg flex items-center justify-center transition-all duration-200",
                       sidebarCollapsed ? "w-8 h-8" : "w-8 h-8"
@@ -1285,7 +1282,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                           color: appThemeColor
                         } : {}}
                       />
-                    </div>
+                      </div>
                     {!sidebarCollapsed && (
                       <div className="flex-1 min-w-0">
                         <div 
@@ -1298,7 +1295,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                         </div>
                       </div>
                     )}
-                  </button>
+                    </button>
                 );
 
                 return sidebarCollapsed ? (
@@ -1434,6 +1431,19 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
         confirmText="Delete Presets"
         onConfirm={resetThemes}
         variant="destructive"
+      />
+
+      <ConfirmDialog
+        open={showExportThemesDialog}
+        onOpenChange={setShowExportThemesDialog}
+        title="Export Themes"
+        description={<>Export your custom themes and colour settings as a <strong>.json</strong> file to later on import.</>}
+        confirmText="Export"
+        onConfirm={() => {
+          performExport();
+          setShowExportThemesDialog(false);
+        }}
+        buttonClassName="w-full py-3.5 rounded-xl font-semibold text-[15px] hover:shadow-none hover:border-0 !transition-[background-color] bg-green-500 hover:bg-green-600 text-white dark:text-black"
       />
 
       <input

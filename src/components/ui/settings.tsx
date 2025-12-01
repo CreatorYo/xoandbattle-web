@@ -98,7 +98,7 @@ const SettingsRow = React.forwardRef<HTMLDivElement, SettingsRowProps>(
                 } : (icon as React.ReactElement).props?.style
               })
             )}
-          </div>
+            </div>
         )}
         <div className="flex-1 min-w-0 py-2.5">
           <div className="text-[15px] font-normal text-foreground leading-tight">

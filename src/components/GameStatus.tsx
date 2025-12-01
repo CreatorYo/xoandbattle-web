@@ -52,7 +52,7 @@ export function GameStatus() {
                   ? "It's a Draw!" 
                   : gameSettings.gameMode === 'ai'
                     ? (isAiThinking ? "AI's turn" : currentPlayer === 'X' ? 'Your turn' : "AI's turn")
-                    : `Player ${currentPlayer}'s Turn`)
+                  : `Player ${currentPlayer}'s Turn`)
               }
             </span>
           </div>

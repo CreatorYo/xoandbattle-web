@@ -12,6 +12,7 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   variant?: 'default' | 'destructive';
   maxWidth?: string;
+  buttonClassName?: string;
 }
 
 export function ConfirmDialog({
@@ -24,6 +25,7 @@ export function ConfirmDialog({
   onConfirm,
   variant = 'default',
   maxWidth = '420px',
+  buttonClassName,
 }: ConfirmDialogProps) {
   const handleConfirm = () => {
     onConfirm();
@@ -42,14 +44,14 @@ export function ConfirmDialog({
             </DialogHeader>
             
             <p className="text-center text-[14px] text-muted-foreground mb-5">
-              {description}
-            </p>
+                {description}
+              </p>
             
             <div className="pb-0">
               <Button
                 variant={variant === 'destructive' ? 'destructive' : 'default'}
                 onClick={handleConfirm}
-                className="w-full py-3.5 rounded-xl font-semibold text-[15px] hover:shadow-none hover:border-0 !transition-[background-color]"
+                className={buttonClassName || "w-full py-3.5 rounded-xl font-semibold text-[15px] hover:shadow-none hover:border-0 !transition-[background-color]"}
               >
                 {confirmText}
               </Button>
