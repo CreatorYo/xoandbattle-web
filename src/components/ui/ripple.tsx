@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, cloneElement, isValidElement } from 'react';
 
 interface RippleProps {
   children: React.ReactNode;
@@ -12,7 +12,7 @@ export function Ripple({ children, className = '', color = 'rgba(255, 255, 255, 
   const rippleId = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const addRipple = (event: React.MouseEvent<HTMLDivElement>) => {
+  const addRipple = (event: React.MouseEvent) => {
     if (!containerRef.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
@@ -28,19 +28,55 @@ export function Ripple({ children, className = '', color = 'rgba(255, 255, 255, 
     }, duration);
   };
 
-  const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    const button = event.currentTarget.querySelector('button');
-    if (button) {
-      button.click();
-    }
-  };
-
+  const isRoundedFull = className.includes('rounded-full');
+  const baseClasses = `relative overflow-hidden ${isRoundedFull ? 'rounded-full' : 'rounded-lg'}`;
+  
+  if (isValidElement(children) && typeof children.type !== 'string') {
+    const child = children as React.ReactElement;
+    const originalOnMouseDown = child.props.onMouseDown;
+    
+    return (
+      <div
+        ref={containerRef}
+        className={`${baseClasses} ${className}`}
+        style={{ display: 'inline-block' }}
+      >
+        {cloneElement(child, {
+          onMouseDown: (e: React.MouseEvent) => {
+            addRipple(e);
+            originalOnMouseDown?.(e);
+          },
+          style: {
+            ...child.props.style,
+            position: 'relative',
+            zIndex: 1,
+          },
+        })}
+        {ripples.map(ripple => (
+          <span
+            key={ripple.id}
+            className="absolute rounded-full animate-ripple pointer-events-none"
+            style={{
+              left: ripple.x,
+              top: ripple.y,
+              width: ripple.size,
+              height: ripple.size,
+              backgroundColor: color,
+              transform: 'scale(0)',
+              animationDuration: `${duration}ms`,
+              zIndex: 0,
+            }}
+          />
+        ))}
+      </div>
+    );
+  }
+  
   return (
     <div
       ref={containerRef}
-      className={`relative overflow-hidden rounded-lg ${className}`}
+      className={`${baseClasses} ${className}`}
       onMouseDown={addRipple}
-      onClick={handleClick}
     >
       {children}
       {ripples.map(ripple => (

@@ -5,9 +5,12 @@ import { SettingsDialog } from './SettingsDialog';
 import { useGame } from '@/contexts/GameContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIVisibility } from '@/hooks/use-ui-visibility';
+import { useIsPWA } from '@/hooks/use-pwa';
 import { Button } from '@/components/ui/button';
+import { Ripple } from '@/components/ui/ripple';
 import { Eye, RotateCcw, Gamepad2, Settings } from 'lucide-react';
 import { GameModeDialog } from './GameModeDialog';
+import { cn } from '@/lib/utils';
 
 function TurnIndicator() {
   const { winner, currentPlayer, gameSettings, board, isAiThinking } = useGame();
@@ -51,6 +54,7 @@ export function GameLayout() {
   const { isUIVisible, toggleUIVisibility } = useUIVisibility();
   const { resetGame, gameSettings, winner, currentPlayer, board } = useGame();
   const { theme, setTheme } = useTheme();
+  const isPWA = useIsPWA();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -102,7 +106,10 @@ export function GameLayout() {
         </div>
       )}
 
-      <div className="container mx-auto px-6 py-8 max-w-6xl relative z-10 pt-32">
+      <div className={cn(
+        "container mx-auto px-6 py-8 max-w-6xl relative z-10 pt-40",
+        isPWA && "pt-48"
+      )}>
         <div className="text-center mb-8">
           <div className="mb-4">
             <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
@@ -144,36 +151,62 @@ export function GameLayout() {
               
               <div className="space-y-3">
                 <div className="flex gap-3 justify-center">
-                  <Button 
-                    onClick={resetGame} 
-                    variant="outline"
-                    size="sm"
-                    className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-0 hover:bg-red-500/20 transition-all duration-200 shadow-lg hover:shadow-red-500/25"
-                    title="Reset Game"
-                  >
-                    <RotateCcw className="!h-5 !w-5 text-red-500" />
-                  </Button>
+                  <Ripple className="w-12 h-12 rounded-full" color="rgba(239, 68, 68, 0.3)">
+                    <Button 
+                      onClick={resetGame} 
+                      variant="outline"
+                      size="sm"
+                      className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-0 hover:bg-red-500/20 transition-all duration-200"
+                      title="Reset Game"
+                    >
+                      <RotateCcw className="!h-5 !w-5 text-red-500" />
+                    </Button>
+                  </Ripple>
                   
                   <GameModeDialog open={gameModeOpen} onOpenChange={setGameModeOpen}>
+                    <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className="w-12 h-12 p-0 rounded-full bg-blue-500/10 border-0 hover:bg-blue-500/20 transition-all duration-200 relative z-10"
+                        title="Change Game Mode"
+                        onMouseDown={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const size = Math.max(rect.width, rect.height);
+                          const x = e.clientX - rect.left - size / 2;
+                          const y = e.clientY - rect.top - size / 2;
+                          const ripple = document.createElement('span');
+                          ripple.className = 'absolute rounded-full animate-ripple pointer-events-none';
+                          ripple.style.cssText = `
+                            left: ${x}px;
+                            top: ${y}px;
+                            width: ${size}px;
+                            height: ${size}px;
+                            background-color: rgba(59, 130, 246, 0.3);
+                            transform: scale(0);
+                            animation-duration: 600ms;
+                            z-index: 0;
+                          `;
+                          e.currentTarget.parentElement?.appendChild(ripple);
+                          setTimeout(() => ripple.remove(), 600);
+                        }}
+                      >
+                        <Gamepad2 className="!h-5 !w-5 text-blue-500" />
+                      </Button>
+                    </div>
+                  </GameModeDialog>
+
+                  <Ripple className="w-12 h-12 rounded-full" color="rgba(34, 197, 94, 0.3)">
                     <Button 
                       variant="outline"
                       size="sm"
-                      className="w-12 h-12 p-0 rounded-full bg-blue-500/10 border-0 hover:bg-blue-500/20 transition-all duration-200 shadow-lg hover:shadow-blue-500/25"
-                      title="Change Game Mode"
+                      className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-0 hover:bg-green-500/20 transition-all duration-200"
+                      onClick={() => setSettingsOpen(true)}
+                      title="Settings"
                     >
-                      <Gamepad2 className="!h-5 !w-5 text-blue-500" />
+                      <Settings className="!h-5 !w-5 text-green-500" />
                     </Button>
-                  </GameModeDialog>
-
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-0 hover:bg-green-500/20 transition-all duration-200 shadow-lg hover:shadow-green-500/25"
-                    onClick={() => setSettingsOpen(true)}
-                    title="Settings"
-                  >
-                    <Settings className="!h-5 !w-5 text-green-500" />
-                  </Button>
+                  </Ripple>
                 </div>
               </div>
             </div>
@@ -189,33 +222,59 @@ export function GameLayout() {
             <div className="text-center space-y-6 mt-8">
                 <div className="space-y-3">
                   <div className="flex gap-3 justify-center">
-                    <Button 
-                      onClick={resetGame} 
-                      variant="outline"
-                      size="sm"
-                      className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-0 hover:bg-red-500/20 transition-all duration-200 shadow-lg hover:shadow-red-500/25"
-                    >
-                      <RotateCcw className="!h-5 !w-5 text-red-500" />
-                    </Button>
+                    <Ripple className="w-12 h-12 rounded-full" color="rgba(239, 68, 68, 0.3)">
+                      <Button 
+                        onClick={resetGame} 
+                        variant="outline"
+                        size="sm"
+                        className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-0 hover:bg-red-500/20 transition-all duration-200"
+                      >
+                        <RotateCcw className="!h-5 !w-5 text-red-500" />
+                      </Button>
+                    </Ripple>
                     
                     <GameModeDialog>
+                      <div className="relative w-12 h-12 rounded-full overflow-hidden">
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          className="w-12 h-12 p-0 rounded-full bg-blue-500/10 border-0 hover:bg-blue-500/20 transition-all duration-200 relative z-10"
+                          onMouseDown={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const size = Math.max(rect.width, rect.height);
+                            const x = e.clientX - rect.left - size / 2;
+                            const y = e.clientY - rect.top - size / 2;
+                            const ripple = document.createElement('span');
+                            ripple.className = 'absolute rounded-full animate-ripple pointer-events-none';
+                            ripple.style.cssText = `
+                              left: ${x}px;
+                              top: ${y}px;
+                              width: ${size}px;
+                              height: ${size}px;
+                              background-color: rgba(59, 130, 246, 0.3);
+                              transform: scale(0);
+                              animation-duration: 600ms;
+                              z-index: 0;
+                            `;
+                            e.currentTarget.parentElement?.appendChild(ripple);
+                            setTimeout(() => ripple.remove(), 600);
+                          }}
+                        >
+                          <Gamepad2 className="!h-5 !w-5 text-blue-500" />
+                        </Button>
+                      </div>
+                    </GameModeDialog>
+
+                    <Ripple className="w-12 h-12 rounded-full" color="rgba(34, 197, 94, 0.3)">
                       <Button 
                         variant="outline"
                         size="sm"
-                        className="w-12 h-12 p-0 rounded-full bg-blue-500/10 border-0 hover:bg-blue-500/20 transition-all duration-200 shadow-lg hover:shadow-blue-500/25"
+                        className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-0 hover:bg-green-500/20 transition-all duration-200"
+                        onClick={() => setSettingsOpen(true)}
                       >
-                        <Gamepad2 className="!h-5 !w-5 text-blue-500" />
+                        <Settings className="!h-5 !w-5 text-green-500" />
                       </Button>
-                    </GameModeDialog>
-
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                      className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-0 hover:bg-green-500/20 transition-all duration-200 shadow-lg hover:shadow-green-500/25"
-                      onClick={() => setSettingsOpen(true)}
-                    >
-                      <Settings className="!h-5 !w-5 text-green-500" />
-                    </Button>
+                    </Ripple>
                 </div>
               </div>
             </div>

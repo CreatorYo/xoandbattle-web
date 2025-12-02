@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { GameProvider } from "@/contexts/GameContext";
 import { OnboardingTour } from "@/components/OnboardingTour";
+import { PWALaunchScreen } from "@/components/PWALaunchScreen";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -16,6 +17,7 @@ const App = () => (
     <ThemeProvider defaultTheme="system" storageKey="tic-tac-toe-theme">
       <GameProvider>
         <TooltipProvider>
+          <PWALaunchScreen />
           <OnboardingTour />
           <Toaster />
           <Sonner />
