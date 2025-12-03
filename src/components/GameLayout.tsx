@@ -152,24 +152,24 @@ export function GameLayout() {
               <div className="space-y-3">
                 <div className="flex gap-3 justify-center">
                   <Ripple className="w-12 h-12 rounded-full" color="rgba(239, 68, 68, 0.3)">
-                    <Button 
-                      onClick={resetGame} 
-                      variant="outline"
-                      size="sm"
+                  <Button 
+                    onClick={resetGame} 
+                    variant="outline"
+                    size="sm"
                       className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-0 hover:bg-red-500/20 transition-all duration-200"
-                      title="Reset Game"
-                    >
-                      <RotateCcw className="!h-5 !w-5 text-red-500" />
-                    </Button>
+                    title="Reset Game"
+                  >
+                    <RotateCcw className="!h-5 !w-5 text-red-500" />
+                  </Button>
                   </Ripple>
                   
                   <GameModeDialog open={gameModeOpen} onOpenChange={setGameModeOpen}>
                     <div className="relative w-12 h-12 rounded-full overflow-hidden">
-                      <Button 
-                        variant="outline"
-                        size="sm"
+                    <Button 
+                      variant="outline"
+                      size="sm"
                         className="w-12 h-12 p-0 rounded-full bg-blue-500/10 border-0 hover:bg-blue-500/20 transition-all duration-200 relative z-10"
-                        title="Change Game Mode"
+                      title="Change Game Mode"
                         onMouseDown={(e) => {
                           const rect = e.currentTarget.getBoundingClientRect();
                           const size = Math.max(rect.width, rect.height);
@@ -190,22 +190,22 @@ export function GameLayout() {
                           e.currentTarget.parentElement?.appendChild(ripple);
                           setTimeout(() => ripple.remove(), 600);
                         }}
-                      >
-                        <Gamepad2 className="!h-5 !w-5 text-blue-500" />
-                      </Button>
+                    >
+                      <Gamepad2 className="!h-5 !w-5 text-blue-500" />
+                    </Button>
                     </div>
                   </GameModeDialog>
 
                   <Ripple className="w-12 h-12 rounded-full" color="rgba(34, 197, 94, 0.3)">
-                    <Button 
-                      variant="outline"
-                      size="sm"
+                  <Button 
+                    variant="outline"
+                    size="sm"
                       className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-0 hover:bg-green-500/20 transition-all duration-200"
-                      onClick={() => setSettingsOpen(true)}
-                      title="Settings"
-                    >
-                      <Settings className="!h-5 !w-5 text-green-500" />
-                    </Button>
+                    onClick={() => setSettingsOpen(true)}
+                    title="Settings"
+                  >
+                    <Settings className="!h-5 !w-5 text-green-500" />
+                  </Button>
                   </Ripple>
                 </div>
               </div>
@@ -223,21 +223,21 @@ export function GameLayout() {
                 <div className="space-y-3">
                   <div className="flex gap-3 justify-center">
                     <Ripple className="w-12 h-12 rounded-full" color="rgba(239, 68, 68, 0.3)">
-                      <Button 
-                        onClick={resetGame} 
-                        variant="outline"
-                        size="sm"
+                    <Button 
+                      onClick={resetGame} 
+                      variant="outline"
+                      size="sm"
                         className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-0 hover:bg-red-500/20 transition-all duration-200"
-                      >
-                        <RotateCcw className="!h-5 !w-5 text-red-500" />
-                      </Button>
+                    >
+                      <RotateCcw className="!h-5 !w-5 text-red-500" />
+                    </Button>
                     </Ripple>
                     
                     <GameModeDialog>
                       <div className="relative w-12 h-12 rounded-full overflow-hidden">
-                        <Button 
-                          variant="outline"
-                          size="sm"
+                      <Button 
+                        variant="outline"
+                        size="sm"
                           className="w-12 h-12 p-0 rounded-full bg-blue-500/10 border-0 hover:bg-blue-500/20 transition-all duration-200 relative z-10"
                           onMouseDown={(e) => {
                             const rect = e.currentTarget.getBoundingClientRect();
@@ -259,21 +259,21 @@ export function GameLayout() {
                             e.currentTarget.parentElement?.appendChild(ripple);
                             setTimeout(() => ripple.remove(), 600);
                           }}
-                        >
-                          <Gamepad2 className="!h-5 !w-5 text-blue-500" />
-                        </Button>
+                      >
+                        <Gamepad2 className="!h-5 !w-5 text-blue-500" />
+                      </Button>
                       </div>
                     </GameModeDialog>
 
                     <Ripple className="w-12 h-12 rounded-full" color="rgba(34, 197, 94, 0.3)">
-                      <Button 
-                        variant="outline"
-                        size="sm"
+                    <Button 
+                      variant="outline"
+                      size="sm"
                         className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-0 hover:bg-green-500/20 transition-all duration-200"
-                        onClick={() => setSettingsOpen(true)}
-                      >
-                        <Settings className="!h-5 !w-5 text-green-500" />
-                      </Button>
+                      onClick={() => setSettingsOpen(true)}
+                    >
+                      <Settings className="!h-5 !w-5 text-green-500" />
+                    </Button>
                     </Ripple>
                 </div>
               </div>

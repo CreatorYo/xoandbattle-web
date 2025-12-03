@@ -21,6 +21,7 @@ import {
   VolumeX,
   Sparkles,
   RotateCcw,
+  RotateCw,
   Sun,
   Moon,
   Monitor,
@@ -43,9 +44,11 @@ import {
   HelpCircle,
   Smartphone,
   Keyboard,
-  Info
+  Info,
+  Infinity
 } from 'lucide-react';
 import { GameTheme } from '@/contexts/GameContext';
+import { getAppStoreUrl } from '@/lib/utils';
 import { CustomBoardStylingDialog } from './CustomBoardStylingDialog';
 import { ThemesNavigationView } from './ThemesNavigationView';
 import { cn } from '@/lib/utils';
@@ -591,7 +594,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                         document.documentElement.removeAttribute('data-theme-customized');
                       }}
                       disabled={appThemeColor === '#3b82f6'}
-                      className="p-1 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+                      className="p-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-muted-foreground"
                       title={appThemeColor === '#3b82f6' ? 'Already at default colour' : 'Reset to default colour'}
                     >
                       <RotateCcw className="h-3.5 w-3.5" />
@@ -654,8 +657,8 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
           <div className="space-y-6">
             <SettingsSection header="GAME MODE">
               <SettingsRow
-                icon={<Users className="h-4 w-4" />}
-                iconColor="bg-blue-500"
+                icon={gameSettings.gameMode === 'human' ? <Users className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                iconColor={gameSettings.gameMode === 'human' ? "bg-blue-500" : "bg-green-500"}
                 title="Game Mode"
                 subtitle={gameModeLabel}
                 rightElement={
@@ -700,10 +703,32 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="easy">Easy</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="hard">Hard</SelectItem>
-                      <SelectItem value="unbeatable">Unbeatable</SelectItem>
+                      <SelectItem value="easy">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-black text-xs font-semibold">1</span>
+                          <span>Easy</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="medium">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-black text-xs font-semibold">2</span>
+                          <span>Medium</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="hard">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-orange-500 text-black text-xs font-semibold">3</span>
+                          <span>Hard</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="unbeatable">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-red-500">
+                            <Infinity className="h-3 w-3 text-black" />
+                          </span>
+                          <span>Unbeatable</span>
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 }
@@ -1317,7 +1342,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
             <div className="p-4 border-t border-border/30">
               {sidebarCollapsed ? (
                 <a
-                  href="https://apps.apple.com/us/app/x-o-battle/id6745736399"
+                  href={getAppStoreUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setMobileMenuOpen(false)}
@@ -1325,7 +1350,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                   title="Get App"
                 >
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200">
-                    <Smartphone className={cn(
+                    <Download className={cn(
                       "h-5 w-5 transition-colors duration-200",
                       "group-hover:text-foreground"
                     )} />
@@ -1336,7 +1361,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                   color={`rgba(${appThemeColorRgb}, 0.2)`}
                 >
                   <a
-                    href="https://apps.apple.com/us/app/x-o-battle/id6745736399"
+                    href={getAppStoreUrl()}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setMobileMenuOpen(false)}
@@ -1344,7 +1369,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                     title="Get App"
                   >
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200">
-                      <Smartphone className="h-5 w-5" />
+                      <Download className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div 

@@ -71,7 +71,7 @@ export function Ripple({ children, className = '', color = 'rgba(255, 255, 255, 
       </div>
     );
   }
-  
+
   return (
     <div
       ref={containerRef}

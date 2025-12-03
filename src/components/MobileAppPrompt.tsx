@@ -24,7 +24,11 @@ export function MobileAppPrompt({ onContinue }: MobileAppPromptProps) {
   };
 
   const handleAppStore = () => {
-    window.open('https://apps.apple.com/us/app/x-o-battle/id6745736399', '_blank');
+    const isWindows = window.navigator.userAgent.toLowerCase().includes('windows');
+    const url = isWindows 
+      ? 'https://apps.microsoft.com/detail/9nk0184bmx07?hl=en-GB&gl=GB'
+      : 'https://apps.apple.com/us/app/x-o-battle/id6745736399';
+    window.open(url, '_blank');
   };
 
   const handleClose = () => {
