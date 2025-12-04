@@ -37,12 +37,14 @@ export const pwaConfig: Partial<VitePWAOptions> = {
     categories: ['games', 'entertainment']
   },
   workbox: {
-    globPatterns: ['**/*.*'], // precache everything in the dist folder
+    globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2,json}'],
+    globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js'],
     navigateFallback: '/index.html',
     navigateFallbackDenylist: [/^\/_/, /\/[^/?]+\.[^/]+$/],
     cleanupOutdatedCaches: true,
-    skipWaiting: false, // prompt means skipWaiting false
+    skipWaiting: true,
     clientsClaim: true,
+    maximumFileSizeToCacheInBytes: 5000000,
     runtimeCaching: [
       {
         urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -62,15 +64,17 @@ export const pwaConfig: Partial<VitePWAOptions> = {
         }
       },
       {
-        urlPattern: ({ request }) => {
+        urlPattern: ({ request, url }) => {
+          const pathname = url.pathname;
           return request.destination === 'script' || 
                  request.destination === 'style' ||
-                 /\.(?:js|mjs|css)$/.test(new URL(request.url).pathname);
+                 /\.(?:js|mjs|css)$/i.test(pathname);
         },
-        handler: 'StaleWhileRevalidate',
+        handler: 'CacheFirst',
         options: {
           cacheName: 'static-resources',
-          expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7 }
+          expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 365 },
+          cacheableResponse: { statuses: [0, 200] }
         }
       },
       {
@@ -79,7 +83,8 @@ export const pwaConfig: Partial<VitePWAOptions> = {
         options: {
           cacheName: 'html-cache',
           expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 },
-          networkTimeoutSeconds: 3
+          networkTimeoutSeconds: 3,
+          cacheableResponse: { statuses: [0, 200] }
         }
       },
       {
@@ -89,13 +94,14 @@ export const pwaConfig: Partial<VitePWAOptions> = {
                  !pathname.startsWith('/api') &&
                  request.destination !== 'script' &&
                  request.destination !== 'style' &&
-                 !/\.(?:js|mjs|css|png|jpg|jpeg|svg|gif|webp|ico|html)$/.test(pathname);
+                 !/\.(?:js|mjs|css|png|jpg|jpeg|svg|gif|webp|ico|html|json)$/i.test(pathname);
         },
         handler: 'NetworkFirst',
         options: {
           cacheName: 'pages-cache',
           expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 },
-          networkTimeoutSeconds: 3
+          networkTimeoutSeconds: 3,
+          cacheableResponse: { statuses: [0, 200] }
         }
       }
     ]
