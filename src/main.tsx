@@ -5,9 +5,19 @@ import { UpdateInstallScreen } from './components/UpdateInstallScreen'
 import React from 'react'
 
 const renderApp = () => {
-  const root = document.getElementById("root");
+  createRoot(document.getElementById("root")!).render(<App />);
+};
+
+const renderRefreshScreen = () => {
+  const root = document.getElementById('root');
   if (root) {
-    createRoot(root).render(<App />);
+    root.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--background, #fff); color: var(--foreground, #000); font-family: system-ui, -apple-system, sans-serif;">
+        <div style="text-align: center; padding: 2rem;">
+          <h1 style="font-size: 1.5rem; margin-bottom: 1rem;">Please refresh the page.</h1>
+        </div>
+      </div>
+    `;
   }
 };
 
@@ -15,51 +25,25 @@ if ('serviceWorker' in navigator) {
   if (navigator.serviceWorker.controller) {
     renderApp();
   } else {
-    let appRendered = false;
     const timeout = setTimeout(() => {
-      if (!appRendered) {
-        console.log('Service worker timeout, rendering app anyway');
-        appRendered = true;
-        renderApp();
-      }
-    }, 2000);
+      renderRefreshScreen();
+    }, 5000);
 
-    const registerAndWait = async () => {
-      try {
-        const registration = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
+    const clearTimeoutAndRender = () => {
+      clearTimeout(timeout);
+      renderApp();
+    };
+
+    navigator.serviceWorker.ready.then(clearTimeoutAndRender).catch(() => {
+      clearTimeout(timeout);
+      renderApp();
+    });
+    
+    navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+      .then((registration) => {
         console.log('ServiceWorker registration successful:', registration.scope);
 
         if (registration.active) {
-          await navigator.serviceWorker.ready;
-          if (!appRendered) {
-            appRendered = true;
-            clearTimeout(timeout);
-            renderApp();
-          }
-          return;
-        }
-
-        if (registration.installing) {
-          await new Promise((resolve) => {
-            registration.installing.addEventListener('statechange', () => {
-              if (registration.installing?.state === 'activated') {
-                resolve(null);
-              }
-            });
-          });
-        } else if (registration.waiting) {
-          await new Promise((resolve) => {
-            registration.waiting.addEventListener('statechange', () => {
-              if (registration.waiting?.state === 'activated') {
-                resolve(null);
-              }
-            });
-          });
-        }
-
-        await navigator.serviceWorker.ready;
-        if (!appRendered) {
-          appRendered = true;
           clearTimeout(timeout);
           renderApp();
         }
@@ -68,6 +52,7 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           if (!isInstalling && navigator.serviceWorker.controller) {
             isInstalling = true;
+            clearTimeout(timeout);
             const root = document.getElementById('root');
             if (root) {
               root.innerHTML = '';
@@ -77,17 +62,12 @@ if ('serviceWorker' in navigator) {
             window.location.reload();
           }
         });
-      } catch (error) {
+      })
+      .catch((error) => {
         console.log('ServiceWorker registration failed:', error);
-        if (!appRendered) {
-          appRendered = true;
-          clearTimeout(timeout);
-          renderApp();
-        }
-      }
-    };
-
-    registerAndWait();
+        clearTimeout(timeout);
+        renderApp();
+      });
   }
 } else {
   renderApp();
