@@ -13,7 +13,6 @@ const Index = () => {
 
   return (
     <>
-      <div className="titlebar-area" />
       <GameLayout />
       
       {isMobile && showMobilePrompt && (

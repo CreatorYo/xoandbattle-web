@@ -178,39 +178,6 @@
     cursor: pointer;
     user-select: none;
   }
-
-  @supports (selector(:has(*))) {
-    body:has([data-window-controls-overlay]) {
-      padding-top: env(titlebar-area-height, 0px);
-    }
-  }
-
-  @media (display-mode: window-controls-overlay) {
-    body {
-      padding-top: env(titlebar-area-height, 0px);
-    }
-
-    .titlebar-area {
-      position: fixed;
-      top: 0;
-      left: env(titlebar-area-x, 0);
-      width: calc(100% - env(titlebar-area-width, 0px) - env(titlebar-area-x, 0));
-      height: env(titlebar-area-height, 33px);
-      -webkit-app-region: drag;
-      app-region: drag;
-      z-index: 9999;
-      pointer-events: auto;
-    }
-
-    .titlebar-area button,
-    .titlebar-area a,
-    .titlebar-area input,
-    .titlebar-area select,
-    .titlebar-area textarea {
-      -webkit-app-region: no-drag;
-      app-region: no-drag;
-    }
-  }
 }
 
 @layer components {
