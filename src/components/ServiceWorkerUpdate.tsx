@@ -1,35 +1,63 @@
 import { useEffect, useRef, useState } from 'react';
 import { UpdateInstallScreen } from './UpdateInstallScreen';
-import { useRegisterSW } from 'virtual:pwa-register/react';
 
 export function ServiceWorkerUpdate() {
+  const [updateAvailable, setUpdateAvailable] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
+  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const notificationShown = useRef(false);
 
-  const {
-    needRefresh: [needRefresh],
-    updateServiceWorker,
-  } = useRegisterSW({
-    immediate: true,
-    onRegistered(r) {
-      console.log('SW Registered: ', r);
-    },
-    onRegisterError(error) {
-      console.log('SW registration error', error);
-    },
-  });
-
   useEffect(() => {
-    if (needRefresh && !notificationShown.current) {
-      notificationShown.current = true;
+    if (!('serviceWorker' in navigator)) {
+      return;
     }
-  }, [needRefresh]);
 
-  const installUpdate = async () => {
+    navigator.serviceWorker.ready.then((reg) => {
+      setRegistration(reg);
+
+      const checkForUpdate = () => {
+        if (reg.waiting && !notificationShown.current) {
+          notificationShown.current = true;
+          setUpdateAvailable(true);
+          return;
+        }
+
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller && !notificationShown.current) {
+              notificationShown.current = true;
+              setUpdateAvailable(true);
+            }
+          });
+        });
+      };
+
+      checkForUpdate();
+
+      const interval = setInterval(() => {
+        reg.update();
+      }, 60000);
+
+      return () => {
+        clearInterval(interval);
+      };
+    });
+  }, []);
+
+  const installUpdate = () => {
+    if (!registration) return;
+
     setIsInstalling(true);
 
-    setTimeout(async () => {
-      await updateServiceWorker(true);
+    setTimeout(() => {
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      } else {
+        window.location.reload();
+      }
     }, 2000);
   };
 
@@ -39,7 +67,7 @@ export function ServiceWorkerUpdate() {
 
   return (
     <>
-      {needRefresh && (
+      {updateAvailable && (
         <button
           onClick={installUpdate}
           className="fixed top-4 left-4 z-50 inline-flex items-center justify-center rounded-lg bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white px-4 py-2 text-sm font-medium shadow-lg transition-all duration-200 hover:scale-105 active:scale-95"
