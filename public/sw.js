@@ -1,5 +1,5 @@
-const CACHE_NAME = 'xobattle-v3';
-const STATIC_CACHE_NAME = 'xobattle-static-v3';
+const CACHE_NAME = 'xobattle-v4';
+const STATIC_CACHE_NAME = 'xobattle-static-v4';
 
 const staticAssets = [
   '/',

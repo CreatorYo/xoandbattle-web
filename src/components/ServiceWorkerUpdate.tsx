@@ -11,8 +11,6 @@ export function ServiceWorkerUpdate() {
       return;
     }
 
-    let refreshing = false;
-
     navigator.serviceWorker.ready.then((reg) => {
       const checkForUpdate = () => {
         if (reg.waiting && !notificationShown.current) {
@@ -39,13 +37,6 @@ export function ServiceWorkerUpdate() {
       const interval = setInterval(() => {
         reg.update();
       }, 60000);
-
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
-          refreshing = true;
-          window.location.reload();
-        }
-      });
 
       return () => {
         clearInterval(interval);
