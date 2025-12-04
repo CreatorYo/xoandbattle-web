@@ -1,5 +1,5 @@
-const CACHE_NAME = 'xoandbattle-v22122';
-const STATIC_CACHE_NAME = 'xoandbattle-static-v222122';
+const CACHE_NAME = 'xoandbattle-vf22122';
+const STATIC_CACHE_NAME = 'xoandbattle-static-v22f2122';
 
 const staticAssets = [
   '/',
@@ -22,19 +22,19 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   console.log('Service Worker activating...');
   event.waitUntil(
-    Promise.all([
-      caches.keys().then((cacheNames) => {
-        return Promise.all(
+    caches.keys().then((cacheNames) => {
+      return Promise.all([
+        Promise.all(
           cacheNames.map((cacheName) => {
             if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE_NAME) {
               console.log('Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
           })
-        );
-      }),
-      self.clients.claim()
-    ])
+        ),
+        self.clients.claim()
+      ]);
+    })
   );
 });
 
@@ -58,44 +58,56 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     (async () => {
-      const cachedResponse = await caches.match(request);
-      
-      if (cachedResponse) {
-        fetch(request).then((response) => {
+      try {
+        const cachedResponse = await caches.match(request, { ignoreSearch: false });
+        
+        if (cachedResponse) {
+          fetch(request).then((response) => {
+            if (response && response.ok) {
+              const cacheToUse = /\.(?:png|jpg|jpeg|svg|gif|webp|ico|woff|woff2|ttf|eot)$/i.test(url.pathname) 
+                ? STATIC_CACHE_NAME 
+                : CACHE_NAME;
+              caches.open(cacheToUse).then((cache) => {
+                cache.put(request, response.clone());
+              }).catch(() => {});
+            }
+          }).catch(() => {});
+          return cachedResponse;
+        }
+
+        try {
+          const response = await fetch(request);
           if (response && response.ok) {
             const cacheToUse = /\.(?:png|jpg|jpeg|svg|gif|webp|ico|woff|woff2|ttf|eot)$/i.test(url.pathname) 
               ? STATIC_CACHE_NAME 
               : CACHE_NAME;
-            caches.open(cacheToUse).then((cache) => {
-              cache.put(request, response.clone());
-            });
+            const cache = await caches.open(cacheToUse);
+            await cache.put(request, response.clone());
           }
-        }).catch(() => {});
-        return cachedResponse;
-      }
-
-      try {
-        const response = await fetch(request);
-        if (response && response.ok) {
-          const cacheToUse = /\.(?:png|jpg|jpeg|svg|gif|webp|ico|woff|woff2|ttf|eot)$/i.test(url.pathname) 
-            ? STATIC_CACHE_NAME 
-            : CACHE_NAME;
-          const cache = await caches.open(cacheToUse);
-          await cache.put(request, response.clone());
+          return response;
+        } catch (fetchError) {
+          if (request.destination === 'document' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+            const cachedHtml = await caches.match('/index.html');
+            if (cachedHtml) {
+              return cachedHtml;
+            }
+            const rootResponse = await caches.match('/');
+            if (rootResponse) {
+              return rootResponse;
+            }
+          }
+          console.error('Fetch failed and no cache available:', request.url);
+          return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
         }
-        return response;
-      } catch (fetchError) {
+      } catch (error) {
+        console.error('Service Worker error:', error);
         if (request.destination === 'document' || url.pathname === '/' || url.pathname.endsWith('.html')) {
           const cachedHtml = await caches.match('/index.html');
           if (cachedHtml) {
             return cachedHtml;
           }
-          const rootResponse = await caches.match('/');
-          if (rootResponse) {
-            return rootResponse;
-          }
         }
-        return new Response('Offline', { status: 503 });
+        return new Response('Error', { status: 500 });
       }
     })()
   );
