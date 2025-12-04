@@ -1,5 +1,5 @@
-const CACHE_NAME = 'xobattle-v4';
-const STATIC_CACHE_NAME = 'xobattle-static-v4';
+const CACHE_NAME = 'xobattl2e2-2v4';
+const STATIC_CACHE_NAME = 'xob2at22tle-static-v4';
 
 const staticAssets = [
   '/',
@@ -14,7 +14,6 @@ self.addEventListener('install', (event) => {
       return cache.addAll(staticAssets);
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
