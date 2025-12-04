@@ -377,6 +377,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
   const resetStatistics = () => {
     resetPersistentStats();
     setShowResetDialog(false);
+    showToast.success('Awards Reset', 'All awards have been reset successfully.');
   };
 
   const resetSettings = () => {
