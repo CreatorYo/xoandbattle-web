@@ -20,9 +20,7 @@ if ('serviceWorker' in navigator) {
               const installRoot = createRoot(root);
               installRoot.render(React.createElement(UpdateInstallScreen));
             }
-            setTimeout(() => {
-              window.location.reload();
-            }, 2500);
+            window.location.reload();
           }
         });
       })
