@@ -12,10 +12,10 @@ export function ServiceWorkerUpdate() {
       return;
     }
 
-    navigator.serviceWorker.ready.then((reg) => {
-      setRegistration(reg);
+    const checkForUpdates = () => {
+      navigator.serviceWorker.ready.then((reg) => {
+        setRegistration(reg);
 
-      const checkForUpdate = () => {
         if (reg.waiting && !notificationShown.current) {
           notificationShown.current = true;
           setUpdateAvailable(true);
@@ -33,18 +33,20 @@ export function ServiceWorkerUpdate() {
             }
           });
         });
-      };
 
-      checkForUpdate();
-
-      const interval = setInterval(() => {
         reg.update();
-      }, 60000);
+      });
+    };
 
-      return () => {
-        clearInterval(interval);
-      };
-    });
+    checkForUpdates();
+
+    const interval = setInterval(() => {
+      checkForUpdates();
+    }, 60000);
+
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
   const installUpdate = () => {
