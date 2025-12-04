@@ -1,5 +1,5 @@
-const CACHE_NAME = 'xoandbattle-v1';
-const STATIC_CACHE_NAME = 'xoandbattle-static-v1';
+const CACHE_NAME = 'xoandbattle-v21';
+const STATIC_CACHE_NAME = 'xoandbattle-static-v12';
 
 const staticAssets = [
   '/',
@@ -54,46 +54,98 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      if (cachedResponse) {
-        fetch(request).then((response) => {
-          if (response && response.ok) {
-            const cacheToUse = /\.(?:png|jpg|jpeg|svg|gif|webp|ico|woff|woff2|ttf|eot)$/i.test(url.pathname) 
-              ? STATIC_CACHE_NAME 
-              : CACHE_NAME;
-            caches.open(cacheToUse).then((cache) => {
-              cache.put(request, response.clone());
-            });
+  if (/\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i.test(url.pathname)) {
+    event.respondWith(
+      caches.open(STATIC_CACHE_NAME).then((cache) => {
+        return cache.match(request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
           }
-        }).catch(() => {});
-        return cachedResponse;
-      }
-
-      return fetch(request).then((response) => {
-        if (response && response.ok) {
-          const responseToCache = response.clone();
-          const cacheToUse = /\.(?:png|jpg|jpeg|svg|gif|webp|ico|woff|woff2|ttf|eot)$/i.test(url.pathname) 
-            ? STATIC_CACHE_NAME 
-            : CACHE_NAME;
-          caches.open(cacheToUse).then((cache) => {
-            cache.put(request, responseToCache);
-          });
-        }
-        return response;
-      }).catch(() => {
-        if (request.destination === 'document' || url.pathname === '/' || url.pathname.endsWith('.html')) {
-          return caches.match('/index.html').then((cachedHtml) => {
-            if (cachedHtml) {
-              return cachedHtml;
+          return fetch(request).then((response) => {
+            if (response.ok) {
+              cache.put(request, response.clone());
             }
-            return caches.match('/').then((rootResponse) => {
-              return rootResponse || new Response('Offline', { status: 503 });
-            });
+            return response;
+          }).catch(() => {
+            return new Response('', { status: 404 });
           });
-        }
-        return new Response('Offline', { status: 503 });
-      });
+        });
+      })
+    );
+    return;
+  }
+
+  if (/\.(?:js|mjs|css)$/i.test(url.pathname)) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then((cache) => {
+        return cache.match(request).then((cachedResponse) => {
+          if (cachedResponse) {
+            fetch(request).then((response) => {
+              if (response && response.ok) {
+                cache.put(request, response.clone());
+              }
+            }).catch(() => {});
+            return cachedResponse;
+          }
+          return fetch(request).then((response) => {
+            if (response && response.ok) {
+              cache.put(request, response.clone());
+            }
+            return response;
+          }).catch(() => {
+            return new Response('Resource not available offline', { status: 404 });
+          });
+        });
+      })
+    );
+    return;
+  }
+
+  if (request.destination === 'document' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then((cache) => {
+        return cache.match('/index.html').then((cachedHtml) => {
+          return fetch(request)
+            .then((response) => {
+              if (response && response.ok) {
+                cache.put(request, response.clone());
+              }
+              return response;
+            })
+            .catch(() => {
+              if (cachedHtml) {
+                return cachedHtml;
+              }
+              return cache.match('/').then((rootResponse) => {
+                return rootResponse || new Response('Offline', { status: 503 });
+              });
+            });
+        });
+      })
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.open(CACHE_NAME).then((cache) => {
+      return fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            cache.put(request, response.clone());
+          }
+          return response;
+        })
+        .catch(() => {
+          return cache.match(request).then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            if (request.destination === 'document') {
+              return cache.match('/index.html');
+            }
+            return new Response('Offline', { status: 503 });
+          });
+        });
     })
   );
 });

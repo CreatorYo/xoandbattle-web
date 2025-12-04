@@ -35,7 +35,7 @@ export function SettingsPanel() {
               className="flex-1 btn-hover-blue"
             >
               <Sun className="h-4 w-4 mr-2" />
-              Light
+              Light2
             </Button>
             <Button
               variant={theme === 'dark' ? 'default' : 'outline'}
