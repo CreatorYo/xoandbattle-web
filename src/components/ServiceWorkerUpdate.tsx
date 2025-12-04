@@ -12,30 +12,44 @@ export function ServiceWorkerUpdate() {
       return;
     }
 
-    const checkForUpdates = () => {
-      navigator.serviceWorker.ready.then((reg) => {
+    const checkForUpdates = async () => {
+      try {
+        const reg = await navigator.serviceWorker.ready;
         setRegistration(reg);
 
-        if (reg.waiting && !notificationShown.current) {
+        const checkCache = async () => {
+          const cacheNames = await caches.keys();
+          const hasCache = cacheNames.some(name => name.includes('xobattle'));
+          return hasCache;
+        };
+
+        const hasCachedFiles = await checkCache();
+
+        if (reg.waiting && hasCachedFiles && !notificationShown.current) {
           notificationShown.current = true;
           setUpdateAvailable(true);
           return;
         }
 
-        reg.addEventListener('updatefound', () => {
+        reg.addEventListener('updatefound', async () => {
           const newWorker = reg.installing;
           if (!newWorker) return;
 
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller && !notificationShown.current) {
-              notificationShown.current = true;
-              setUpdateAvailable(true);
+          newWorker.addEventListener('statechange', async () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              const hasCached = await checkCache();
+              if (hasCached && !notificationShown.current) {
+                notificationShown.current = true;
+                setUpdateAvailable(true);
+              }
             }
           });
         });
 
         reg.update();
-      });
+      } catch (error) {
+        console.error('Error checking for updates:', error);
+      }
     };
 
     checkForUpdates();

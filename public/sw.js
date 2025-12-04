@@ -1,19 +1,9 @@
-const CACHE_NAME = 'xobattl2e2-2v4';
-const STATIC_CACHE_NAME = 'xob2at22tle-static-v4';
-
-const staticAssets = [
-  '/',
-  '/index.html',
-  '/manifest.json'
-];
+const CACHE_NAME = 'xobattle-v5';
+const STATIC_CACHE_NAME = 'xobattle-static-v5';
 
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
-  event.waitUntil(
-    caches.open(STATIC_CACHE_NAME).then((cache) => {
-      return cache.addAll(staticAssets);
-    })
-  );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -51,64 +41,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (/\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i.test(url.pathname)) {
-    event.respondWith(
-      caches.open(STATIC_CACHE_NAME).then((cache) => {
-        return cache.match(request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          return fetch(request).then((response) => {
-            if (response.ok) {
-              cache.put(request, response.clone());
-            }
-            return response;
-          });
-        });
-      })
-    );
-    return;
-  }
-
-  if (/\.(?:js|mjs|css)$/i.test(url.pathname)) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then((cache) => {
-        return cache.match(request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          return fetch(request).then((response) => {
-            if (response.ok) {
-              cache.put(request, response.clone());
-            }
-            return response;
-          });
-        });
-      })
-    );
-    return;
-  }
-
   event.respondWith(
-    caches.open(CACHE_NAME).then((cache) => {
-      return fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            cache.put(request, response.clone());
+    fetch(request).then((response) => {
+      return response;
+    }).catch(() => {
+      return caches.open(CACHE_NAME).then((cache) => {
+        return cache.match(request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
           }
-          return response;
-        })
-        .catch(() => {
-          return cache.match(request).then((cachedResponse) => {
-            if (cachedResponse) {
-              return cachedResponse;
-            }
-            if (request.destination === 'document') {
-              return cache.match('/index.html');
-            }
-            return new Response('Offline', { status: 503 });
-          });
+          if (request.destination === 'document' || request.mode === 'navigate') {
+            return cache.match('/index.html');
+          }
+          return new Response('Offline', { status: 503 });
         });
+      });
     })
   );
 });
