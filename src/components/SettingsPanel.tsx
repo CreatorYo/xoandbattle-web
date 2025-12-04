@@ -35,7 +35,7 @@ export function SettingsPanel() {
               className="flex-1 btn-hover-blue"
             >
               <Sun className="h-4 w-4 mr-2" />
-              Light2
+              Light
             </Button>
             <Button
               variant={theme === 'dark' ? 'default' : 'outline'}
@@ -93,7 +93,7 @@ export function SettingsPanel() {
 
           {gameSettings.gameMode === 'ai' && (
             <div>
-              <Label className="text-sm font-medium mb-2 block">AI Difficulty</Label>
+              <Label className="text-sm font-medium mb-2 block">AI Difficulty2</Label>
                 <Select
                   value={gameSettings.difficulty}
                   onValueChange={(value: 'easy' | 'medium' | 'hard' | 'unbeatable') => 
