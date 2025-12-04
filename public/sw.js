@@ -1,5 +1,5 @@
-const CACHE_NAME = 'xoandbattle-v12';
-const STATIC_CACHE_NAME = 'xoandbattle-static-v12';
+const CACHE_NAME = 'xoandbattle-v122';
+const STATIC_CACHE_NAME = 'xoandbattle-static-v122';
 
 const staticAssets = [
   '/',
@@ -59,7 +59,10 @@ self.addEventListener('fetch', (event) => {
       if (cachedResponse) {
         fetch(request).then((response) => {
           if (response && response.ok) {
-            caches.open(CACHE_NAME).then((cache) => {
+            const cacheToUse = /\.(?:png|jpg|jpeg|svg|gif|webp|ico|woff|woff2|ttf|eot)$/i.test(url.pathname) 
+              ? STATIC_CACHE_NAME 
+              : CACHE_NAME;
+            caches.open(cacheToUse).then((cache) => {
               cache.put(request, response.clone());
             });
           }
@@ -70,7 +73,10 @@ self.addEventListener('fetch', (event) => {
       return fetch(request).then((response) => {
         if (response && response.ok) {
           const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
+          const cacheToUse = /\.(?:png|jpg|jpeg|svg|gif|webp|ico|woff|woff2|ttf|eot)$/i.test(url.pathname) 
+            ? STATIC_CACHE_NAME 
+            : CACHE_NAME;
+          caches.open(cacheToUse).then((cache) => {
             cache.put(request, responseToCache);
           });
         }
