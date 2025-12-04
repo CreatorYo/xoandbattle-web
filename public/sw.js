@@ -1,5 +1,5 @@
-const CACHE_NAME = 'xoandbattle-v122';
-const STATIC_CACHE_NAME = 'xoandbattle-static-v122';
+const CACHE_NAME = 'xoandbattle-v2122';
+const STATIC_CACHE_NAME = 'xoandbattle-static-v2122';
 
 const staticAssets = [
   '/',
@@ -55,7 +55,9 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(request).then((cachedResponse) => {
+    (async () => {
+      const cachedResponse = await caches.match(request);
+      
       if (cachedResponse) {
         fetch(request).then((response) => {
           if (response && response.ok) {
@@ -70,30 +72,29 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse;
       }
 
-      return fetch(request).then((response) => {
+      try {
+        const response = await fetch(request);
         if (response && response.ok) {
-          const responseToCache = response.clone();
           const cacheToUse = /\.(?:png|jpg|jpeg|svg|gif|webp|ico|woff|woff2|ttf|eot)$/i.test(url.pathname) 
             ? STATIC_CACHE_NAME 
             : CACHE_NAME;
-          caches.open(cacheToUse).then((cache) => {
-            cache.put(request, responseToCache);
-          });
+          const cache = await caches.open(cacheToUse);
+          await cache.put(request, response.clone());
         }
         return response;
-      }).catch(() => {
+      } catch (fetchError) {
         if (request.destination === 'document' || url.pathname === '/' || url.pathname.endsWith('.html')) {
-          return caches.match('/index.html').then((cachedHtml) => {
-            if (cachedHtml) {
-              return cachedHtml;
-            }
-            return caches.match('/').then((rootResponse) => {
-              return rootResponse || new Response('Offline', { status: 503 });
-            });
-          });
+          const cachedHtml = await caches.match('/index.html');
+          if (cachedHtml) {
+            return cachedHtml;
+          }
+          const rootResponse = await caches.match('/');
+          if (rootResponse) {
+            return rootResponse;
+          }
         }
         return new Response('Offline', { status: 503 });
-      });
-    })
+      }
+    })()
   );
 });

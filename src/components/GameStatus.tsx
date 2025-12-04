@@ -10,7 +10,7 @@ export function GameStatus() {
       const isAiWin = gameSettings.gameMode === 'ai' && winner === 'O';
       return (
         <span className={`text-base font-semibold ${winner === 'X' ? 'text-game-x' : 'text-game-o'}`}>
-          {isAiWin ? 'AI Wins!22' : `Player ${winner} Wins!`}
+          {isAiWin ? 'AI Wins!222' : `Player ${winner} Wins!`}
         </span>
       );
     }
