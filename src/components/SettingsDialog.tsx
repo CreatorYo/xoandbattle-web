@@ -579,11 +579,11 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
       }
       
       setCacheSize('0MB');
-      showToast.success('Cache Cleared', 'All cached data has been cleared.');
+      showToast.success('Cache Cleared', 'All cached data has been cleared. Reloading...');
       
       setTimeout(() => {
-        calculateCacheSize();
-      }, 500);
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.error('Failed to clear cache:', error);
       showToast.error('Clear Failed', 'Failed to clear cache. Please try again.');
