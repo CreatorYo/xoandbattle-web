@@ -10,6 +10,7 @@ export function ServiceWorkerUpdate() {
     needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW({
+    immediate: true,
     onRegistered(r) {
       console.log('SW Registered: ', r);
     },
