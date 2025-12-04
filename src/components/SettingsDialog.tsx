@@ -46,8 +46,6 @@ import {
   Keyboard,
   Info,
   Infinity,
-  Wifi,
-  WifiOff
 } from 'lucide-react';
 import { GameTheme } from '@/contexts/GameContext';
 import { getAppStoreUrl } from '@/lib/utils';
@@ -592,20 +590,6 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
     }
   };
 
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
 
   useEffect(() => {
     if (isPWA && activeSection === 'app-settings') {
@@ -1265,17 +1249,6 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
       case 'app-settings':
         return (
           <div className="space-y-6">
-            <SettingsSection header="NETWORK">
-              <SettingsRow
-                icon={isOnline ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
-                iconColor={isOnline ? "bg-green-500" : "bg-red-500"}
-                title="Connection Status"
-                subtitle={isOnline ? "Online" : "Offline"}
-                isFirst
-                isLast
-              />
-            </SettingsSection>
-
             <SettingsSection header="CACHE">
               <SettingsRow
                 icon={<Database className="h-4 w-4" />}

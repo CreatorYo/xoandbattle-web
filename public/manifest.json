@@ -1,32 +1,53 @@
 {
   "name": "X&O Battle",
   "short_name": "X&O Battle",
-  "description": "X&O Battle is a playful take on tic-tac-toe, perfect for when you're feeling bored. Play with a friend or challenge an AI opponent with adjustable difficulty ranging from easy to unbeatable. Customise themes and explore fun features to make each match your own! The web version of X&O Battle.",
+  "description": "X&O Battle is a playful take on tic-tac-toe, perfect for when you're feeling bored. Play with a friend or challenge an AI opponent with adjustable difficulty. Customise themes and explore fun features to make each match your own!",
   "start_url": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
-  "orientation": "portrait-primary",
   "scope": "/",
- "icons": [
-  {
-    "src": "/assets/android-chrome-192x192.png",
-    "sizes": "192x192",
-    "type": "image/png",
-    "purpose": "any maskable"
-  },
-  {
-    "src": "/assets/android-chrome-512x512.png",
-    "sizes": "512x512",
-    "type": "image/png",
-    "purpose": "any maskable"
-  }
-],
+  "display": "standalone",
+  "display_override": ["window-controls-overlay"],
+  "background_color": "#ffffff",
+  "theme_color": "#00bfff",
+  "orientation": "portrait-primary",
   "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "/assets/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
   "protocol_handlers": [
     {
       "protocol": "xobattle",
-      "url": "/?play"
+      "url": "/play"
+    },
+    {
+      "protocol": "xobattle-solo",
+      "url": "/solo"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Play Online",
+      "url": "/online"
+    },
+    {
+      "name": "Solo Mode",
+      "url": "/solo"
+    },
+    {
+      "name": "Settings",
+      "url": "/settings"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }
