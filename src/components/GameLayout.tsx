@@ -28,13 +28,13 @@ function TurnIndicator() {
     if (isAiThinking) {
       return (
         <p className="text-base font-semibold" style={{ color: gameSettings.theme.oColor }}>
-          AI is thinking...t
+          AI is thinking...
         </p>
       );
     }
     return (
       <p className="text-base font-semibold" style={{ color: gameSettings.theme.xColor }}>
-        You're X and AI is O2tt
+        You're X and AI is O
       </p>
     );
   }
