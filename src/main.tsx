@@ -4,11 +4,25 @@ import './index.css'
 import { UpdateInstallScreen } from './components/UpdateInstallScreen'
 import React from 'react'
 
+const renderApp = () => {
+  createRoot(document.getElementById("root")!).render(<App />);
+};
+
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
+  if (navigator.serviceWorker.controller) {
+    renderApp();
+  } else {
+    navigator.serviceWorker.ready.then(() => {
+      renderApp();
+    });
+    
     navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
       .then((registration) => {
         console.log('ServiceWorker registration successful:', registration.scope);
+
+        if (registration.active) {
+          renderApp();
+        }
 
         let isInstalling = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -26,8 +40,9 @@ if ('serviceWorker' in navigator) {
       })
       .catch((error) => {
         console.log('ServiceWorker registration failed:', error);
+        renderApp();
       });
-  });
+  }
+} else {
+  renderApp();
 }
-
-createRoot(document.getElementById("root")!).render(<App />);
