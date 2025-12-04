@@ -3,6 +3,7 @@ const STATIC_CACHE_NAME = 'xobattle-static-v5';
 
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -41,15 +42,20 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    fetch(request).then((response) => {
-      return response;
-    }).catch(() => {
-      return caches.open(CACHE_NAME).then((cache) => {
-        return cache.match(request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.match(request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        return fetch(request).then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            cache.put(request, responseToCache);
           }
-          if (request.destination === 'document' || request.mode === 'navigate') {
+          return response;
+        }).catch(() => {
+          if (request.destination === 'document') {
             return cache.match('/index.html');
           }
           return new Response('Offline', { status: 503 });

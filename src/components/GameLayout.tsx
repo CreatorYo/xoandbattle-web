@@ -34,7 +34,7 @@ function TurnIndicator() {
     }
     return (
       <p className="text-base font-semibold" style={{ color: gameSettings.theme.xColor }}>
-        You're X and AI is O2
+        You're X and AI is O
       </p>
     );
   }
