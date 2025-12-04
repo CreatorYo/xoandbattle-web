@@ -3,7 +3,6 @@ const STATIC_CACHE_NAME = 'xobattle-static-v5';
 
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
