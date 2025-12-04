@@ -113,7 +113,7 @@ export function GameLayout() {
         <div className="text-center mb-8">
           <div className="mb-4">
             <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-              Tic Tac Toe
+              t
             </h1>
           </div>
           <p className="text-muted-foreground text-base mb-4 max-w-md mx-auto">
