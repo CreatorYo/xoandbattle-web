@@ -2,10 +2,9 @@ import { useGame } from '@/contexts/GameContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Settings, Moon, Sun, Monitor, Bot, Users, Sparkles, Volume2, VolumeX } from 'lucide-react';
+import { Settings, Moon, Sun, Monitor, Bot, Users, Sparkles } from 'lucide-react';
 
 export function SettingsPanel() {
   const { gameSettings, updateSettings, gameStats } = useGame();
@@ -93,7 +92,7 @@ export function SettingsPanel() {
 
           {gameSettings.gameMode === 'ai' && (
             <div>
-              <Label className="text-sm font-medium mb-2 block">AI Difficulty2</Label>
+              <Label className="text-sm font-medium mb-2 block">AI Difficulty</Label>
                 <Select
                   value={gameSettings.difficulty}
                   onValueChange={(value: 'easy' | 'medium' | 'hard' | 'unbeatable') => 

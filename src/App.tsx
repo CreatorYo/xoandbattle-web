@@ -7,7 +7,6 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { GameProvider } from "@/contexts/GameContext";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { PWALaunchScreen } from "@/components/PWALaunchScreen";
-import { ServiceWorkerUpdate } from "@/components/ServiceWorkerUpdate";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -20,7 +19,6 @@ const App = () => (
         <TooltipProvider>
           <PWALaunchScreen />
           <OnboardingTour />
-          <ServiceWorkerUpdate />
           <Toaster />
           <Sonner />
           <BrowserRouter>

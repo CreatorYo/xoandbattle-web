@@ -22,11 +22,11 @@ import {
   Sparkles,
   RotateCcw,
   RotateCw,
+  Link2,
   Sun,
   Moon,
   Monitor,
   Accessibility,
-  Database,
   Download,
   Upload,
   ChevronRight,
@@ -99,7 +99,28 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
     }
   });
 
+  const [isStatusBarSynced, setIsStatusBarSynced] = useState(() => {
+    try {
+      return localStorage.getItem('tic-tac-toe-status-bar-synced') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const [statusBarColor, setStatusBarColor] = useState(() => {
+    try {
+      const synced = localStorage.getItem('tic-tac-toe-status-bar-synced') === 'true';
+      if (synced) {
+        return localStorage.getItem('tic-tac-toe-app-theme-color') || '#3b82f6';
+      }
+      return localStorage.getItem('tic-tac-toe-status-bar-color') || '#000000';
+    } catch {
+      return '#000000';
+    }
+  });
+
   const appThemeColorInputRef = useRef<HTMLInputElement>(null);
+  const statusBarColorInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--app-theme-color', appThemeColor);
@@ -110,6 +131,48 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
       document.documentElement.removeAttribute('data-theme-customized');
     }
   }, [appThemeColor]);
+
+  useEffect(() => {
+    if (isStatusBarSynced) {
+      setStatusBarColor(appThemeColor);
+      localStorage.setItem('tic-tac-toe-status-bar-color', appThemeColor);
+    }
+  }, [appThemeColor, isStatusBarSynced]);
+
+  useEffect(() => {
+    const updateStatusBarColor = () => {
+      let lightMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: light)"]') as HTMLMetaElement;
+      let darkMeta = document.querySelector('meta[name="theme-color"][media="(prefers-color-scheme: dark)"]') as HTMLMetaElement;
+      
+      if (!lightMeta) {
+        lightMeta = document.createElement('meta');
+        lightMeta.name = 'theme-color';
+        lightMeta.setAttribute('media', '(prefers-color-scheme: light)');
+        document.head.appendChild(lightMeta);
+      }
+      if (!darkMeta) {
+        darkMeta = document.createElement('meta');
+        darkMeta.name = 'theme-color';
+        darkMeta.setAttribute('media', '(prefers-color-scheme: dark)');
+        document.head.appendChild(darkMeta);
+      }
+      
+      lightMeta.content = statusBarColor;
+      darkMeta.content = statusBarColor;
+
+      const generalMeta = document.querySelector('meta[name="theme-color"]:not([media])') as HTMLMetaElement;
+      if (generalMeta) {
+        generalMeta.content = statusBarColor;
+      } else {
+        const meta = document.createElement('meta');
+        meta.name = 'theme-color';
+        meta.content = statusBarColor;
+        document.head.appendChild(meta);
+      }
+    };
+
+    updateStatusBarColor();
+  }, [statusBarColor]);
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -153,7 +216,6 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
   const [showHowToPlayDialog, setShowHowToPlayDialog] = useState(false);
   const [showExportThemesDialog, setShowExportThemesDialog] = useState(false);
   const [showThemesView, setShowThemesView] = useState(false);
-  const [cacheSize, setCacheSize] = useState<string>('0MB');
   const [themeSearchQuery, setThemeSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -496,106 +558,6 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
 
   const importThemesInputRef = useRef<HTMLInputElement>(null);
 
-  const calculateCacheSize = async () => {
-    if (!('caches' in window)) {
-      setCacheSize('0MB');
-      return;
-    }
-
-    try {
-      const cacheNames = await caches.keys();
-      let totalSize = 0;
-      let processedCount = 0;
-      let errorCount = 0;
-
-      for (const cacheName of cacheNames) {
-        try {
-          const cache = await caches.open(cacheName);
-          const keys = await cache.keys();
-          
-          for (const key of keys) {
-            try {
-              const response = await cache.match(key);
-              if (response && response.ok) {
-                const clonedResponse = response.clone();
-                const blob = await clonedResponse.blob();
-                totalSize += blob.size;
-                processedCount++;
-              }
-            } catch (err) {
-              errorCount++;
-            }
-          }
-        } catch (err) {
-          errorCount++;
-        }
-      }
-
-      if (processedCount === 0 && errorCount > 0) {
-        setCacheSize('0MB');
-        return;
-      }
-
-      const sizeInMB = totalSize / (1024 * 1024);
-      const sizeInKB = totalSize / 1024;
-      
-      if (sizeInMB < 0.01) {
-        if (sizeInKB < 0.01) {
-          setCacheSize('0MB');
-        } else {
-          setCacheSize(`${sizeInKB.toFixed(2)}KB`);
-        }
-      } else if (sizeInMB < 1) {
-        setCacheSize(`${sizeInMB.toFixed(2)}MB`);
-      } else {
-        setCacheSize(`${sizeInMB.toFixed(2)}MB`);
-      }
-    } catch (error) {
-      console.error('Failed to calculate cache size:', error);
-      setCacheSize('0MB');
-    }
-  };
-
-  const clearCache = async () => {
-    if (!('caches' in window)) {
-      showToast.error('Clear Failed', 'No cache to clear.');
-      return;
-    }
-
-    try {
-      const cacheNames = await caches.keys();
-      if (cacheNames.length === 0) {
-        showToast.error('Clear Failed', 'No cache to clear.');
-        return;
-      }
-
-      await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
-      
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const registration of registrations) {
-          await registration.unregister();
-        }
-      }
-      
-      setCacheSize('0MB');
-      showToast.success('Cache Cleared', 'All cached data has been cleared. Reloading...');
-      
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    } catch (error) {
-      console.error('Failed to clear cache:', error);
-      showToast.error('Clear Failed', 'Failed to clear cache. Please try again.');
-    }
-  };
-
-
-  useEffect(() => {
-    if (isPWA && activeSection === 'app-settings') {
-      calculateCacheSize();
-    }
-  }, [isPWA, activeSection]);
 
 
   const sidebarItems = [
@@ -1249,22 +1211,84 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
       case 'app-settings':
         return (
           <div className="space-y-6">
-            <SettingsSection header="CACHE">
-              <SettingsRow
-                icon={<Database className="h-4 w-4" />}
-                iconColor="bg-blue-500"
-                title="Cache Size"
-                subtitle={cacheSize}
-                isFirst
-              />
-              <SettingsRow
-                icon={<RotateCcw className="h-4 w-4" />}
-                iconColor="bg-red-500"
-                title="Clear Cache"
-                onClick={clearCache}
-                showChevron
-                isLast
-              />
+            <SettingsSection header="STATUS BAR COLOUR">
+              <div className="px-4 py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Status Bar Colour
+                    </label>
+                    <button
+                      onClick={() => {
+                        const newSyncedState = !isStatusBarSynced;
+                        setIsStatusBarSynced(newSyncedState);
+                        localStorage.setItem('tic-tac-toe-status-bar-synced', String(newSyncedState));
+                        if (newSyncedState) {
+                          setStatusBarColor(appThemeColor);
+                          localStorage.setItem('tic-tac-toe-status-bar-color', appThemeColor);
+                        }
+                      }}
+                      className={cn(
+                        "px-2 py-1 text-xs rounded-lg transition-colors",
+                        isStatusBarSynced 
+                          ? "hover:opacity-90" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      )}
+                      style={isStatusBarSynced ? {
+                        backgroundColor: `rgba(${appThemeColorRgb}, 0.2)`,
+                        color: appThemeColor
+                      } : {}}
+                    >
+                      Sync with Accent
+                    </button>
+                    <button
+                      onClick={() => {
+                        const defaultColor = '#000000';
+                        setStatusBarColor(defaultColor);
+                        localStorage.setItem('tic-tac-toe-status-bar-color', defaultColor);
+                      }}
+                      disabled={statusBarColor === '#000000'}
+                      className="p-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-muted-foreground"
+                      title={statusBarColor === '#000000' ? 'Already at default colour' : 'Reset to default colour'}
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <div
+                      className={cn(
+                        "w-10 h-10 rounded-lg transition-all duration-200 border border-border/30",
+                        isStatusBarSynced 
+                          ? "cursor-not-allowed opacity-60" 
+                          : "cursor-pointer hover:border-border/50"
+                      )}
+                      style={{ backgroundColor: statusBarColor }}
+                      onClick={() => {
+                        if (!isStatusBarSynced) {
+                          statusBarColorInputRef.current?.click();
+                        }
+                      }}
+                    />
+                    <input
+                      ref={statusBarColorInputRef}
+                      type="color"
+                      value={statusBarColor}
+                      onChange={(e) => {
+                        if (!isStatusBarSynced) {
+                          const newColor = e.target.value;
+                          setStatusBarColor(newColor);
+                          localStorage.setItem('tic-tac-toe-status-bar-color', newColor);
+                          setIsStatusBarSynced(false);
+                          localStorage.setItem('tic-tac-toe-status-bar-synced', 'false');
+                        }
+                      }}
+                      className="absolute top-0 left-0 w-10 h-10 opacity-0"
+                      style={{ pointerEvents: isStatusBarSynced ? 'none' : 'auto', cursor: isStatusBarSynced ? 'not-allowed' : 'pointer' }}
+                      disabled={isStatusBarSynced}
+                    />
+                  </div>
+                </div>
+              </div>
             </SettingsSection>
           </div>
         );
