@@ -11,7 +11,9 @@ self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
   event.waitUntil(
     caches.open(STATIC_CACHE_NAME).then((cache) => {
-      return cache.addAll(staticAssets);
+      return cache.addAll(staticAssets).catch((err) => {
+        console.log('Cache addAll failed:', err);
+      });
     })
   );
   self.skipWaiting();
@@ -64,6 +66,8 @@ self.addEventListener('fetch', (event) => {
               cache.put(request, response.clone());
             }
             return response;
+          }).catch(() => {
+            return new Response('', { status: 404 });
           });
         });
       })
@@ -76,14 +80,46 @@ self.addEventListener('fetch', (event) => {
       caches.open(CACHE_NAME).then((cache) => {
         return cache.match(request).then((cachedResponse) => {
           if (cachedResponse) {
+            fetch(request).then((response) => {
+              if (response && response.ok) {
+                cache.put(request, response.clone());
+              }
+            }).catch(() => {});
             return cachedResponse;
           }
           return fetch(request).then((response) => {
-            if (response.ok) {
+            if (response && response.ok) {
               cache.put(request, response.clone());
             }
             return response;
+          }).catch(() => {
+            return new Response('Resource not available offline', { status: 404 });
           });
+        });
+      })
+    );
+    return;
+  }
+
+  if (request.destination === 'document' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then((cache) => {
+        return cache.match('/index.html').then((cachedHtml) => {
+          return fetch(request)
+            .then((response) => {
+              if (response && response.ok) {
+                cache.put(request, response.clone());
+              }
+              return response;
+            })
+            .catch(() => {
+              if (cachedHtml) {
+                return cachedHtml;
+              }
+              return cache.match('/').then((rootResponse) => {
+                return rootResponse || new Response('Offline', { status: 503 });
+              });
+            });
         });
       })
     );
