@@ -1,5 +1,4 @@
-const CACHE_NAME = 'xobattle-v5';
-const STATIC_CACHE_NAME = 'xobattle-static-v5';
+const CACHE_NAME = 'xobattle-v25';
 
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
@@ -12,7 +11,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE_NAME) {
+          if (cacheName !== CACHE_NAME) {
             console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
