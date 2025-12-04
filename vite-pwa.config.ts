@@ -62,7 +62,11 @@ export const pwaConfig: Partial<VitePWAOptions> = {
         }
       },
       {
-        urlPattern: /\.(?:js|mjs|css)$/,
+        urlPattern: ({ request }) => {
+          return request.destination === 'script' || 
+                 request.destination === 'style' ||
+                 /\.(?:js|mjs|css)$/.test(new URL(request.url).pathname);
+        },
         handler: 'StaleWhileRevalidate',
         options: {
           cacheName: 'static-resources',
@@ -79,7 +83,14 @@ export const pwaConfig: Partial<VitePWAOptions> = {
         }
       },
       {
-        urlPattern: ({ url }) => url.pathname.startsWith('/') && !url.pathname.startsWith('/api'),
+        urlPattern: ({ url, request }) => {
+          const pathname = url.pathname;
+          return pathname.startsWith('/') && 
+                 !pathname.startsWith('/api') &&
+                 request.destination !== 'script' &&
+                 request.destination !== 'style' &&
+                 !/\.(?:js|mjs|css|png|jpg|jpeg|svg|gif|webp|ico|html)$/.test(pathname);
+        },
         handler: 'NetworkFirst',
         options: {
           cacheName: 'pages-cache',
@@ -88,6 +99,11 @@ export const pwaConfig: Partial<VitePWAOptions> = {
         }
       }
     ]
+  },
+  devOptions: {
+    enabled: true,
+    type: 'module',
+    navigateFallback: '/index.html'
   },
   injectRegister: 'auto'
 };
