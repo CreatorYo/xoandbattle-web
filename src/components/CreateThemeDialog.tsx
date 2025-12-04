@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Sparkles, ChevronRight, Copy } from 'lucide-react';
+import { Plus, Sparkles, ChevronRight, Copy, Smile } from 'lucide-react';
+import { CustomiseSymbolsDialog } from './CustomiseSymbolsDialog';
 import React from 'react';
 
 interface ColorInputProps {
@@ -112,7 +113,10 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
     oColor: '#EA4335',
     boardBg: '#FFFFFF',
     enableBoxFill: false,
+    xSymbol: '×',
+    oSymbol: '○',
   });
+  const [symbolsDialogOpen, setSymbolsDialogOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -133,6 +137,8 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
         oColor: editTheme.oColor,
         boardBg: editTheme.boardBg,
         enableBoxFill: editTheme.enableBoxFill,
+        xSymbol: editTheme.xSymbol || '×',
+        oSymbol: editTheme.oSymbol || '○',
       });
       setOpen(true);
     } else {
@@ -144,6 +150,8 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
         oColor: '#EA4335',
         boardBg: '#FFFFFF',
         enableBoxFill: false,
+        xSymbol: '×',
+        oSymbol: '○',
       });
     }
     if (descriptionTextareaRef.current) {
@@ -166,6 +174,8 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
       oColor: newTheme.oColor!,
       boardBg: newTheme.boardBg!,
       enableBoxFill: newTheme.enableBoxFill!,
+      xSymbol: newTheme.xSymbol || '×',
+      oSymbol: newTheme.oSymbol || '○',
     };
 
     onCreateTheme(theme);
@@ -200,6 +210,8 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
         oColor: '#EA4335',
         boardBg: '#FFFFFF',
         enableBoxFill: false,
+        xSymbol: '×',
+        oSymbol: '○',
       });
     }
   };
@@ -353,9 +365,34 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
                     appThemeColor={appThemeColor}
                   />
                 </div>
+
+                <Button
+                  variant="outline"
+                  onClick={() => setSymbolsDialogOpen(true)}
+                  className="w-full justify-start gap-3 h-auto py-3 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none focus:ring-0 focus:outline-none"
+                >
+                  <Smile className="h-4 w-4" />
+                  <div className="flex-1 text-left">
+                    <div className="text-sm font-medium">Customise Symbols</div>
+                    <div className="text-xs text-muted-foreground">
+                      {newTheme.xSymbol || '×'} and {newTheme.oSymbol || '○'}
+                    </div>
+                  </div>
+                </Button>
               </div>
             </div>
           </div>
+
+          <CustomiseSymbolsDialog
+            open={symbolsDialogOpen}
+            onOpenChange={setSymbolsDialogOpen}
+            xSymbol={newTheme.xSymbol || '×'}
+            oSymbol={newTheme.oSymbol || '○'}
+            onSymbolsChange={(xSymbol, oSymbol) => {
+              setNewTheme(prev => ({ ...prev, xSymbol, oSymbol }));
+            }}
+            appThemeColor={appThemeColor}
+          />
 
           <div className="pt-2">
             <Button 

@@ -14,6 +14,8 @@ export interface GameTheme {
   oColor: string;
   boardBg: string;
   enableBoxFill: boolean;
+  xSymbol?: string;
+  oSymbol?: string;
 }
 
 export interface BoardStyling {

@@ -12,6 +12,13 @@ export function GameBoard() {
 
     const isWinningCell = winningLine?.includes(index);
     
+    const xSymbol = gameSettings.theme.xSymbol || '×';
+    const oSymbol = gameSettings.theme.oSymbol || '○';
+    
+    const isEmojiX = xSymbol !== '×' && /[\p{Emoji}]/u.test(xSymbol);
+    const isEmojiO = oSymbol !== '○' && /[\p{Emoji}]/u.test(oSymbol);
+    const hasCustomSymbols = isEmojiX || isEmojiO;
+    
     const getFontSizeClass = () => {
       switch (gameSettings.gridFontSize) {
         case 'very-small': return 'text-3xl';
@@ -23,6 +30,7 @@ export function GameBoard() {
     };
     
     const baseClasses = `${getFontSizeClass()} font-bold transition-all duration-300`;
+    const shouldAnimate = gameSettings.enableAnimations && !hasCustomSymbols;
     
     if (value === 'X') {
       return (
@@ -30,12 +38,12 @@ export function GameBoard() {
           className={cn(
             baseClasses,
             "text-game-x",
-            gameSettings.enableAnimations && "animate-piece-appear",
-            isWinningCell && gameSettings.enableAnimations && gameSettings.winAnimation === 'glow' && "animate-winner-glow"
+            shouldAnimate && "animate-piece-appear",
+            isWinningCell && shouldAnimate && gameSettings.winAnimation === 'glow' && "animate-winner-glow"
           )}
           style={{ color: gameSettings.theme.xColor }}
         >
-          ×
+          {xSymbol}
         </span>
       );
     }
@@ -45,12 +53,12 @@ export function GameBoard() {
         className={cn(
           baseClasses,
           "text-game-o",
-          gameSettings.enableAnimations && "animate-piece-appear",
-          isWinningCell && gameSettings.enableAnimations && gameSettings.winAnimation === 'glow' && "animate-winner-glow"
+          shouldAnimate && "animate-piece-appear",
+          isWinningCell && shouldAnimate && gameSettings.winAnimation === 'glow' && "animate-winner-glow"
         )}
         style={{ color: gameSettings.theme.oColor }}
       >
-        ○
+        {oSymbol}
       </span>
     );
   };

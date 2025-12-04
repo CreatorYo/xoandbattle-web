@@ -45,7 +45,9 @@ import {
   Smartphone,
   Keyboard,
   Info,
-  Infinity
+  Infinity,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { GameTheme } from '@/contexts/GameContext';
 import { getAppStoreUrl } from '@/lib/utils';
@@ -54,6 +56,7 @@ import { ThemesNavigationView } from './ThemesNavigationView';
 import { cn } from '@/lib/utils';
 import { getDefaultGameSettings, resetAccessibilitySettings, getDefaultAppearanceTheme, resetAllLocalStorageSettings } from '@/lib/settings-reset';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsPWA } from '@/hooks/use-pwa';
 import React from 'react';
 
 interface SettingsDialogProps {
@@ -65,6 +68,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
   const { gameSettings, updateSettings, persistentStats, resetPersistentStats, updatePersistentStats } = useGame();
   const { theme, setTheme } = useTheme();
   const isMobile = useIsMobile();
+  const isPWA = useIsPWA();
   const [reduceMotion, setReduceMotion] = useState(() => {
     try {
       return localStorage.getItem('tic-tac-toe-reduce-motion') === 'true';
@@ -132,7 +136,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get('s');
-      if (tab && ['appearance', 'gameplay', 'effects', 'awards', 'accessibility', 'other'].includes(tab)) {
+      if (tab && ['appearance', 'gameplay', 'effects', 'awards', 'accessibility', 'app-settings', 'other'].includes(tab)) {
         return tab;
       }
     }
@@ -151,6 +155,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
   const [showHowToPlayDialog, setShowHowToPlayDialog] = useState(false);
   const [showExportThemesDialog, setShowExportThemesDialog] = useState(false);
   const [showThemesView, setShowThemesView] = useState(false);
+  const [cacheSize, setCacheSize] = useState<string>('0MB');
   const [themeSearchQuery, setThemeSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -493,6 +498,122 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
 
   const importThemesInputRef = useRef<HTMLInputElement>(null);
 
+  const calculateCacheSize = async () => {
+    if (!('caches' in window)) {
+      setCacheSize('0MB');
+      return;
+    }
+
+    try {
+      const cacheNames = await caches.keys();
+      let totalSize = 0;
+      let processedCount = 0;
+      let errorCount = 0;
+
+      for (const cacheName of cacheNames) {
+        try {
+          const cache = await caches.open(cacheName);
+          const keys = await cache.keys();
+          
+          for (const key of keys) {
+            try {
+              const response = await cache.match(key);
+              if (response && response.ok) {
+                const clonedResponse = response.clone();
+                const blob = await clonedResponse.blob();
+                totalSize += blob.size;
+                processedCount++;
+              }
+            } catch (err) {
+              errorCount++;
+            }
+          }
+        } catch (err) {
+          errorCount++;
+        }
+      }
+
+      if (processedCount === 0 && errorCount > 0) {
+        setCacheSize('0MB');
+        return;
+      }
+
+      const sizeInMB = totalSize / (1024 * 1024);
+      const sizeInKB = totalSize / 1024;
+      
+      if (sizeInMB < 0.01) {
+        if (sizeInKB < 0.01) {
+          setCacheSize('0MB');
+        } else {
+          setCacheSize(`${sizeInKB.toFixed(2)}KB`);
+        }
+      } else if (sizeInMB < 1) {
+        setCacheSize(`${sizeInMB.toFixed(2)}MB`);
+      } else {
+        setCacheSize(`${sizeInMB.toFixed(2)}MB`);
+      }
+    } catch (error) {
+      console.error('Failed to calculate cache size:', error);
+      setCacheSize('0MB');
+    }
+  };
+
+  const clearCache = async () => {
+    if (!('caches' in window)) {
+      showToast.error('Clear Failed', 'No cache to clear.');
+      return;
+    }
+
+    try {
+      const cacheNames = await caches.keys();
+      if (cacheNames.length === 0) {
+        showToast.error('Clear Failed', 'No cache to clear.');
+        return;
+      }
+
+      await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
+      
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+        }
+      }
+      
+      setCacheSize('0MB');
+      showToast.success('Cache Cleared', 'All cached data has been cleared.');
+      
+      setTimeout(() => {
+        calculateCacheSize();
+      }, 500);
+    } catch (error) {
+      console.error('Failed to clear cache:', error);
+      showToast.error('Clear Failed', 'Failed to clear cache. Please try again.');
+    }
+  };
+
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isPWA && activeSection === 'app-settings') {
+      calculateCacheSize();
+    }
+  }, [isPWA, activeSection]);
+
+
   const sidebarItems = [
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'gameplay', label: 'Gameplay', icon: Layout },
@@ -501,6 +622,8 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
     { id: 'accessibility', label: 'Accessibility', icon: Accessibility },
     { id: 'other', label: 'Other', icon: MoreHorizontal },
   ];
+
+  const appSettingsActive = activeSection === 'app-settings';
 
   const renderContent = () => {
     switch (activeSection) {
@@ -1139,6 +1262,40 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
             </div>
         );
 
+      case 'app-settings':
+        return (
+          <div className="space-y-6">
+            <SettingsSection header="NETWORK">
+              <SettingsRow
+                icon={isOnline ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
+                iconColor={isOnline ? "bg-green-500" : "bg-red-500"}
+                title="Connection Status"
+                subtitle={isOnline ? "Online" : "Offline"}
+                isFirst
+                isLast
+              />
+            </SettingsSection>
+
+            <SettingsSection header="CACHE">
+              <SettingsRow
+                icon={<Database className="h-4 w-4" />}
+                iconColor="bg-blue-500"
+                title="Cache Size"
+                subtitle={cacheSize}
+                isFirst
+              />
+              <SettingsRow
+                icon={<RotateCcw className="h-4 w-4" />}
+                iconColor="bg-red-500"
+                title="Clear Cache"
+                onClick={clearCache}
+                showChevron
+                isLast
+              />
+            </SettingsSection>
+          </div>
+        );
+
       case 'other':
         return (
             <div className="space-y-6">
@@ -1341,44 +1498,90 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
             
             <div className="p-4 border-t border-border/30">
               {sidebarCollapsed ? (
-                <a
-                  href={getAppStoreUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full group flex items-center justify-center p-3 text-muted-foreground rounded-lg transition-all duration-200"
-                  title="Get App"
-                >
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200">
-                    <Download className={cn(
-                      "h-5 w-5 transition-colors duration-200",
-                      "group-hover:text-foreground"
-                    )} />
-                  </div>
-                </a>
-              ) : (
-                <Ripple 
-                  color={`rgba(${appThemeColorRgb}, 0.2)`}
-                >
+                isPWA ? (
+                  <button
+                    onClick={() => {
+                      setActiveSection('app-settings');
+                      setMobileMenuOpen(false);
+                    }}
+                    className={cn(
+                      "w-full group flex items-center justify-center p-3 rounded-lg transition-all duration-200",
+                      appSettingsActive ? "text-foreground" : "text-muted-foreground"
+                    )}
+                    title="App Settings"
+                  >
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200">
+                      <Monitor className={cn(
+                        "h-5 w-5 transition-colors duration-200",
+                        appSettingsActive ? "" : "group-hover:text-foreground"
+                      )} />
+                    </div>
+                  </button>
+                ) : (
                   <a
                     href={getAppStoreUrl()}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="w-full group flex items-center gap-4 p-3 rounded-lg text-left transition-all duration-200 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                    className="w-full group flex items-center justify-center p-3 text-muted-foreground rounded-lg transition-all duration-200"
                     title="Get App"
                   >
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200">
-                      <Download className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div 
-                        className="font-medium text-sm"
-                      >
-                        Get App
-                      </div>
+                      <Download className={cn(
+                        "h-5 w-5 transition-colors duration-200",
+                        "group-hover:text-foreground"
+                      )} />
                     </div>
                   </a>
+                )
+              ) : (
+                <Ripple 
+                  color={`rgba(${appThemeColorRgb}, 0.2)`}
+                >
+                  {isPWA ? (
+                    <button
+                      onClick={() => {
+                        setActiveSection('app-settings');
+                        setMobileMenuOpen(false);
+                      }}
+                      className={cn(
+                        "w-full group flex items-center gap-4 p-3 rounded-lg text-left transition-all duration-200",
+                        appSettingsActive ? "text-foreground" : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                      )}
+                      title="App Settings"
+                    >
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200">
+                        <Monitor className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div 
+                          className="font-medium text-sm"
+                        >
+                          App Settings
+                        </div>
+                      </div>
+                    </button>
+                  ) : (
+                    <a
+                      href={getAppStoreUrl()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full group flex items-center gap-4 p-3 rounded-lg text-left transition-all duration-200 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                      title="Get App"
+                    >
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200">
+                        <Download className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div 
+                          className="font-medium text-sm"
+                        >
+                          Get App
+                        </div>
+                      </div>
+                    </a>
+                  )}
                 </Ripple>
               )}
             </div>
