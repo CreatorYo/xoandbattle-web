@@ -1,7 +1,7 @@
 import { VitePWAOptions } from 'vite-plugin-pwa';
 
 export const pwaConfig: Partial<VitePWAOptions> = {
-  registerType: 'prompt', // automatically update when new version is available
+  registerType: 'prompt', // user chooses when to update
   strategies: 'generateSW',
   includeAssets: [
     'favicon.ico',
@@ -37,11 +37,11 @@ export const pwaConfig: Partial<VitePWAOptions> = {
     categories: ['games', 'entertainment']
   },
   workbox: {
-    globPatterns: ['**/*.*'], // caches everything in your dist folder
+    globPatterns: ['**/*.*'], // precache everything in the dist folder
     navigateFallback: '/index.html',
     navigateFallbackDenylist: [/^\/_/, /\/[^/?]+\.[^/]+$/],
     cleanupOutdatedCaches: true,
-    skipWaiting: true,
+    skipWaiting: false, // prompt means skipWaiting false
     clientsClaim: true,
     runtimeCaching: [
       {
@@ -89,6 +89,5 @@ export const pwaConfig: Partial<VitePWAOptions> = {
       }
     ]
   },
-  // DEV options removed for reliable offline caching in production
   injectRegister: 'auto'
 };
