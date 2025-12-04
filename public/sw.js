@@ -1,5 +1,5 @@
-const CACHE_NAME = 'xobattle-v1';
-const STATIC_CACHE_NAME = 'xobattle-static-v1';
+const CACHE_NAME = 'xobattle-v2';
+const STATIC_CACHE_NAME = 'xobattle-static-v2';
 
 const staticAssets = [
   '/',
@@ -17,7 +17,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE_NAME)
       .then((cache) => {
-        return cache.addAll(staticAssets);
+        return cache.addAll(staticAssets.map(url => new Request(url, { cache: 'reload' })));
       })
       .catch((error) => {
         console.error('Cache installation failed:', error);
@@ -59,7 +59,8 @@ self.addEventListener('fetch', (event) => {
       request.url.endsWith('.jpg') ||
       request.url.endsWith('.jpeg') ||
       request.url.endsWith('.svg') ||
-      request.url.endsWith('.ico')) {
+      request.url.endsWith('.ico') ||
+      request.url.endsWith('.webp')) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
         if (cachedResponse) {
@@ -74,28 +75,79 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         }).catch(() => {
-          return caches.match('/assets/android-chrome-192x192.png');
+          if (request.url.includes('/assets/')) {
+            return caches.match('/assets/android-chrome-192x192.png');
+          }
+          return new Response('', { status: 404 });
         });
       })
     );
     return;
   }
 
-  if (request.destination === 'document' || request.url.endsWith('.html')) {
+  if (request.destination === 'document' || request.url.endsWith('.html') || request.url === '/' || request.url === location.origin + '/') {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseToCache);
+      caches.match('/index.html').then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return fetch(request)
+          .then((response) => {
+            if (response && response.status === 200) {
+              const responseToCache = response.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put('/index.html', responseToCache);
+              });
+            }
+            return response;
+          })
+          .catch(() => {
+            return caches.match('/index.html').then((cached) => {
+              if (cached) {
+                return cached;
+              }
+              return new Response('<!DOCTYPE html><html><head><title>Offline</title></head><body><h1>You are offline</h1></body></html>', {
+                headers: { 'Content-Type': 'text/html' }
+              });
             });
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match('/index.html');
-        })
+          });
+      })
+    );
+    return;
+  }
+
+  if (request.destination === 'script' || 
+      request.destination === 'style' ||
+      request.url.includes('/src/') ||
+      request.url.endsWith('.js') ||
+      request.url.endsWith('.css') ||
+      request.url.endsWith('.mjs') ||
+      request.url.endsWith('.ts') ||
+      request.url.endsWith('.tsx')) {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return fetch(request)
+          .then((response) => {
+            if (response && response.status === 200) {
+              const responseToCache = response.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(request, responseToCache);
+              });
+            }
+            return response;
+          })
+          .catch(() => {
+            return caches.match(request).then((cached) => {
+              if (cached) {
+                return cached;
+              }
+              return new Response('', { status: 404 });
+            });
+          });
+      })
     );
     return;
   }
@@ -119,7 +171,7 @@ self.addEventListener('fetch', (event) => {
           if (request.destination === 'document') {
             return caches.match('/index.html');
           }
-          return new Response('Offline', { status: 503 });
+          return new Response('', { status: 404 });
         });
       })
   );
