@@ -369,7 +369,7 @@ export function CreateThemeDialog({ onCreateTheme, editTheme, onEditComplete, op
                 <Button
                   variant="outline"
                   onClick={() => setSymbolsDialogOpen(true)}
-                  className="w-full justify-start gap-3 h-auto py-3 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none focus:ring-0 focus:outline-none"
+                  className="w-full justify-start gap-3 h-auto py-3 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none focus:ring-0 focus:outline-none hover:!text-foreground [&_*]:hover:!text-inherit"
                 >
                   <Smile className="h-4 w-4" />
                   <div className="flex-1 text-left">

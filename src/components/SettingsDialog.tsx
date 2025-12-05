@@ -67,6 +67,9 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
   const { theme, setTheme } = useTheme();
   const isMobile = useIsMobile();
   const isPWA = useIsPWA();
+  
+  const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(window.navigator.userAgent) && !(window as any).MSStream;
+  const isIOSPWA = isPWA && isIOS;
   const [reduceMotion, setReduceMotion] = useState(() => {
     try {
       return localStorage.getItem('tic-tac-toe-reduce-motion') === 'true';
@@ -1210,6 +1213,10 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
         );
 
       case 'app-settings':
+        if (isIOSPWA) {
+          window.location.href = getAppStoreUrl();
+          return null;
+        }
         return (
           <div className="space-y-6">
             <SettingsSection header="STATUS BAR COLOUR">
@@ -1496,7 +1503,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
             
             <div className="p-4 border-t border-border/30">
               {sidebarCollapsed ? (
-                isPWA ? (
+                isPWA && !isIOSPWA ? (
                   <button
                     onClick={() => {
                       setActiveSection('app-settings');
@@ -1536,7 +1543,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                 <Ripple 
                   color={`rgba(${appThemeColorRgb}, 0.2)`}
                 >
-                  {isPWA ? (
+                  {isPWA && !isIOSPWA ? (
                     <button
                       onClick={() => {
                         setActiveSection('app-settings');
