@@ -36,6 +36,7 @@ export interface GameSettings {
   showGameStatus: boolean;
   gameStatusPosition: 'left' | 'right';
   enableAnimations: boolean;
+  enableSounds: boolean;
   gridFontSize: 'very-small' | 'small' | 'medium' | 'large' | 'very-large';
   boardStyling: BoardStyling;
 }
@@ -147,6 +148,7 @@ const defaultSettings: GameSettings = {
   showGameStatus: false,
   gameStatusPosition: 'left',
   enableAnimations: true,
+  enableSounds: false,
   gridFontSize: 'medium',
   boardStyling: {
     style: 'standard',

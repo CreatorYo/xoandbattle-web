@@ -11,6 +11,7 @@ import { Ripple } from '@/components/ui/ripple';
 import { Eye, RotateCcw, Gamepad2, Settings } from 'lucide-react';
 import { GameModeDialog } from './GameModeDialog';
 import { cn } from '@/lib/utils';
+import { playResetSound, playSettingsOpenSound, playGameModeSwitchSound } from '@/lib/sounds';
 
 function TurnIndicator() {
   const { winner, currentPlayer, gameSettings, board, isAiThinking } = useGame();
@@ -56,19 +57,40 @@ export function GameLayout() {
   const { theme, setTheme } = useTheme();
   const isPWA = useIsPWA();
 
+  const handleResetGame = () => {
+    if (gameSettings.enableSounds) {
+      playResetSound();
+    }
+    resetGame();
+  };
+
+  const handleSettingsOpen = (open: boolean) => {
+    if (open && gameSettings.enableSounds) {
+      playSettingsOpenSound();
+    }
+    setSettingsOpen(open);
+  };
+
+  const handleGameModeOpen = (open: boolean) => {
+    if (open && gameSettings.enableSounds) {
+      playGameModeSwitchSound();
+    }
+    setGameModeOpen(open);
+  };
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isUIVisible || settingsOpen || gameModeOpen) return;
 
       if (event.key.toLowerCase() === 'r' && !event.ctrlKey && !event.altKey && !event.metaKey) {
         event.preventDefault();
-        resetGame();
+        handleResetGame();
       } else if (event.key.toLowerCase() === 's' && !event.ctrlKey) {
         event.preventDefault();
-        setGameModeOpen(true);
+        handleGameModeOpen(true);
       } else if (event.key === ',' && event.ctrlKey) {
         event.preventDefault();
-        setSettingsOpen(true);
+        handleSettingsOpen(true);
       } else if (event.key.toLowerCase() === 't' && event.altKey && event.shiftKey) {
         event.preventDefault();
         if (theme === 'light') {
@@ -86,7 +108,7 @@ export function GameLayout() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isUIVisible, settingsOpen, gameModeOpen, resetGame, theme, setTheme]);
+  }, [isUIVisible, settingsOpen, gameModeOpen, resetGame, theme, setTheme, gameSettings.enableSounds]);
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">      
@@ -153,7 +175,7 @@ export function GameLayout() {
                 <div className="flex gap-3 justify-center">
                   <Ripple className="w-12 h-12 rounded-full" color="rgba(239, 68, 68, 0.3)">
                   <Button 
-                    onClick={resetGame} 
+                    onClick={handleResetGame} 
                     variant="outline"
                     size="sm"
                       className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-0 hover:bg-red-500/20 transition-all duration-200"
@@ -163,7 +185,7 @@ export function GameLayout() {
                   </Button>
                   </Ripple>
                   
-                  <GameModeDialog open={gameModeOpen} onOpenChange={setGameModeOpen}>
+                  <GameModeDialog open={gameModeOpen} onOpenChange={handleGameModeOpen}>
                     <div className="relative w-12 h-12 rounded-full overflow-hidden">
                     <Button 
                       variant="outline"
@@ -197,11 +219,11 @@ export function GameLayout() {
                   </GameModeDialog>
 
                   <Ripple className="w-12 h-12 rounded-full" color="rgba(34, 197, 94, 0.3)">
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                      className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-0 hover:bg-green-500/20 transition-all duration-200"
-                    onClick={() => setSettingsOpen(true)}
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                        className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-0 hover:bg-green-500/20 transition-all duration-200"
+                    onClick={() => handleSettingsOpen(true)}
                     title="Settings"
                   >
                     <Settings className="!h-5 !w-5 text-green-500" />
@@ -224,7 +246,7 @@ export function GameLayout() {
                   <div className="flex gap-3 justify-center">
                     <Ripple className="w-12 h-12 rounded-full" color="rgba(239, 68, 68, 0.3)">
                     <Button 
-                      onClick={resetGame} 
+                      onClick={handleResetGame} 
                       variant="outline"
                       size="sm"
                         className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-0 hover:bg-red-500/20 transition-all duration-200"
@@ -270,7 +292,7 @@ export function GameLayout() {
                       variant="outline"
                       size="sm"
                         className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-0 hover:bg-green-500/20 transition-all duration-200"
-                      onClick={() => setSettingsOpen(true)}
+                      onClick={() => handleSettingsOpen(true)}
                     >
                       <Settings className="!h-5 !w-5 text-green-500" />
                     </Button>
@@ -282,7 +304,7 @@ export function GameLayout() {
         </div>
       </div>
       
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <SettingsDialog open={settingsOpen} onOpenChange={handleSettingsOpen} />
     </div>
   );
 }

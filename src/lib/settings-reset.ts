@@ -9,6 +9,7 @@ export const defaultGameSettings: Partial<GameSettings> = {
   showGameStatus: false,
   gameStatusPosition: 'left',
   enableAnimations: true,
+  enableSounds: false,
   gridFontSize: 'medium',
   boardStyling: {
     style: 'standard',

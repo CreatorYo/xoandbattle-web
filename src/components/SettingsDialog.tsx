@@ -728,7 +728,7 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
         
         return (
           <div className="space-y-6">
-            <SettingsSection header="GAME MODE">
+            <SettingsSection header="GAME MODE & SOUND">
               <SettingsRow
                 icon={gameSettings.gameMode === 'human' ? <Users className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                 iconColor={gameSettings.gameMode === 'human' ? "bg-blue-500" : "bg-green-500"}
@@ -806,6 +806,19 @@ export function SettingsDialog({ open: externalOpen, onOpenChange: externalOnOpe
                   </Select>
                 }
                 showDropdown
+              />
+              <SettingsRow
+                icon={<Volume2 className="h-4 w-4" />}
+                iconColor="bg-purple-500"
+                title="Sound Effects"
+                subtitle="Play audio feedback for moves, wins, draws, and actions"
+                rightElement={
+                <Switch
+                  checked={gameSettings.enableSounds}
+                  onCheckedChange={(checked) => updateSettings({ enableSounds: checked })}
+                  appThemeColor={appThemeColor}
+                />
+                }
                 isLast
               />
             </SettingsSection>

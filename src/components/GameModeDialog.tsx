@@ -4,6 +4,7 @@ import { Users, Bot, Check } from 'lucide-react';
 import { useGame } from '@/contexts/GameContext';
 import type { GameMode } from '@/contexts/GameContext';
 import { Ripple } from '@/components/ui/ripple';
+import { playGameModeSwitchSound } from '@/lib/sounds';
 
 interface GameModeDialogProps {
   children: React.ReactNode;
@@ -31,6 +32,9 @@ export function GameModeDialog({ children, open: externalOpen, onOpenChange: ext
     updateSettings({
       gameMode: mode,
     });
+    if (gameSettings.enableSounds) {
+      playGameModeSwitchSound();
+    }
     resetGame();
     setIsOpen(false);
   };
