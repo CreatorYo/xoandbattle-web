@@ -99,3 +99,4 @@ export function playGameModeSwitchSound(): void {
     playTone(700, 0.1, 'sine', 0.2);
   }, 60);
 }
+
