@@ -1,107 +1,97 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Users, Bot, Check } from 'lucide-react';
-import { useGame } from '@/contexts/GameContext';
-import type { GameMode } from '@/contexts/GameContext';
-import { Ripple } from '@/components/ui/ripple';
+import type { ComponentType, CSSProperties } from 'react';
+import { Cpu, Users } from 'lucide-react';
+import { useGame, type GameMode } from '@/contexts/GameContext';
+import {
+  Dialog,
+  DialogBody,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Checkmark } from '@/components/ui/checkmark';
 import { playGameModeSwitchSound } from '@/lib/sounds';
+import { cn } from '@/lib/utils';
 
-interface GameModeDialogProps {
-  children: React.ReactNode;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+interface ModeOption {
+  mode: GameMode;
+  title: string;
+  description: string;
+  icon: ComponentType<{ className?: string }>;
+  color: string;
 }
 
-export function GameModeDialog({ children, open: externalOpen, onOpenChange: externalOnOpenChange }: GameModeDialogProps) {
+const OPTIONS: ModeOption[] = [
+  { mode: 'human', title: 'Two Player', description: 'Play with a friend', icon: Users, color: '#3b82f6' },
+  { mode: 'ai', title: 'AI Mode', description: 'Play against the AI', icon: Cpu, color: '#22c55e' },
+];
+
+interface GameModeDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function GameModeDialog({ open, onOpenChange }: GameModeDialogProps) {
   const { gameSettings, updateSettings, resetGame } = useGame();
-  const [internalOpen, setInternalOpen] = useState(false);
-  const [selectedMode, setSelectedMode] = useState<GameMode>(gameSettings.gameMode);
 
-  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
-  const setIsOpen = externalOnOpenChange || setInternalOpen;
-
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
-      setSelectedMode(gameSettings.gameMode);
+  const handleSelect = (mode: GameMode) => {
+    if (mode !== gameSettings.gameMode) {
+      updateSettings({ gameMode: mode });
+      resetGame();
+      if (gameSettings.enableSounds) playGameModeSwitchSound();
     }
-    setIsOpen(open);
-  };
-
-  const handleModeSelect = (mode: GameMode) => {
-    setSelectedMode(mode);
-    updateSettings({
-      gameMode: mode,
-    });
-    if (gameSettings.enableSounds) {
-      playGameModeSwitchSound();
-    }
-    resetGame();
-    setIsOpen(false);
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[420px] p-0 gap-0 bg-transparent border-0 shadow-none">
-        <div className="bg-card/95 dark:bg-black/95 backdrop-blur-xl rounded-2xl overflow-hidden border border-border/50 shadow-2xl">
-          <div className="p-6">
-            <DialogHeader className="mb-6">
-              <DialogTitle className="text-center text-2xl font-semibold text-foreground mb-2">
-                Select Game Mode
-              </DialogTitle>
-              <p className="text-center text-sm text-muted-foreground">
-                Choose how you want to play
-              </p>
-            </DialogHeader>
-            
-            <div className="space-y-3">
-              <Ripple color="rgba(255, 255, 255, 0.1)">
-                <button
-                  onClick={() => handleModeSelect('human')}
-                  className="w-full flex items-center gap-3 px-5 py-3 rounded-xl transition-colors text-left bg-blue-500/5 hover:bg-blue-500/10"
-                >
-                  <Users className="h-5 w-5 text-blue-500" />
-                  <div className="flex-1">
-                    <div className="text-[15px] font-medium text-foreground">Two Player</div>
-                    <div className="text-[13px] text-muted-foreground">Play with a friend</div>
-                  </div>
-                  {selectedMode === 'human' && (
-                    <Check className="h-5 w-5 text-blue-500" />
-                  )}
-                </button>
-              </Ripple>
-              
-              <Ripple color="rgba(255, 255, 255, 0.1)">
-                <button
-                  onClick={() => handleModeSelect('ai')}
-                  className="w-full flex items-center gap-3 px-5 py-3 rounded-xl transition-colors text-left bg-green-500/5 hover:bg-green-500/10"
-                >
-                  <Bot className="h-5 w-5 text-green-500" />
-                  <div className="flex-1">
-                    <div className="text-[15px] font-medium text-foreground">AI Mode</div>
-                    <div className="text-[13px] text-muted-foreground">Play against computer</div>
-                  </div>
-                  {selectedMode === 'ai' && (
-                    <Check className="h-5 w-5 text-green-500" />
-                  )}
-                </button>
-              </Ripple>
-            </div>
-          </div>
-          
-          <div className="px-6 pb-6 pt-4">
-            <Ripple color="rgba(255, 255, 255, 0.1)">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent size="sm">
+        <DialogHeader>
+          <DialogTitle className="text-2xl">Select Game Mode</DialogTitle>
+          <DialogDescription>Choose how you want to play.</DialogDescription>
+        </DialogHeader>
+
+        <DialogBody className="flex flex-col gap-3 pt-6">
+          {OPTIONS.map((option) => {
+            const selected = gameSettings.gameMode === option.mode;
+            return (
               <button
-                onClick={() => setIsOpen(false)}
-                className="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 active:bg-red-800 font-medium text-[14px] text-white transition-colors"
+                key={option.mode}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => handleSelect(option.mode)}
+                style={{ '--mode': option.color } as CSSProperties}
+                className={cn(
+                  'flex w-full items-center gap-3.5 rounded-[1.25rem] px-4 py-4 text-left transition-[background-color,box-shadow,scale]',
+                  'bg-[color-mix(in_oklab,var(--mode)_12%,transparent)] hover:bg-[color-mix(in_oklab,var(--mode)_18%,transparent)]',
+                  'active:scale-[0.98] active:bg-[color-mix(in_oklab,var(--mode)_22%,transparent)]',
+                  'outline-2 outline-offset-2 outline-transparent focus-visible:outline-[color:var(--mode)]',
+                  selected && 'shadow-[inset_0_0_0_1.5px_var(--mode)]'
+                )}
               >
-                Cancel
+                <span className="shrink-0" style={{ color: option.color }}>
+                  <option.icon className="size-6" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-semibold">{option.title}</span>
+                  <span className="block text-[13px] text-muted-foreground">{option.description}</span>
+                </span>
+                {selected && (
+                  <Checkmark style={{ color: option.color }} />
+                )}
               </button>
-            </Ripple>
-          </div>
-        </div>
+            );
+          })}
+        </DialogBody>
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="destructive">Cancel</Button>
+          </DialogClose>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -1,270 +1,144 @@
 import * as React from "react"
-import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { X, AlertTriangle, Info, CheckCircle, AlertCircle } from "lucide-react"
+import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { useSheetDrag } from "@/hooks/use-sheet-drag"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 const Dialog = DialogPrimitive.Root
-
-const DialogTrigger = DialogPrimitive.Trigger
-
-const DialogPortal = DialogPrimitive.Portal
-
 const DialogClose = DialogPrimitive.Close
 
-const DialogOverlay = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay
-    ref={ref}
-    className={cn(
-      "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-      className
-    )}
-    {...props}
-  />
-))
-DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
+const contentSizes = {
+  sm: "sm:max-w-[400px]",
+  md: "sm:max-w-md",
+  lg: "sm:max-w-lg",
+} as const
 
-const DialogContent = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-2xl duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-xl border-border/50",
-        className
-      )}
-      style={{ boxShadow: 'none', outline: 'none' }}
-      {...props}
-    >
-      {children}
-      <DialogPrimitive.Close 
-        className="absolute right-4 top-4 rounded-full p-1.5 opacity-70 ring-offset-background transition-all hover:opacity-100 hover:bg-gray-200 dark:hover:bg-muted/40 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-gray-200 dark:data-[state=open]:bg-muted/40 data-[state=open]:text-muted-foreground"
-        style={{ outline: 'none', boxShadow: 'none' }}
-      >
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
-  </DialogPortal>
-))
-DialogContent.displayName = DialogPrimitive.Content.displayName
+const presentations = {
+  card: {
+    overlay: "p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]",
+    content: "max-h-[92dvh] rounded-[2rem] glass-sheet sm:max-h-[min(88dvh,820px)]",
+    grabber: true,
+  },
+  page: {
+    overlay: "pt-[calc(var(--safe-top)+0.625rem)]",
+    content: "h-full rounded-t-[2rem] bg-background elev-panel sm:h-[min(700px,calc(100dvh-6rem))] sm:rounded-b-[2rem]",
+    grabber: false,
+  },
+} as const
 
-const DialogHeader = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col space-y-2 text-center sm:text-left",
-      className
-    )}
-    {...props}
-  />
-)
-DialogHeader.displayName = "DialogHeader"
-
-const DialogFooter = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3",
-      className
-    )}
-    {...props}
-  />
-)
-DialogFooter.displayName = "DialogFooter"
-
-const DialogTitle = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title
-    ref={ref}
-    className={cn(
-      "text-xl font-semibold leading-none tracking-tight text-foreground",
-      className
-    )}
-    {...props}
-  />
-))
-DialogTitle.displayName = DialogPrimitive.Title.displayName
-
-const DialogDescription = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description
-    ref={ref}
-    className={cn("text-sm text-muted-foreground leading-relaxed", className)}
-    {...props}
-  />
-))
-DialogDescription.displayName = DialogPrimitive.Description.displayName
-
-interface DialogContainerProps {
-  children: React.ReactNode
-  className?: string
+type DialogContentProps = React.ComponentProps<typeof DialogPrimitive.Content> & {
+  size?: keyof typeof contentSizes
+  presentation?: keyof typeof presentations
 }
 
-const DialogContainer = ({ children, className }: DialogContainerProps) => (
-  <div className={cn(
-    "bg-card/95 dark:bg-black/95 backdrop-blur-xl rounded-2xl overflow-hidden border border-border/50 shadow-2xl",
-    className
-  )}>
-    {children}
-  </div>
-)
-
-interface ConfirmationDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  title: string
-  description: string
-  confirmText?: string
-  cancelText?: string
-  variant?: 'default' | 'destructive' | 'warning' | 'info' | 'success'
-  onConfirm: () => void
-  onCancel?: () => void
-  icon?: React.ReactNode
-  className?: string
+function chain<E>(theirs: ((event: E) => void) | undefined, ours: (event: E) => void) {
+  return (event: E) => {
+    theirs?.(event)
+    ours(event)
+  }
 }
 
-const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
-  open,
-  onOpenChange,
-  title,
-  description,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
-  variant = 'default',
-  onConfirm,
-  onCancel,
-  icon,
-  className
-}) => {
-  const getVariantStyles = () => {
-    switch (variant) {
-      case 'destructive':
-        return {
-          icon: <AlertTriangle className="h-6 w-6 text-destructive" />,
-          confirmClass: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-          borderClass: "border-destructive/20"
-        }
-      case 'warning':
-        return {
-          icon: <AlertTriangle className="h-6 w-6 text-yellow-500" />,
-          confirmClass: "bg-yellow-500 text-white hover:bg-yellow-600",
-          borderClass: "border-yellow-500/20"
-        }
-      case 'info':
-        return {
-          icon: <Info className="h-6 w-6 text-blue-500" />,
-          confirmClass: "bg-blue-500 text-white hover:bg-blue-600",
-          borderClass: "border-blue-500/20"
-        }
-      case 'success':
-        return {
-          icon: <CheckCircle className="h-6 w-6 text-green-500" />,
-          confirmClass: "bg-green-500 text-white hover:bg-green-600",
-          borderClass: "border-green-500/20"
-        }
-      default:
-        return {
-          icon: <AlertCircle className="h-6 w-6 text-primary" />,
-          confirmClass: "bg-primary text-primary-foreground hover:bg-primary/90",
-          borderClass: "border-primary/20"
-        }
-    }
-  }
-
-  const variantStyles = getVariantStyles()
-
-  const handleConfirm = () => {
-    onConfirm()
-    onOpenChange(false)
-  }
-
-  const handleCancel = () => {
-    onCancel?.()
-    onOpenChange(false)
-  }
+function DialogContent({ className, children, size = "md", presentation = "card", ...props }: DialogContentProps) {
+  const contentRef = React.useRef<HTMLDivElement>(null)
+  const closeRef = React.useRef<HTMLButtonElement>(null)
+  const sheetDrag = useSheetDrag(contentRef, () => closeRef.current?.click())
+  const style = presentations[presentation]
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn("max-w-md", className)}>
-        <DialogHeader className="space-y-3">
-          <div className="flex items-center justify-center sm:justify-start">
-            {icon || variantStyles.icon}
-          </div>
-          <DialogTitle className="text-center sm:text-left">{title}</DialogTitle>
-          <DialogDescription className="text-center sm:text-left">
-            {description}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <DialogClose
-            onClick={handleCancel}
-            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-          >
-            {cancelText}
-          </DialogClose>
-          <button
-            onClick={handleConfirm}
-            className={cn(
-              "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2",
-              variantStyles.confirmClass
-            )}
-          >
-            {confirmText}
-          </button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <DialogPrimitive.Portal>
+      <DialogPrimitive.Overlay
+        className={cn(
+          "fixed inset-0 z-50 flex items-end justify-center overflow-y-auto scrim sm:items-center sm:p-6",
+          "data-[state=open]:before:animate-scrim-in",
+          style.overlay
+        )}
+      >
+        <DialogPrimitive.Content
+          {...props}
+          ref={contentRef}
+          onPointerDown={chain(props.onPointerDown, sheetDrag.onPointerDown)}
+          onPointerMove={chain(props.onPointerMove, sheetDrag.onPointerMove)}
+          onPointerUp={chain(props.onPointerUp, sheetDrag.onPointerUp)}
+          onPointerCancel={chain(props.onPointerCancel, sheetDrag.onPointerCancel)}
+          onLostPointerCapture={chain(props.onLostPointerCapture, sheetDrag.onLostPointerCapture)}
+          className={cn(
+            "relative flex w-full flex-col overflow-hidden text-foreground outline-none sm:origin-center",
+            "max-sm:data-[state=open]:animate-sheet-in max-sm:data-[state=closed]:animate-sheet-out",
+            "sm:data-[state=open]:animate-dialog-in sm:data-[state=closed]:animate-dialog-out",
+            style.content,
+            contentSizes[size],
+            className
+          )}
+        >
+          {style.grabber && (
+            <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center pt-2 sm:hidden">
+              <span className="h-[5px] w-9 rounded-full bg-foreground/20" />
+            </div>
+          )}
+          {children}
+          <DialogPrimitive.Close ref={closeRef} tabIndex={-1} aria-hidden hidden />
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Overlay>
+    </DialogPrimitive.Portal>
   )
 }
 
-const SimpleConfirmDialog: React.FC<{
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  title: string
-  message: string
-  onConfirm: () => void
-  confirmText?: string
-  cancelText?: string
-}> = ({ open, onOpenChange, title, message, onConfirm, confirmText = "Yes", cancelText = "No" }) => (
-  <ConfirmationDialog
-    open={open}
-    onOpenChange={onOpenChange}
-    title={title}
-    description={message}
-    confirmText={confirmText}
-    cancelText={cancelText}
-    onConfirm={onConfirm}
-    variant="default"
-  />
-)
+function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-sheet-handle
+      className={cn(
+        "flex flex-col items-center gap-1.5 px-6 pt-7 text-center max-sm:touch-none max-sm:select-none",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
+  return <ScrollArea className={cn("px-5 py-5 sm:px-6", className)} {...props} />
+}
+
+function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col-reverse gap-2 px-5 pb-5 pt-1 sm:flex-row sm:px-6 sm:pb-6",
+        "*:h-12 *:w-full *:text-base *:font-semibold sm:*:w-auto sm:*:flex-1",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
+  return (
+    <DialogPrimitive.Title
+      className={cn("text-xl font-bold leading-snug tracking-tight text-foreground", className)}
+      {...props}
+    />
+  )
+}
+
+function DialogDescription({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Description>) {
+  return (
+    <DialogPrimitive.Description
+      className={cn("text-[15px] leading-snug text-muted-foreground", className)}
+      {...props}
+    />
+  )
+}
 
 export {
   Dialog,
-  DialogPortal,
-  DialogOverlay,
   DialogClose,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
+  DialogBody,
   DialogFooter,
   DialogTitle,
   DialogDescription,
-  DialogContainer,
-  ConfirmationDialog,
-  SimpleConfirmDialog,
 }

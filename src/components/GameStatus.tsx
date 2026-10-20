@@ -1,78 +1,61 @@
+import { Bot, Users } from 'lucide-react';
 import { useGame } from '@/contexts/GameContext';
-import { Card, CardContent } from '@/components/ui/card';
-import { Users, Bot } from 'lucide-react';
 
 export function GameStatus() {
   const { winner, currentPlayer, gameSettings, gameStats, board, isAiThinking } = useGame();
+  const { theme, gameMode } = gameSettings;
+  const isAiMode = gameMode === 'ai';
+  const isDraw = !winner && board.every((cell) => cell !== null);
 
-  const getStatusMessage = () => {
-    if (winner) {
-      const isAiWin = gameSettings.gameMode === 'ai' && winner === 'O';
-      return (
-        <span className={`text-base font-semibold ${winner === 'X' ? 'text-game-x' : 'text-game-o'}`}>
-          {isAiWin ? 'AI Wins!' : `Player ${winner} Wins!`}
-        </span>
-      );
-    }
+  const status = winner
+    ? isAiMode
+      ? winner === 'X'
+        ? 'You win!'
+        : 'AI wins'
+      : `Player ${winner} wins!`
+    : isDraw
+      ? 'It’s a draw'
+      : isAiMode
+        ? isAiThinking || currentPlayer === 'O'
+          ? 'AI’s turn'
+          : 'Your turn'
+        : `Player ${currentPlayer}’s turn`;
 
-    const isDraw = !winner && board.every(cell => cell !== null);
+  const scores = [
+    { label: isAiMode ? 'You' : 'X', value: gameStats.xWins, color: theme.xColor },
+    { label: 'Draws', value: gameStats.draws, color: undefined },
+    { label: isAiMode ? 'AI' : 'O', value: gameStats.oWins, color: theme.oColor },
+  ];
 
-    if (isDraw) {
-      return (
-        <span className="text-base font-semibold text-muted-foreground">It's a Draw!</span>
-      );
-    }
-
-    return (
-      <div className="flex items-center justify-center gap-2">
-        {gameSettings.gameMode === 'ai' ? (
-          <Bot className="h-4 w-4 text-muted-foreground" />
-        ) : (
-          <Users className="h-4 w-4 text-muted-foreground" />
-        )}
-        <span className="text-sm text-muted-foreground">Player {currentPlayer}'s Turn</span>
-      </div>
-    );
-  };
+  const ModeIcon = isAiMode ? Bot : Users;
 
   return (
-    <Card className="w-full bg-card border-border/50">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between gap-6">
-          <div className="flex items-center gap-2.5 min-w-0">
-            {gameSettings.gameMode === 'ai' ? (
-              <Bot className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            ) : (
-              <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            )}
-            <span className="text-sm text-foreground whitespace-nowrap">
-              {winner 
-                ? (gameSettings.gameMode === 'ai' && winner === 'O' ? 'AI Wins!' : `Player ${winner} Wins!`)
-                : (!winner && board.every(cell => cell !== null) 
-                  ? "It's a Draw!" 
-                  : gameSettings.gameMode === 'ai'
-                    ? (isAiThinking ? "AI's turn" : currentPlayer === 'X' ? 'Your turn' : "AI's turn")
-                  : `Player ${currentPlayer}'s Turn`)
-              }
-            </span>
+    <section
+      aria-label="Game status"
+      className="flex items-center gap-4 rounded-[1.375rem] py-3 pl-3 pr-5 glass sm:min-w-80"
+    >
+      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-sunken text-muted-foreground">
+          <ModeIcon className="size-4" />
+        </span>
+        <span className="truncate text-sm font-medium">{status}</span>
+      </div>
+
+      <div className="h-8 w-px shrink-0 bg-border" aria-hidden />
+
+      <dl className="flex shrink-0 items-center gap-4">
+        {scores.map((score) => (
+          <div key={score.label} className="flex min-w-8 flex-col-reverse items-center">
+            <dt className="text-[11px] font-medium text-muted-foreground">{score.label}</dt>
+            <dd
+              className="text-lg font-semibold leading-tight tabular-nums"
+              style={{ color: score.color }}
+            >
+              {score.value}
+            </dd>
           </div>
-          
-          <div className="flex items-center gap-5 flex-shrink-0">
-            <div className="text-center min-w-[32px]">
-              <div className="text-lg font-bold leading-tight" style={{ color: gameSettings.theme.xColor }}>{gameStats.xWins}</div>
-              <div className="text-xs text-muted-foreground mt-1">X</div>
-            </div>
-            <div className="text-center min-w-[32px]">
-              <div className="text-lg font-bold text-muted-foreground leading-tight">{gameStats.draws}</div>
-              <div className="text-xs text-muted-foreground mt-1">-</div>
-            </div>
-            <div className="text-center min-w-[32px]">
-              <div className="text-lg font-bold leading-tight" style={{ color: gameSettings.theme.oColor }}>{gameStats.oWins}</div>
-              <div className="text-xs text-muted-foreground mt-1">{gameSettings.gameMode === 'ai' ? 'AI' : 'O'}</div>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        ))}
+      </dl>
+    </section>
   );
 }

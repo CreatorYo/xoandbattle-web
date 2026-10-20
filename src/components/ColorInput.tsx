@@ -1,52 +1,34 @@
-import React from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
-import { Input } from '@/components/ui/input';
+import { ColorPicker } from '@/components/ui/color-picker';
+import { cn, normalizeHex } from '@/lib/utils';
 
 interface ColorInputProps {
   value: string;
   onChange: (color: string) => void;
   label: string;
+  disabled?: boolean;
+  showHex?: boolean;
 }
 
-export function ColorInput({ value, onChange, label }: ColorInputProps) {
-  const colorInputRef = React.useRef<HTMLInputElement>(null);
-  const { theme } = useTheme();
-  const isTransparent = value === 'transparent' || !value || value === '';
+const checkerboard = 'repeating-conic-gradient(var(--muted) 0% 25%, var(--surface) 0% 50%) 50% / 8px 8px';
 
-  const getActualBackgroundColor = () => {
-    if (!isTransparent) return value;
-    return theme === 'dark' ? '#000000' : '#ffffff';
-  };
+export function ColorInput({ value, onChange, label, disabled, showHex = true }: ColorInputProps) {
+  const hex = normalizeHex(value);
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="relative">
-        <div
-          className="w-8 h-8 rounded-lg border border-border/50 cursor-pointer hover:border-primary/50 transition-[background-color,border-color] duration-200 relative overflow-hidden"
-          style={{ backgroundColor: getActualBackgroundColor() }}
-          onClick={() => colorInputRef.current?.click()}
-        >
-          {isTransparent && (
-            <div className="absolute inset-0 bg-[linear-gradient(45deg,#ccc_25%,transparent_25%,transparent_75%,#ccc_75%,#ccc),linear-gradient(45deg,#ccc_25%,transparent_25%,transparent_75%,#ccc_75%,#ccc)] bg-[length:8px_8px] [background-position:0_0,4px_4px] opacity-30" />
-          )}
-        </div>
-        <input
-          ref={colorInputRef}
-          type="color"
-          value={isTransparent ? getActualBackgroundColor() : value}
-          onChange={(e) => onChange(e.target.value)}
-          className="absolute top-0 left-0 w-8 h-8 opacity-0 cursor-pointer"
-        />
-      </div>
-      {!isTransparent && (
-        <Input
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="#FF0000"
-          className="h-8 text-xs font-mono bg-background/50 border-border/50 focus-visible:ring-0 focus-visible:border-2 focus-visible:border-primary/50"
-        />
-      )}
-    </div>
+    <ColorPicker value={hex ?? '#ffffff'} onChange={onChange} label={label} disabled={disabled}>
+      <button
+        type="button"
+        aria-label={`${label}, ${hex ?? 'none'}`}
+        className={cn(
+          'flex h-8 shrink-0 items-center gap-2 rounded-full bg-foreground/6 p-1 transition-colors not-disabled:hover:bg-foreground/10',
+          'outline-2 outline-offset-2 outline-transparent focus-visible:outline-brand',
+          'disabled:cursor-not-allowed disabled:opacity-50',
+          showHex && 'pr-3'
+        )}
+      >
+        <span className="size-6 rounded-full inset-ring inset-ring-foreground/15" style={{ background: hex ?? checkerboard }} />
+        {showHex && <span className="font-mono text-xs uppercase tabular-nums text-foreground/80">{hex ?? 'None'}</span>}
+      </button>
+    </ColorPicker>
   );
 }
-

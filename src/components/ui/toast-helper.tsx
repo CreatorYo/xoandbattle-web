@@ -1,50 +1,13 @@
-import { toast as showToast } from '@/hooks/use-toast';
+import { toast as sonner } from 'sonner';
 
-type ToastVariant = 'default' | 'destructive' | 'success' | 'warning' | 'info';
-
-interface ToastOptions {
-  title: string;
-  description?: string;
-  variant?: ToastVariant;
-  duration?: number;
-}
+const CONFIRMATION_DURATION = 3500;
+const ERROR_DURATION = 5000;
 
 export const toast = {
-  show: ({ title, description, variant = 'default', duration = 5800 }: ToastOptions) => {
-    const toastProps: any = {
-      title,
-      description,
-      duration: duration || 5800,
-    };
-    
-    if (variant === 'destructive') {
-      toastProps.variant = 'destructive';
-    } else {
-      toastProps.variant = variant;
-    }
-    
-    return showToast(toastProps);
-  },
+  success: (title: string, description?: string) =>
+    sonner.success(title, { description, duration: CONFIRMATION_DURATION }),
 
-  success: (title: string, description?: string, duration: number = 5800) => {
-    return toast.show({ title, description, variant: 'success', duration });
-  },
+  info: (title: string, description?: string) => sonner.info(title, { description, duration: CONFIRMATION_DURATION }),
 
-  error: (title: string, description?: string, duration: number = 5800) => {
-    return showToast({
-      title,
-      description,
-      variant: 'destructive',
-      duration: duration || 5800,
-    });
-  },
-
-  warning: (title: string, description?: string, duration: number = 5800) => {
-    return toast.show({ title, description, variant: 'warning', duration });
-  },
-
-  info: (title: string, description?: string, duration: number = 5800) => {
-    return toast.show({ title, description, variant: 'info', duration });
-  },
+  error: (title: string, description?: string) => sonner.error(title, { description, duration: ERROR_DURATION }),
 };
-

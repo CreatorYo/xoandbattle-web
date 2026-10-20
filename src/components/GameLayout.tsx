@@ -1,310 +1,213 @@
-import { useState, useEffect } from 'react';
+import { Suspense, useEffect, useState, type ComponentType, type CSSProperties } from 'react';
+import { GameAnnouncer } from './GameAnnouncer';
 import { GameBoard } from './GameBoard';
 import { GameStatus } from './GameStatus';
-import { SettingsDialog } from './SettingsDialog';
 import { useGame } from '@/contexts/GameContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useUIVisibility } from '@/hooks/use-ui-visibility';
-import { useIsPWA } from '@/hooks/use-pwa';
-import { Button } from '@/components/ui/button';
-import { Ripple } from '@/components/ui/ripple';
-import { Eye, RotateCcw, Gamepad2, Settings } from 'lucide-react';
-import { GameModeDialog } from './GameModeDialog';
-import { cn } from '@/lib/utils';
+import { usePreferences } from '@/contexts/PreferencesContext';
+import { cn, isModalOpen, isTypingOrMenuTarget, MODIFIER_KEY } from '@/lib/utils';
+import { lazyWithPreload, whenIdle } from '@/lib/lazy';
 import { playResetSound, playSettingsOpenSound, playGameModeSwitchSound } from '@/lib/sounds';
+import { CONTROL_BUTTONS, resolveControlColors, type ControlButtonId } from '@/lib/control-buttons';
+
+const SettingsDialog = lazyWithPreload(async () => ({ default: (await import('./SettingsDialog')).SettingsDialog }));
+const GameModeDialog = lazyWithPreload(async () => ({ default: (await import('./GameModeDialog')).GameModeDialog }));
 
 function TurnIndicator() {
   const { winner, currentPlayer, gameSettings, board, isAiThinking } = useGame();
-  
+  const { theme, gameMode } = gameSettings;
+  const isDraw = !winner && board.every((cell) => cell !== null);
+
+  let message: string;
+  let color: string | undefined;
+
   if (winner) {
-    return null;
+    message = gameMode === 'ai' && winner === 'O' ? 'AI Wins!' : `Player ${winner} Wins!`;
+    color = winner === 'X' ? theme.xColor : theme.oColor;
+  } else if (isDraw) {
+    message = 'It’s a Draw!';
+  } else if (gameMode === 'ai') {
+    message = isAiThinking ? 'AI is thinking…' : 'You’re X and AI is O.';
+    color = isAiThinking ? theme.oColor : theme.xColor;
+  } else {
+    message = `Please proceed with your turn player ${currentPlayer}.`;
+    color = currentPlayer === 'X' ? theme.xColor : theme.oColor;
   }
-  
-  const isDraw = board.every(cell => cell !== null) && !winner;
-  if (isDraw) {
-    return null;
-  }
-  
-  if (gameSettings.gameMode === 'ai') {
-    if (isAiThinking) {
-      return (
-        <p className="text-base font-semibold" style={{ color: gameSettings.theme.oColor }}>
-          AI is thinking...
-        </p>
-      );
-    }
-    return (
-      <p className="text-base font-semibold" style={{ color: gameSettings.theme.xColor }}>
-        You're X and AI is O.
-      </p>
-    );
-  }
-  
-  const playerColor = currentPlayer === 'X' ? gameSettings.theme.xColor : gameSettings.theme.oColor;
-  
+
+  const isResult = !!winner || isDraw;
+
   return (
-    <p className="text-base font-semibold" style={{ color: playerColor }}>
-      Please proceed with your turn Player {currentPlayer}
+    <p
+      role="status"
+      aria-live="polite"
+      className={cn(
+        'text-balance font-semibold',
+        isResult ? 'text-2xl tracking-tight' : 'text-base',
+        !color && 'text-muted-foreground'
+      )}
+      style={{ color }}
+    >
+      {message}
     </p>
   );
 }
 
+interface ControlButtonProps {
+  icon: ComponentType<{ className?: string }>;
+  label: string;
+  color: string;
+  custom: boolean;
+  shortcut: string;
+  onClick: () => void;
+}
+
+function ControlButton({ icon: Icon, label, color, custom, shortcut, onClick }: ControlButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={`${label} (${shortcut})`}
+      data-style={custom ? 'custom' : undefined}
+      className="control-button"
+      style={{ '--control': color } as CSSProperties}
+    >
+      <Icon />
+    </button>
+  );
+}
+
 export function GameLayout() {
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(() => new URLSearchParams(window.location.search).has('s'));
   const [gameModeOpen, setGameModeOpen] = useState(false);
-  const { isUIVisible, toggleUIVisibility } = useUIVisibility();
-  const { resetGame, gameSettings, winner, currentPlayer, board } = useGame();
+  const [mounted, setMounted] = useState({ settings: settingsOpen, mode: false });
+  const { resetGame, gameSettings } = useGame();
   const { theme, setTheme } = useTheme();
-  const isPWA = useIsPWA();
+  const { controlColors, customControlButtons, controlColorsSynced } = usePreferences();
+  const buttonColors = resolveControlColors({
+    custom: customControlButtons,
+    synced: controlColorsSynced,
+    colors: controlColors,
+    theme: gameSettings.theme,
+  });
 
   const handleResetGame = () => {
-    if (gameSettings.enableSounds) {
-      playResetSound();
-    }
+    if (gameSettings.enableSounds) playResetSound();
     resetGame();
   };
 
   const handleSettingsOpen = (open: boolean) => {
-    if (open && gameSettings.enableSounds) {
-      playSettingsOpenSound();
-    }
+    if (open && gameSettings.enableSounds) playSettingsOpenSound();
+    if (open && !mounted.settings) setMounted((previous) => ({ ...previous, settings: true }));
     setSettingsOpen(open);
   };
 
   const handleGameModeOpen = (open: boolean) => {
-    if (open && gameSettings.enableSounds) {
-      playGameModeSwitchSound();
-    }
+    if (open && gameSettings.enableSounds) playGameModeSwitchSound();
+    if (open && !mounted.mode) setMounted((previous) => ({ ...previous, mode: true }));
     setGameModeOpen(open);
   };
 
+  useEffect(
+    () =>
+      whenIdle(() => {
+        const ignore = () => undefined;
+        SettingsDialog.preload().then(() => setMounted((previous) => ({ ...previous, settings: true })), ignore);
+        GameModeDialog.preload().then(() => setMounted((previous) => ({ ...previous, mode: true })), ignore);
+        import('canvas-confetti').catch(ignore);
+      }),
+    []
+  );
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!isUIVisible || settingsOpen || gameModeOpen) return;
+      if (settingsOpen || gameModeOpen || event.repeat) return;
+      if (isModalOpen() || isTypingOrMenuTarget(event.target)) return;
+      const key = event.key.toLowerCase();
 
-      if (event.key.toLowerCase() === 'r' && !event.ctrlKey && !event.altKey && !event.metaKey) {
+      if (key === 'r' && !event.ctrlKey && !event.altKey && !event.metaKey) {
         event.preventDefault();
         handleResetGame();
-      } else if (event.key.toLowerCase() === 's' && !event.ctrlKey) {
+      } else if (key === 's' && !event.ctrlKey && !event.altKey && !event.metaKey) {
         event.preventDefault();
         handleGameModeOpen(true);
-      } else if (event.key === ',' && event.ctrlKey) {
+      } else if (event.key === ',' && (event.ctrlKey || event.metaKey)) {
         event.preventDefault();
         handleSettingsOpen(true);
-      } else if (event.key.toLowerCase() === 't' && event.altKey && event.shiftKey) {
+      } else if (key === 't' && event.altKey && event.shiftKey) {
         event.preventDefault();
-        if (theme === 'light') {
-          setTheme('dark');
-        } else if (theme === 'dark') {
-          setTheme('system');
-        } else {
-          setTheme('light');
-        }
+        setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light');
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  });
 
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isUIVisible, settingsOpen, gameModeOpen, resetGame, theme, setTheme, gameSettings.enableSounds]);
+  const showStatusPanel = gameSettings.showGameStatus;
+
+  const controlActions: Record<ControlButtonId, Omit<ControlButtonProps, 'icon' | 'color' | 'custom'>> = {
+    reset: { label: 'Reset game', shortcut: 'R', onClick: handleResetGame },
+    mode: { label: 'Change game mode', shortcut: 'S', onClick: () => handleGameModeOpen(true) },
+    settings: { label: 'Settings', shortcut: `${MODIFIER_KEY}+,`, onClick: () => handleSettingsOpen(true) },
+  };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">      
+    <div className="relative flex min-h-dvh flex-col bg-background">
+      <main
+        className={cn(
+          'flex flex-1 flex-col items-center justify-center px-6 pt-[max(3rem,env(safe-area-inset-top))]',
+          showStatusPanel ? 'pb-32 sm:pb-12' : 'pb-[max(3rem,env(safe-area-inset-bottom))]'
+        )}
+      >
+        <header className="flex flex-col items-center text-center">
+          <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">Tic Tac Toe</h1>
+          <p className="mt-2 text-[15px] text-muted-foreground">Play against AI or a friend</p>
+          <div className="mt-6 flex h-8 items-center justify-center max-[359px]:h-12">
+            <TurnIndicator />
+          </div>
+        </header>
 
-      {!isUIVisible && (
-        <div className="fixed top-6 right-6 z-50">
-          <Button
-            onClick={toggleUIVisibility}
-            variant="outline"
-            size="sm"
-            className="bg-background/90 backdrop-blur-md border-border/50 shadow-xl hover:bg-background transition-all duration-300 hover:scale-105"
-            title="Show UI"
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            Show UI
-          </Button>
+        <div className="mt-6">
+          <GameBoard />
+        </div>
+
+        <nav aria-label="Game controls" className="mt-10 flex items-center gap-6">
+          {CONTROL_BUTTONS.map((button) => (
+            <ControlButton
+              key={button.id}
+              icon={button.icon}
+              color={buttonColors[button.id]}
+              custom={customControlButtons}
+              {...controlActions[button.id]}
+            />
+          ))}
+        </nav>
+      </main>
+
+      <GameAnnouncer />
+
+      {showStatusPanel && (
+        <div
+          className={cn(
+            'fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] z-40 max-sm:inset-x-4',
+            gameSettings.gameStatusPosition === 'left' ? 'sm:left-6' : 'sm:right-6'
+          )}
+        >
+          <GameStatus />
         </div>
       )}
 
-      <div className={cn(
-        "container mx-auto px-6 py-8 max-w-6xl relative z-10 pt-40",
-        isPWA && "pt-48"
-      )}>
-        <div className="text-center mb-8">
-          <div className="mb-4">
-            <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-              Tic Tac Toe
-            </h1>
-          </div>
-          <p className="text-muted-foreground text-base mb-4 max-w-md mx-auto">
-            Play against AI or a friend
-          </p>
-          <TurnIndicator />
-        </div>
-
-        {isUIVisible && !gameSettings.showGameStatus && (winner || board.every(cell => cell !== null)) && (
-          <div className="text-center mb-6">
-            {winner ? (
-              <div 
-                className="text-3xl font-bold animate-in fade-in-0 zoom-in-95 duration-500 ease-out" 
-                style={{ color: winner === 'X' ? gameSettings.theme.xColor : gameSettings.theme.oColor }}
-              >
-                {gameSettings.gameMode === 'ai' && winner === 'O' ? 'AI Wins!' : `Player ${winner} Wins!`}
-              </div>
-            ) : board.every(cell => cell !== null) ? (
-              <div className="text-center">
-                <div className="text-3xl font-bold text-gray-500">
-                  It's a Draw!
-                </div>
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        <div className="flex flex-col items-center space-y-4">
-          <div className="flex justify-center">
-            <GameBoard />
-          </div>
-          
-          {isUIVisible && !gameSettings.showGameStatus && (
-            <div className="text-center space-y-6">
-              
-              <div className="space-y-3">
-                <div className="flex gap-3 justify-center">
-                  <Ripple className="w-12 h-12 rounded-full" color="rgba(239, 68, 68, 0.3)">
-                  <Button 
-                    onClick={handleResetGame} 
-                    variant="outline"
-                    size="sm"
-                      className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-0 hover:bg-red-500/20 transition-all duration-200"
-                    title="Reset Game"
-                  >
-                    <RotateCcw className="!h-5 !w-5 text-red-500" />
-                  </Button>
-                  </Ripple>
-                  
-                  <GameModeDialog open={gameModeOpen} onOpenChange={handleGameModeOpen}>
-                    <div className="relative w-12 h-12 rounded-full overflow-hidden">
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                        className="w-12 h-12 p-0 rounded-full bg-blue-500/10 border-0 hover:bg-blue-500/20 transition-all duration-200 relative z-10"
-                      title="Change Game Mode"
-                        onMouseDown={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const size = Math.max(rect.width, rect.height);
-                          const x = e.clientX - rect.left - size / 2;
-                          const y = e.clientY - rect.top - size / 2;
-                          const ripple = document.createElement('span');
-                          ripple.className = 'absolute rounded-full animate-ripple pointer-events-none';
-                          ripple.style.cssText = `
-                            left: ${x}px;
-                            top: ${y}px;
-                            width: ${size}px;
-                            height: ${size}px;
-                            background-color: rgba(59, 130, 246, 0.3);
-                            transform: scale(0);
-                            animation-duration: 600ms;
-                            z-index: 0;
-                          `;
-                          e.currentTarget.parentElement?.appendChild(ripple);
-                          setTimeout(() => ripple.remove(), 600);
-                        }}
-                    >
-                      <Gamepad2 className="!h-5 !w-5 text-blue-500" />
-                    </Button>
-                    </div>
-                  </GameModeDialog>
-
-                  <Ripple className="w-12 h-12 rounded-full" color="rgba(34, 197, 94, 0.3)">
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                        className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-0 hover:bg-green-500/20 transition-all duration-200"
-                    onClick={() => handleSettingsOpen(true)}
-                    title="Settings"
-                  >
-                    <Settings className="!h-5 !w-5 text-green-500" />
-                  </Button>
-                  </Ripple>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {isUIVisible && gameSettings.showGameStatus && (
-            <div className={`fixed bottom-6 ${gameSettings.gameStatusPosition === 'left' ? 'left-6' : 'right-6'} z-40 max-w-sm`}>
-                <GameStatus />
-            </div>
-          )}
-                
-          {isUIVisible && gameSettings.showGameStatus && (
-            <div className="text-center space-y-6 mt-8">
-                <div className="space-y-3">
-                  <div className="flex gap-3 justify-center">
-                    <Ripple className="w-12 h-12 rounded-full" color="rgba(239, 68, 68, 0.3)">
-                    <Button 
-                      onClick={handleResetGame} 
-                      variant="outline"
-                      size="sm"
-                        className="w-12 h-12 p-0 rounded-full bg-red-500/10 border-0 hover:bg-red-500/20 transition-all duration-200"
-                    >
-                      <RotateCcw className="!h-5 !w-5 text-red-500" />
-                    </Button>
-                    </Ripple>
-                    
-                    <GameModeDialog>
-                      <div className="relative w-12 h-12 rounded-full overflow-hidden">
-                      <Button 
-                        variant="outline"
-                        size="sm"
-                          className="w-12 h-12 p-0 rounded-full bg-blue-500/10 border-0 hover:bg-blue-500/20 transition-all duration-200 relative z-10"
-                          onMouseDown={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const size = Math.max(rect.width, rect.height);
-                            const x = e.clientX - rect.left - size / 2;
-                            const y = e.clientY - rect.top - size / 2;
-                            const ripple = document.createElement('span');
-                            ripple.className = 'absolute rounded-full animate-ripple pointer-events-none';
-                            ripple.style.cssText = `
-                              left: ${x}px;
-                              top: ${y}px;
-                              width: ${size}px;
-                              height: ${size}px;
-                              background-color: rgba(59, 130, 246, 0.3);
-                              transform: scale(0);
-                              animation-duration: 600ms;
-                              z-index: 0;
-                            `;
-                            e.currentTarget.parentElement?.appendChild(ripple);
-                            setTimeout(() => ripple.remove(), 600);
-                          }}
-                      >
-                        <Gamepad2 className="!h-5 !w-5 text-blue-500" />
-                      </Button>
-                      </div>
-                    </GameModeDialog>
-
-                    <Ripple className="w-12 h-12 rounded-full" color="rgba(34, 197, 94, 0.3)">
-                    <Button 
-                      variant="outline"
-                      size="sm"
-                        className="w-12 h-12 p-0 rounded-full bg-green-500/10 border-0 hover:bg-green-500/20 transition-all duration-200"
-                      onClick={() => handleSettingsOpen(true)}
-                    >
-                      <Settings className="!h-5 !w-5 text-green-500" />
-                    </Button>
-                    </Ripple>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      <SettingsDialog open={settingsOpen} onOpenChange={handleSettingsOpen} />
+      {mounted.mode && (
+        <Suspense fallback={null}>
+          <GameModeDialog open={gameModeOpen} onOpenChange={handleGameModeOpen} />
+        </Suspense>
+      )}
+      {mounted.settings && (
+        <Suspense fallback={null}>
+          <SettingsDialog open={settingsOpen} onOpenChange={handleSettingsOpen} />
+        </Suspense>
+      )}
     </div>
   );
 }

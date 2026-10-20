@@ -1,0 +1,62 @@
+.hide-focus-outlines :focus-visible:not(input, textarea, select),
+[data-modality="pointer"] :focus-visible:not(input, textarea, select) {
+  outline-color: transparent;
+}
+
+.reduce-motion {
+  --glass-blur: 0px;
+  --glass-tint: 100%;
+  --sheet-blur: 0px;
+  --sheet-tint: 100%;
+  --edge-floor: transparent;
+}
+
+.reduce-motion .scroll-edge {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce), (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-blur: 0px;
+    --glass-tint: 100%;
+    --sheet-blur: 0px;
+    --sheet-tint: 100%;
+    --edge-floor: transparent;
+  }
+
+  .scroll-edge {
+    display: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --glass-tint: 100%;
+    --sheet-tint: 100%;
+    --glass-edge: rgb(0 0 0 / 0.45);
+  }
+
+  .dark {
+    --glass-edge: rgb(255 255 255 / 0.35);
+  }
+}
+
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

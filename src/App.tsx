@@ -1,36 +1,48 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/contexts/ThemeContext";
-import { GameProvider } from "@/contexts/GameContext";
-import { OnboardingTour } from "@/components/OnboardingTour";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { ThemeProvider } from "@/contexts/ThemeProvider";
+import { PreferencesProvider } from "@/contexts/PreferencesProvider";
+import { GameProvider } from "@/contexts/GameProvider";
+import { Onboarding } from "@/components/Onboarding";
 import { PWALaunchScreen } from "@/components/PWALaunchScreen";
+import { whenIdle } from "@/lib/lazy";
 import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Toaster = lazy(async () => ({ default: (await import("@/components/ui/sonner")).Toaster }));
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="system" storageKey="tic-tac-toe-theme">
-      <GameProvider>
-        <TooltipProvider>
+function isHomePath() {
+  const base = import.meta.env.BASE_URL;
+  const path = window.location.pathname;
+  return path === base || path === `${base}index.html`;
+}
+
+const App = () => {
+  const [idle, setIdle] = useState(false);
+
+  useEffect(() => whenIdle(() => setIdle(true)), []);
+
+  return (
+    <ThemeProvider>
+      <PreferencesProvider>
+        <GameProvider>
           <PWALaunchScreen />
-          <OnboardingTour />
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </GameProvider>
+          <Onboarding />
+          {isHomePath() ? (
+            <Index />
+          ) : (
+            <Suspense fallback={null}>
+              <NotFound />
+            </Suspense>
+          )}
+          {idle && (
+            <Suspense fallback={null}>
+              <Toaster />
+            </Suspense>
+          )}
+        </GameProvider>
+      </PreferencesProvider>
     </ThemeProvider>
-  </QueryClientProvider>
-);
+  );
+};
 
 export default App;

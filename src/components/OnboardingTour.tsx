@@ -1,273 +1,158 @@
-import { useState, useEffect } from 'react';
-import { X, ArrowRight, ArrowLeft, Play, Users, Bot, Palette, Settings, SkipForward } from 'lucide-react';
+import { useRef, useState, type ComponentType } from 'react';
+import { Dialog as DialogPrimitive } from 'radix-ui';
+import { Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ModesHero, SettingsHero, ThemesHero, WelcomeHero } from '@/components/OnboardingHeroes';
+import { cn } from '@/lib/utils';
+
+const STABILITY_NOTE = 'The web version may not be as stable as the official app.';
 
 interface TourStep {
   id: string;
   title: string;
   description: string;
-  icon: React.ComponentType<{ className?: string }>;
-  target?: string;
-  position: 'top' | 'bottom' | 'left' | 'right' | 'center';
+  Hero: ComponentType;
 }
 
-const tourSteps: TourStep[] = [
+const TOUR_STEPS: TourStep[] = [
   {
     id: 'welcome',
-    title: 'Welcome to X&O Battle Web!',
-    description: 'Let\'s take a quick tour to get you familiar with the game.\n\n**Note:** This web version may not be as stable as the official app.',
-    icon: Play,
-    position: 'center'
+    title: 'Welcome to X&O Battle Web',
+    description: 'Tic-tac-toe, made for the web. Here’s a quick look around before you play.',
+    Hero: WelcomeHero,
   },
   {
     id: 'game-modes',
-    title: 'Game Modes',
-    description: 'Choose between playing with a friend or challenging our computer opponent.',
-    icon: Users,
-    target: 'game-mode-section',
-    position: 'bottom'
+    title: 'Play Your Way',
+    description: 'Challenge a friend on the same device, or take on the AI across four difficulty levels.',
+    Hero: ModesHero,
   },
   {
     id: 'themes',
-    title: 'Custom Themes',
-    description: 'Make your game look amazing with beautiful themes and create your own.',
-    icon: Palette,
-    target: 'themes-section',
-    position: 'top'
+    title: 'Make It Yours',
+    description: 'Pick a built-in theme or create presets with your own colours and symbols.',
+    Hero: ThemesHero,
   },
   {
     id: 'settings',
-    title: 'Settings & Customisation',
-    description: 'Change your game to exactly how you like it with lots of options.',
-    icon: Settings,
-    target: 'settings-section',
-    position: 'right'
-  }
+    title: 'Tuned to You',
+    description: 'Adjust sound, animations, accessibility and more in Settings whenever you like.',
+    Hero: SettingsHero,
+  },
 ];
 
-export function OnboardingTour() {
-  const [isVisible, setIsVisible] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
-  const [welcomeFading, setWelcomeFading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [isHighlighting, setIsHighlighting] = useState(false);
+interface OnboardingTourProps {
+  open: boolean;
+  fadeIn: boolean;
+  onComplete: () => void;
+}
 
-  const showOnboardingAgain = () => {
-    localStorage.removeItem('xobattle-onboarding-seen');
-    setCurrentStep(0);
-    setIsVisible(true);
-  };
+export function OnboardingTour({ open, fadeIn, onComplete }: OnboardingTourProps) {
+  const [step, setStep] = useState(0);
+  const [wasOpen, setWasOpen] = useState(open);
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    (window as any).showOnboardingAgain = showOnboardingAgain;
-  }, []);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    if (open) setStep(0);
+  }
 
-  useEffect(() => {
-    const hasSeenTour = localStorage.getItem('xobattle-onboarding-seen');
-    
-    if (!hasSeenTour) {
-      setShowWelcome(true);
-      setTimeout(() => {
-        setWelcomeFading(true);
-        setTimeout(() => {
-          setShowWelcome(false);
-          setWelcomeFading(false);
-          setIsVisible(true);
-        }, 1000);
-      }, 2500);
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        if (showWelcome) {
-          setShowWelcome(false);
-          setWelcomeFading(false);
-          setIsVisible(false);
-          localStorage.setItem('xobattle-onboarding-seen', 'true');
-        } else if (isVisible) {
-          completeTour();
-        }
-      }
-    };
-
-    if (showWelcome || isVisible) {
-      document.addEventListener('keydown', handleKeyDown);
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [showWelcome, isVisible]);
-
-  const nextStep = () => {
-    if (currentStep < tourSteps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      completeTour();
-    }
-  };
-
-  const previousStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const skipTour = () => {
-    completeTour();
-  };
-
-  const completeTour = () => {
-    localStorage.setItem('xobattle-onboarding-seen', 'true');
-    setIsVisible(false);
-  };
-
-  const getStepPosition = (position: string) => {
-    switch (position) {
-      case 'top':
-        return 'bottom-full left-1/2 transform -translate-x-1/2 mb-4';
-      case 'bottom':
-        return 'top-full left-1/2 transform -translate-x-1/2 mt-4';
-      case 'left':
-        return 'right-full top-1/2 transform -translate-y-1/2 mr-4';
-      case 'right':
-        return 'left-full top-1/2 transform -translate-y-1/2 ml-4';
-      case 'center':
-        return 'inset-0 flex items-center justify-center';
-      default:
-        return 'bottom-full left-1/2 transform -translate-x-1/2 mb-4';
-    }
-  };
-
-  const getStepColors = (stepId: string) => {
-    switch (stepId) {
-      case 'game-modes':
-        return {
-          gradient: 'from-green-500 to-green-600',
-          hoverGradient: 'hover:from-green-600 hover:to-green-700',
-          textColor: 'text-green-100'
-        };
-      case 'themes':
-        return {
-          gradient: 'from-purple-500 to-purple-600',
-          hoverGradient: 'hover:from-purple-600 hover:to-purple-700',
-          textColor: 'text-purple-100'
-        };
-      case 'settings':
-        return {
-          gradient: 'from-orange-500 to-orange-600',
-          hoverGradient: 'hover:from-orange-600 hover:to-orange-700',
-          textColor: 'text-orange-100'
-        };
-      default:
-        return {
-          gradient: 'from-blue-500 to-blue-600',
-          hoverGradient: 'hover:from-blue-600 hover:to-blue-700',
-          textColor: 'text-blue-100'
-        };
-    }
-  };
-
-  if (!isVisible && !showWelcome) return null;
-
-  const currentTourStep = tourSteps[currentStep];
-  const isFirstStep = currentStep === 0;
-  const isLastStep = currentStep === tourSteps.length - 1;
-  const stepColors = getStepColors(currentTourStep.id);
+  const current = TOUR_STEPS[step];
+  const isFirst = step === 0;
+  const isLast = step === TOUR_STEPS.length - 1;
 
   return (
-    <>
-      {showWelcome && (
-        <div 
-          className={`fixed inset-0 z-50 bg-black/80 backdrop-blur-sm transition-all duration-1000 ease-in-out flex items-center justify-center ${
-            welcomeFading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
-          }`}
+    <DialogPrimitive.Root
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) onComplete();
+      }}
+    >
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay
+          className={cn(
+            'fixed inset-0 z-50 bg-background',
+            'bg-[radial-gradient(120%_65%_at_50%_0%,color-mix(in_oklab,var(--brand)_16%,transparent),transparent_70%)]',
+            'data-[state=closed]:animate-fade-out',
+            fadeIn && 'data-[state=open]:animate-fade-in'
+          )}
         >
-          <div className="text-center">
-            <h1 className="text-5xl md:text-7xl font-bold text-white dark:text-[#eee] mb-4 tracking-tight">
-              Welcome to X&O Battle{' '}
-              <span style={{ color: '#0972c3' }}>Web</span>
-            </h1>
-          </div>
-        </div>
-      )}
+          <DialogPrimitive.Content
+            ref={contentRef}
+            onOpenAutoFocus={(event) => {
+              event.preventDefault();
+              contentRef.current?.focus();
+            }}
+            className="flex h-dvh w-full flex-col pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] text-foreground outline-none"
+          >
+            <div className="flex h-16 shrink-0 items-center justify-end px-4 sm:px-6">
+              {!isLast && (
+                <Button variant="glass" size="pill" onClick={onComplete}>
+                  Skip
+                </Button>
+              )}
+            </div>
 
-      {isVisible && (
-        <>
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-all duration-500 ease-out animate-fade-in" />
-          
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div className="relative bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
-              <div className={`bg-gradient-to-r ${stepColors.gradient} p-6 text-white`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                      <currentTourStep.icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-semibold">{currentTourStep.title}</h2>
-                      <p className={`${stepColors.textColor} text-sm`}>{currentStep + 1} of {tourSteps.length}</p>
-                    </div>
-                  </div>
-                  {!isLastStep && (
-                    <button
-                      onClick={skipTour}
-                      className="text-white/80 hover:text-white transition-colors"
-                    >
-                      <SkipForward className="h-5 w-5" />
-                    </button>
-                  )}
+            <ScrollArea className="flex flex-col items-center px-6">
+              <div key={current.id} className="my-auto flex w-full max-w-md animate-fade-in flex-col items-center">
+                <div inert className="flex h-56 w-full items-center justify-center sm:h-72">
+                  <current.Hero />
+                </div>
+
+                <div className="mt-6 flex min-h-40 flex-col items-center text-center">
+                  <DialogPrimitive.Title className="text-balance text-[30px] font-bold leading-tight tracking-tight sm:text-4xl">
+                    {current.title}
+                  </DialogPrimitive.Title>
+                  <DialogPrimitive.Description className="mt-3 max-w-sm text-pretty text-[17px] leading-relaxed text-muted-foreground">
+                    {current.description}
+                  </DialogPrimitive.Description>
                 </div>
               </div>
+            </ScrollArea>
 
-              <div className="p-6">
-                <div className="text-gray-600 dark:text-gray-300 text-center leading-relaxed mb-6">
-                  {currentTourStep.description.split('\n').map((paragraph, pIndex) => (
-                    <p key={pIndex} className={pIndex > 0 ? 'mt-3' : ''}>
-                      {paragraph.split('**').map((part, index) => 
-                        index % 2 === 0 ? (
-                          <span key={index}>{part}</span>
-                        ) : (
-                          <strong key={index} className="font-bold">{part}</strong>
-                        )
-                      )}
-                    </p>
-                  ))}
-                </div>
-
-                <div className="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-2 mb-6">
-                  <div 
-                    className={`bg-gradient-to-r ${stepColors.gradient} h-2 rounded-full transition-all duration-300`}
-                    style={{ width: `${((currentStep + 1) / tourSteps.length) * 100}%` }}
+            <div className="mx-auto flex w-full max-w-md shrink-0 flex-col items-center gap-5 px-6 pb-6 pt-2">
+              <div aria-hidden className="flex items-center gap-1.5">
+                {TOUR_STEPS.map((tourStep, index) => (
+                  <span
+                    key={tourStep.id}
+                    className={cn(
+                      'h-2 rounded-full transition-[width,background-color] duration-300',
+                      index === step ? 'w-6 bg-brand' : 'w-2 bg-foreground/20'
+                    )}
                   />
-                </div>
+                ))}
+              </div>
+              <p className="sr-only" aria-live="polite">
+                Step {step + 1} of {TOUR_STEPS.length}
+              </p>
 
-                <div className="flex items-center justify-between">
-                  <Button
-                    variant="outline"
-                    onClick={previousStep}
-                    disabled={isFirstStep}
-                    className="flex items-center gap-2 hover:border-input hover:text-foreground focus-visible:ring-0"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    Previous
+              <div className="flex w-full flex-col gap-1">
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="w-full"
+                  onClick={() => (isLast ? onComplete() : setStep(step + 1))}
+                >
+                  {isLast ? 'Start Playing' : 'Continue'}
+                </Button>
+                {isFirst ? (
+                  <p className="flex h-12 items-center justify-center">
+                    <span className="text-balance text-center text-[13px] leading-snug text-muted-foreground">
+                      <Info className="mr-1.5 inline size-3.5 align-[-0.15em]" />
+                      {STABILITY_NOTE}
+                    </span>
+                  </p>
+                ) : (
+                  <Button variant="ghost-muted" size="lg" className="w-full" onClick={() => setStep(step - 1)}>
+                    Back
                   </Button>
-
-                  <Button
-                    onClick={nextStep}
-                    className={`bg-gradient-to-r ${stepColors.gradient} ${stepColors.hoverGradient} text-white flex items-center gap-2`}
-                  >
-                    {isLastStep ? 'Get Started' : 'Next'}
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
+                )}
               </div>
             </div>
-          </div>
-        </>
-      )}
-    </>
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Overlay>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }

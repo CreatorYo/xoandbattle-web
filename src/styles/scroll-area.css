@@ -1,0 +1,140 @@
+@property --scroll-fade-top {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --scroll-fade-bottom {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes scroll-fade-top {
+  to { --scroll-fade-top: var(--edge-top-size); }
+}
+
+@keyframes scroll-fade-bottom {
+  from { --scroll-fade-bottom: var(--edge-bottom-size); }
+}
+
+@keyframes scroll-edge-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scroll-edge-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@layer components {
+  .scroll-area {
+    --edge-top-size: 1.5rem;
+    --edge-bottom-size: 1.5rem;
+    position: relative;
+    display: flex;
+    min-height: 0;
+    flex: 1 1 0%;
+    flex-direction: column;
+    timeline-scope: --scroll-area;
+  }
+
+  .scroll-area-viewport {
+    min-height: 0;
+    flex: 1 1 0%;
+    overflow-y: auto;
+  }
+
+  .scroll-edge {
+    display: none;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .scroll-area-viewport {
+      scroll-timeline: --scroll-area y;
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        var(--edge-floor),
+        #000 var(--scroll-fade-top),
+        #000 calc(100% - var(--scroll-fade-bottom)),
+        var(--edge-floor)
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        var(--edge-floor),
+        #000 var(--scroll-fade-top),
+        #000 calc(100% - var(--scroll-fade-bottom)),
+        var(--edge-floor)
+      );
+      animation: scroll-fade-top linear both, scroll-fade-bottom linear both;
+      animation-timeline: --scroll-area, --scroll-area;
+      animation-range:
+        0 var(--edge-top-size),
+        calc(100% - var(--edge-bottom-size)) 100%;
+    }
+
+    .scroll-edge {
+      position: absolute;
+      inset-inline: 0;
+      z-index: 1;
+      display: block;
+      pointer-events: none;
+    }
+
+    .scroll-edge[data-edge="top"] {
+      --edge-direction: to top;
+      top: 0;
+      height: var(--edge-top-size);
+    }
+
+    .scroll-edge[data-edge="bottom"] {
+      --edge-direction: to bottom;
+      bottom: 0;
+      height: var(--edge-bottom-size);
+    }
+
+    .scroll-edge > span {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      -webkit-backdrop-filter: blur(var(--edge-blur));
+      backdrop-filter: blur(var(--edge-blur));
+      -webkit-mask-image: linear-gradient(var(--edge-direction), var(--edge-mask));
+      mask-image: linear-gradient(var(--edge-direction), var(--edge-mask));
+      animation: scroll-edge-in linear both;
+      animation-timeline: --scroll-area;
+      animation-range: 0 var(--edge-top-size);
+    }
+
+    .scroll-edge[data-edge="bottom"] > span {
+      animation-name: scroll-edge-out;
+      animation-range: calc(100% - var(--edge-bottom-size)) 100%;
+    }
+
+    .scroll-edge > span:nth-child(1) {
+      --edge-blur: 1px;
+      --edge-mask: transparent, #000 25%, #000 50%, transparent 75%;
+    }
+
+    .scroll-edge > span:nth-child(2) {
+      --edge-blur: 2px;
+      --edge-mask: transparent 25%, #000 50%, #000 75%, transparent;
+    }
+
+    .scroll-edge > span:nth-child(3) {
+      --edge-blur: 4px;
+      --edge-mask: transparent 50%, #000 75%;
+    }
+
+    .scroll-edge > span:nth-child(4) {
+      --edge-blur: 8px;
+      --edge-mask: transparent 75%, #000;
+    }
+
+    [data-moving] .scroll-edge,
+    [data-receded] .scroll-edge {
+      display: none;
+    }
+  }
+}

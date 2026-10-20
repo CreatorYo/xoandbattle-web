@@ -1,57 +1,60 @@
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
+import { Slot } from "radix-ui"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  [
+    "relative inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full font-medium",
+    "transition-[background-color,color,filter,opacity] duration-150 ease-out",
+    "not-disabled:active:opacity-60",
+    "outline-2 outline-offset-2 outline-transparent focus-visible:outline-brand",
+    "disabled:cursor-not-allowed disabled:opacity-50",
+    "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  ],
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-lg",
-        outline:
-          "border border-input bg-background hover:bg-muted/50 hover:text-primary hover:border-border hover:shadow-none",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-muted/50 hover:text-primary hover:shadow-md",
-        ghost: "hover:bg-muted/50 hover:text-primary hover:shadow-sm",
-        muted: "bg-muted/20 text-primary border border-primary/30 hover:bg-muted/40 hover:border-primary/50 hover:shadow-md",
-        link: "text-primary underline-offset-4 hover:underline hover:text-primary/80",
+        primary: "bg-brand text-brand-foreground glass-tinted not-disabled:hover:brightness-[1.06]",
+        destructive: "bg-destructive text-destructive-foreground glass-tinted not-disabled:hover:brightness-[1.06]",
+        secondary: "bg-surface-sunken text-foreground not-disabled:hover:bg-muted",
+        glass: "glass text-foreground not-disabled:hover:brightness-[1.03]",
+        tinted: "bg-brand/15 text-brand not-disabled:hover:bg-brand/20",
+        "destructive-tinted": "bg-destructive/12 text-destructive not-disabled:hover:bg-destructive/18",
+        "ghost-muted": "text-muted-foreground not-disabled:hover:bg-muted not-disabled:hover:text-foreground",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        sm: "h-8 px-3.5 text-[13px]",
+        md: "h-10 px-5 text-[15px]",
+        lg: "h-12 px-6 text-base font-semibold",
+        pill: "h-9 px-4 text-[15px] font-semibold",
+        icon: "size-10",
+        "icon-sm": "size-8",
       },
     },
     defaultVariants: {
-      variant: "default",
-      size: "default",
+      variant: "secondary",
+      size: "md",
     },
   }
 )
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean
+type ButtonProps = React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }
+
+function Button({ className, variant, size, asChild = false, type, ...props }: ButtonProps) {
+  const Comp = asChild ? Slot.Root : "button"
+  return (
+    <Comp
+      data-slot="button"
+      type={asChild ? undefined : (type ?? "button")}
+      className={cn(buttonVariants({ variant, size }), className)}
+      {...props}
+    />
+  )
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
-    )
-  }
-)
-Button.displayName = "Button"
-
-export { Button, buttonVariants }
+export { Button }

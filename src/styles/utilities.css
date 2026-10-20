@@ -1,0 +1,105 @@
+@utility elev-raised {
+  box-shadow: var(--elev-raised);
+}
+
+@utility elev-panel {
+  box-shadow: var(--glass-rim), 0 0 0 0.5px var(--glass-edge), var(--glass-shadow);
+}
+
+@utility glass {
+  background-color: color-mix(in oklab, var(--glass-base) var(--glass-tint), transparent);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  box-shadow: var(--glass-rim), 0 0 0 0.5px var(--glass-edge), var(--glass-shadow);
+}
+
+@utility glass-tinted {
+  background-image: linear-gradient(to bottom, var(--tinted-sheen), transparent 60%);
+  box-shadow: var(--tinted-rim), 0 0 0 0.5px var(--glass-edge), var(--glass-shadow);
+}
+
+@utility glass-sheet {
+  background-color: color-mix(in oklab, var(--glass-base) var(--sheet-tint), transparent);
+  -webkit-backdrop-filter: blur(var(--sheet-blur)) saturate(var(--glass-saturation));
+  backdrop-filter: blur(var(--sheet-blur)) saturate(var(--glass-saturation));
+  box-shadow: var(--glass-rim), 0 0 0 0.5px var(--glass-edge), var(--glass-shadow);
+}
+
+@utility glass-flat {
+  background-color: color-mix(in oklab, var(--glass-base) var(--glass-tint), transparent);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  box-shadow: var(--glass-rim), 0 0 0 0.5px var(--glass-edge);
+}
+
+@utility glass-lens {
+  background-color: color-mix(in oklab, var(--glass-base) 45%, transparent);
+  -webkit-backdrop-filter: blur(4px) saturate(200%);
+  backdrop-filter: blur(4px) saturate(200%);
+  box-shadow:
+    inset 1.5px 1.5px 1px -1px rgb(255 255 255 / 0.9),
+    inset -1.5px -1.5px 1px -1px rgb(255 255 255 / 0.5),
+    0 0 0 0.5px var(--glass-edge);
+}
+
+@utility scrim {
+  &::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-color: var(--overlay);
+  }
+
+  &[data-state="closed"] {
+    animation: var(--animate-scrim-hold);
+  }
+
+  &[data-state="closed"]::before {
+    animation: var(--animate-scrim-out);
+  }
+}
+
+@utility text-shine {
+  position: relative;
+
+  &::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    color: transparent;
+    pointer-events: none;
+    background: linear-gradient(100deg, transparent 42%, var(--shine) 50%, transparent 58%) 100% 0 / 250% 100% no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: shine 900ms cubic-bezier(0.4, 0, 0.2, 1) 250ms both;
+  }
+}
+
+@keyframes shine {
+  to {
+    background-position: 0 0;
+  }
+}
+
+@utility winner-glow {
+  position: relative;
+  isolation: isolate;
+
+  &::after {
+    content: attr(data-mark);
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    filter: blur(10px);
+    opacity: 0.45;
+    pointer-events: none;
+    animation: winner-glow 1s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes winner-glow {
+  to {
+    opacity: 0.95;
+  }
+}

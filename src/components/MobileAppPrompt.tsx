@@ -1,94 +1,81 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { LayoutGrid, Smartphone, Sparkles } from 'lucide-react';
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { SimpleBottomSheet } from '@/components/ui/bottom-sheet';
-import { Smartphone, Sparkles, GamepadIcon } from 'lucide-react';
+import { dismissAppPrompt } from '@/lib/app-prompt';
+import { APP_STORE } from '@/lib/utils';
 
-interface MobileAppPromptProps {
-  onContinue: () => void;
-}
+const FEATURES = [
+  { icon: LayoutGrid, title: 'Custom Board Styles', body: 'More ways to make the board your own.' },
+  { icon: Smartphone, title: 'Optimised for Mobile', body: 'Designed for playing on your phone.' },
+  { icon: Sparkles, title: 'Enhanced Gameplay', body: 'Extra gameplay features and more.' },
+];
 
-export function MobileAppPrompt({ onContinue }: MobileAppPromptProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function MobileAppPrompt() {
+  const [open, setOpen] = useState(true);
 
-  useEffect(() => {
-    const hasDismissed = localStorage.getItem('mobile-app-prompt-dismissed');
-    if (!hasDismissed) {
-      setIsOpen(true);
-    }
-  }, []);
-
-  const handleContinue = () => {
-    setIsOpen(false);
-    localStorage.setItem('mobile-app-prompt-dismissed', 'true');
-    onContinue();
-  };
-
-  const handleAppStore = () => {
-    const isWindows = window.navigator.userAgent.toLowerCase().includes('windows');
-    const url = isWindows 
-      ? 'https://apps.microsoft.com/detail/9nk0184bmx07?hl=en-GB&gl=GB'
-      : 'https://apps.apple.com/us/app/x-o-battle/id6745736399';
-    window.open(url, '_blank');
-  };
-
-  const handleClose = () => {
-    setIsOpen(false);
-    localStorage.setItem('mobile-app-prompt-dismissed', 'true');
+  const dismiss = () => {
+    setOpen(false);
+    dismissAppPrompt();
   };
 
   return (
-    <SimpleBottomSheet 
-      open={isOpen} 
-      onOpenChange={handleClose}
-      contentClassName="bg-gradient-to-br from-background via-background to-primary/5"
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) dismiss();
+      }}
     >
-      <div className="text-center space-y-6">
-        <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg">
-          <GamepadIcon className="w-10 h-10 text-primary-foreground" />
-        </div>
+      <DialogContent size="sm">
+        <DialogHeader>
+          <img
+            src="/assets/XO_Battle_Logo_Transparent.png"
+            alt=""
+            width={64}
+            height={64}
+            decoding="async"
+            draggable={false}
+            className="mb-1 size-16"
+          />
+          <DialogTitle>Better in the App</DialogTitle>
+          <DialogDescription>Get the full X&amp;O Battle experience on the {APP_STORE.name}.</DialogDescription>
+        </DialogHeader>
 
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
-            Better on the app
-          </h1>
-          <p className="text-muted-foreground leading-relaxed">
-            Experience more on the <span className="font-semibold text-primary">X&O Battle</span> app with custom board styles and more!
-          </p>
-        </div>
+        <DialogBody>
+          <ul className="grouped-list bg-surface-sunken!">
+            {FEATURES.map((feature) => (
+              <li key={feature.title} className="flex items-center gap-3 px-4 py-3 [--separator-inset:3.625rem]">
+                <span className="flex size-[30px] shrink-0 items-center justify-center rounded-[7px] bg-brand text-brand-foreground">
+                  <feature.icon className="size-[18px]" />
+                </span>
+                <div>
+                  <p className="text-[15px] font-medium">{feature.title}</p>
+                  <p className="text-[13px] text-muted-foreground">{feature.body}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </DialogBody>
 
-        <div className="bg-muted/30 rounded-lg p-4 space-y-2">
-          <div className="flex items-center gap-2 text-sm">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span>Custom board styles</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Smartphone className="w-4 h-4 text-primary" />
-            <span>Optimised mobile experience</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <GamepadIcon className="w-4 h-4 text-primary" />
-            <span>Enhanced gameplay features and more</span>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <Button 
-            onClick={handleAppStore}
-            className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-200"
-            size="lg"
-          >
-            Get on App Store
+        <DialogFooter>
+          <Button variant="secondary" onClick={dismiss}>
+            Continue on the Web
           </Button>
-          
-          <Button 
-            onClick={handleContinue}
-            variant="outline"
-            className="w-full border-muted-foreground/20 hover:bg-muted/50"
-          >
-            Continue playing here
+          <Button variant="primary" asChild>
+            <a href={APP_STORE.url} target="_blank" rel="noopener noreferrer">
+              Get the App
+            </a>
           </Button>
-        </div>
-      </div>
-    </SimpleBottomSheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,29 +1,29 @@
-import { useTheme } from "next-themes"
-import { Toaster as Sonner, toast } from "sonner"
+import { Toaster as Sonner } from "sonner"
+import { useTheme } from "@/contexts/ThemeContext"
 
-type ToasterProps = React.ComponentProps<typeof Sonner>
-
-const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
+export function Toaster() {
+  const { resolvedTheme } = useTheme()
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
-      className="toaster group"
+      theme={resolvedTheme}
+      position="bottom-center"
+      gap={8}
+      offset={20}
+      mobileOffset={16}
       toastOptions={{
+        unstyled: true,
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
-          description: "group-[.toast]:text-muted-foreground",
-          actionButton:
-            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
-          cancelButton:
-            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+            "glass-sheet flex w-full items-start gap-3 rounded-[1.375rem] px-4 py-3.5 text-foreground",
+          title: "text-[15px] font-semibold leading-snug",
+          description: "mt-0.5 text-[13px] leading-snug text-muted-foreground",
+          icon: "mt-0.5 shrink-0 [&_svg]:size-5",
+          success: "[&_[data-icon]]:text-success",
+          error: "[&_[data-icon]]:text-destructive",
+          info: "[&_[data-icon]]:text-brand",
         },
       }}
-      {...props}
     />
   )
 }
-
-export { Toaster, toast }

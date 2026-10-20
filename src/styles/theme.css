@@ -1,0 +1,196 @@
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: light;
+
+  --brand: #3b82f6;
+  --brand-foreground: #ffffff;
+  --brand-pastel-base: #ffffff;
+  --brand-pastel: color-mix(in oklab, var(--brand-pastel-base) 78%, var(--brand));
+
+  --background: #f2f2f7;
+  --foreground: #000000;
+  --surface: #ffffff;
+  --surface-muted: #ebebf0;
+  --surface-sunken: #eeeef0;
+  --thumb: #ffffff;
+  --muted: #e5e5ea;
+  --muted-foreground: #6e6e73;
+  --border: #d1d1d6;
+  --border-strong: #c7c7cc;
+  --destructive: #ff3b30;
+  --destructive-foreground: #ffffff;
+  --success: #34c759;
+  --overlay: rgb(0 0 0 / 0.28);
+
+  --cell: #ffffff;
+  --cell-hover: #f7f7f9;
+  --cell-border: #dcdce1;
+  --cell-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+
+  --radius: 0.75rem;
+
+  --glass-tint: var(--glass-tint-user, 78%);
+  --glass-base: rgb(250 250 252);
+  --glass-blur: 16px;
+  --glass-saturation: 180%;
+  --glass-edge: rgb(0 0 0 / 0.12);
+  --glass-specular: rgb(255 255 255 / 0.95);
+  --glass-specular-soft: rgb(255 255 255 / 0.4);
+  --glass-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.22), 0 2px 8px -2px rgb(0 0 0 / 0.08);
+  --glass-rim: inset 1px 1px 0.5px -0.5px var(--glass-specular), inset -1px -1px 0.5px -0.5px var(--glass-specular-soft);
+
+  --tinted-sheen: rgb(255 255 255 / 0.18);
+  --tinted-rim:
+    inset 1px 1px 0.5px -0.5px rgb(255 255 255 / 0.7),
+    inset -1px -1px 0.5px -0.5px rgb(255 255 255 / 0.3),
+    inset 0 0 0 0.5px rgb(255 255 255 / 0.16);
+
+  --elev-raised: 0 0 0 0.5px rgb(0 0 0 / 0.04), 0 3px 8px 0 rgb(0 0 0 / 0.12), 0 3px 1px 0 rgb(0 0 0 / 0.04);
+
+  --sheet-tint: 94%;
+  --sheet-blur: 28px;
+  --safe-top: max(0.75rem, env(safe-area-inset-top));
+  --edge-floor: rgb(0 0 0 / 0.3);
+
+  --shine: rgb(255 255 255 / 0.95);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --background: #000000;
+  --foreground: #ffffff;
+  --surface: #1c1c1e;
+  --surface-muted: #111113;
+  --surface-sunken: #2c2c2e;
+  --thumb: #636366;
+  --muted: #2c2c2e;
+  --muted-foreground: #8e8e93;
+  --border: #38383a;
+  --border-strong: #48484a;
+  --destructive: #ff453a;
+  --success: #30d158;
+  --overlay: rgb(0 0 0 / 0.6);
+
+  --cell: #1c1c1e;
+  --cell-hover: #242426;
+  --cell-border: rgb(255 255 255 / 0.1);
+  --cell-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.04);
+
+  --glass-base: rgb(36 36 40);
+  --glass-edge: rgb(0 0 0 / 0.6);
+  --glass-specular: rgb(255 255 255 / 0.32);
+  --glass-specular-soft: rgb(255 255 255 / 0.1);
+  --glass-shadow: 0 12px 32px -12px rgb(0 0 0 / 0.85), 0 2px 8px -2px rgb(0 0 0 / 0.5);
+
+  --tinted-sheen: rgb(255 255 255 / 0.12);
+  --tinted-rim:
+    inset 1px 1px 0.5px -0.5px rgb(255 255 255 / 0.5),
+    inset -1px -1px 0.5px -0.5px rgb(255 255 255 / 0.18),
+    inset 0 0 0 0.5px rgb(255 255 255 / 0.1);
+
+  --elev-raised: 0 3px 8px 0 rgb(0 0 0 / 0.35), 0 3px 1px 0 rgb(0 0 0 / 0.15);
+
+  --shine: color-mix(in oklab, var(--brand) 55%, white);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-thumb: var(--thumb);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-pastel: var(--brand-pastel);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-cell: var(--cell);
+  --color-cell-hover: var(--cell-hover);
+
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+}
+
+@theme {
+  --animate-piece-appear: piece-appear 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-fade-out: fade-out 150ms ease-in forwards;
+  --animate-scrim-in: scrim-in 150ms ease-out;
+  --animate-scrim-out: scrim-out 240ms ease-in forwards;
+  --animate-scrim-hold: scrim-hold 240ms;
+  --animate-dialog-in: dialog-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-dialog-out: dialog-out 150ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  --animate-sheet-in: sheet-in 340ms cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-sheet-out: sheet-out 220ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  --animate-push-in: push-in 340ms cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-push-out: push-out 240ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  --animate-push-back: push-back 340ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  --animate-pop-back: pop-back 240ms cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-pop-in: pop-in 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-pop-out: pop-out 110ms ease-in forwards;
+  --animate-launch: launch 500ms ease-out;
+
+  @keyframes piece-appear {
+    0% { opacity: 0; transform: scale(0.5) rotate(-180deg); }
+    50% { opacity: 1; transform: scale(1.2) rotate(-90deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+  }
+  @keyframes fade-out {
+    to { opacity: 0; }
+  }
+  @keyframes scrim-in {
+    from { opacity: 0; }
+  }
+  @keyframes scrim-out {
+    to { opacity: 0; }
+  }
+  @keyframes scrim-hold {
+    to { visibility: visible; }
+  }
+  @keyframes dialog-in {
+    from { opacity: 0; scale: 0.95; }
+  }
+  @keyframes dialog-out {
+    to { opacity: 0; scale: 0.97; }
+  }
+  @keyframes sheet-in {
+    from { translate: 0 calc(100% + 1rem + env(safe-area-inset-bottom)); }
+  }
+  @keyframes sheet-out {
+    to { translate: 0 calc(100% + 1rem + env(safe-area-inset-bottom)); }
+  }
+  @keyframes push-in {
+    from { translate: 100% 0; }
+  }
+  @keyframes push-out {
+    to { translate: 100% 0; }
+  }
+  @keyframes push-back {
+    to { translate: -25% 0; opacity: 0.6; }
+  }
+  @keyframes pop-back {
+    from { translate: -25% 0; opacity: 0.6; }
+  }
+  @keyframes pop-in {
+    from { opacity: 0; transform: scale(0.94); }
+  }
+  @keyframes pop-out {
+    to { opacity: 0; transform: scale(0.97); }
+  }
+  @keyframes launch {
+    from { opacity: 0; transform: scale(0.85); }
+  }
+}

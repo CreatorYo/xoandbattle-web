@@ -1,25 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useMediaQuery } from '@/hooks/use-media-query';
+
+const isMobileUserAgent = /android|iphone|ipad|ipod/i.test(window.navigator.userAgent);
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkDevice = () => {
-      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-      
-      const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
-      const isMobileDevice = mobileRegex.test(userAgent.toLowerCase());
-      
-      const isSmallScreen = window.innerWidth <= 768;
-      
-      setIsMobile(isMobileDevice || isSmallScreen);
-    };
-
-    checkDevice();
-    window.addEventListener('resize', checkDevice);
-    
-    return () => window.removeEventListener('resize', checkDevice);
-  }, []);
-
-  return isMobile;
+  const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  return isMobileUserAgent || isSmallScreen;
 }

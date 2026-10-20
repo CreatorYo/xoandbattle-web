@@ -1,6 +1,20 @@
 import { useState } from 'react';
-import { GameTheme } from '@/contexts/GameContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Copy } from 'lucide-react';
+import type { GameTheme } from '@/contexts/GameContext';
+import {
+  Dialog,
+  DialogBody,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Checkmark } from '@/components/ui/checkmark';
+import { MiniBoard } from './MiniBoard';
+import { getSymbols } from '@/lib/symbols';
 
 interface ThemeInfoDialogProps {
   theme: GameTheme | null;
@@ -10,96 +24,94 @@ interface ThemeInfoDialogProps {
 }
 
 export function ThemeInfoDialog({ theme, isCustom, open, onOpenChange }: ThemeInfoDialogProps) {
-  const [copiedColor, setCopiedColor] = useState<string | null>(null);
+  const [shownTheme, setShownTheme] = useState(theme);
+  if (theme && theme !== shownTheme) setShownTheme(theme);
 
-  if (!theme) return null;
+  const [copied, setCopied] = useState<string | null>(null);
+
+  if (!shownTheme) return null;
+
+  const copy = async (key: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(key);
+      window.setTimeout(() => setCopied((current) => (current === key ? null : current)), 1600);
+    } catch (error) {
+      console.error('Failed to copy:', error);
+    }
+  };
+
+  const symbols = getSymbols(shownTheme);
+  const players = [
+    { key: 'x', label: 'Player X', color: shownTheme.xColor, symbol: symbols.x },
+    { key: 'o', label: 'Player O', color: shownTheme.oColor, symbol: symbols.o },
+  ];
 
   return (
-    <Dialog open={open} onOpenChange={(open) => {
-      if (!open) {
-        setCopiedColor(null);
-      }
-      onOpenChange(open);
-    }}>
-      <DialogContent className="sm:max-w-[400px]">
-        <DialogHeader className="space-y-2">
-          <DialogTitle className="text-xl font-semibold">
-            {theme.name}
-          </DialogTitle>
-          {isCustom && theme.description && (
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {theme.description}
-            </p>
-          )}
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) setCopied(null);
+        onOpenChange(next);
+      }}
+    >
+      <DialogContent size="sm">
+        <DialogHeader>
+          <DialogTitle>{shownTheme.name}</DialogTitle>
+          <DialogDescription>
+            {isCustom ? shownTheme.description || 'Custom preset' : 'Built-in theme'}
+          </DialogDescription>
         </DialogHeader>
-        
-        <div className="space-y-4 pt-2">
-          <div>
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              Player Colours
-            </h4>
-            <div className="space-y-2">
-              <div 
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group border border-border/20"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(theme.xColor);
-                    setCopiedColor('x');
-                    setTimeout(() => setCopiedColor(null), 2000);
-                  } catch (err) {
-                    console.error('Failed to copy:', err);
-                  }
-                }}
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="text-sm font-medium text-foreground">Player X</div>
-                  <div className="text-xs text-muted-foreground font-mono truncate">{theme.xColor}</div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {copiedColor === 'x' ? (
-                    <span className="text-xs text-green-600 dark:text-green-400 font-medium">Copied!</span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">Copy</span>
-                  )}
-                  <div 
-                    className="w-6 h-6 rounded-full border-2 border-border/50 transition-all duration-200 flex-shrink-0 group-hover:scale-110" 
-                    style={{ backgroundColor: theme.xColor }}
-                  />
-                </div>
-              </div>
-              <div 
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer group border border-border/20"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(theme.oColor);
-                    setCopiedColor('o');
-                    setTimeout(() => setCopiedColor(null), 2000);
-                  } catch (err) {
-                    console.error('Failed to copy:', err);
-                  }
-                }}
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="text-sm font-medium text-foreground">Player O</div>
-                  <div className="text-xs text-muted-foreground font-mono truncate">{theme.oColor}</div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {copiedColor === 'o' ? (
-                    <span className="text-xs text-green-600 dark:text-green-400 font-medium">Copied!</span>
-                  ) : (
-                    <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">Copy</span>
-                  )}
-                  <div 
-                    className="w-6 h-6 rounded-full border-2 border-border/50 transition-all duration-200 flex-shrink-0 group-hover:scale-110" 
-                    style={{ backgroundColor: theme.oColor }}
-                  />
-                </div>
-              </div>
-            </div>
+
+        <DialogBody className="flex flex-col gap-5">
+          <div className="flex justify-center rounded-xl bg-surface-sunken py-5">
+            <MiniBoard
+              size="md"
+              xColor={shownTheme.xColor}
+              oColor={shownTheme.oColor}
+              xSymbol={shownTheme.xSymbol}
+              oSymbol={shownTheme.oSymbol}
+              boxFill={shownTheme.enableBoxFill}
+            />
           </div>
-        </div>
+
+          <dl className="grouped-list bg-surface-sunken">
+            {players.map((player) => (
+              <div key={player.key} className="flex items-center gap-3 px-4 py-2.5">
+                <span
+                  className="flex size-8 shrink-0 items-center justify-center rounded-lg text-lg font-bold elev-raised"
+                  style={{ color: player.color }}
+                >
+                  {player.symbol}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <dt className="text-sm font-medium">{player.label}</dt>
+                  <dd className="font-mono text-xs uppercase text-muted-foreground">{player.color}</dd>
+                </div>
+                <Button
+                  variant="ghost-muted"
+                  size="sm"
+                  onClick={() => copy(player.key, player.color)}
+                  aria-label={`Copy ${player.label} colour`}
+                >
+                  {copied === player.key ? <Checkmark className="size-4 text-success" /> : <Copy />}
+                  {copied === player.key ? 'Copied' : 'Copy'}
+                </Button>
+              </div>
+            ))}
+            <div className="flex items-center justify-between px-4 py-3">
+              <dt className="text-sm font-medium">Fill squares</dt>
+              <dd className="text-[13px] text-muted-foreground">{shownTheme.enableBoxFill ? 'On' : 'Off'}</dd>
+            </div>
+          </dl>
+        </DialogBody>
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="secondary">Done</Button>
+          </DialogClose>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-
